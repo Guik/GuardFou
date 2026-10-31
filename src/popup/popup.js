@@ -36,7 +36,7 @@ async function main() {
 
 function renderScore(verdict) {
   const ring = document.getElementById('score-ring');
-  ring.className = verdict.band;
+  ring.className = `score-ring ${verdict.band}`;
 
   const progress = document.getElementById('ring-progress');
   progress.style.strokeDasharray = `${RING_CIRCUMFERENCE}`;
