@@ -1,10 +1,12 @@
 import { WATCHED_REGISTRARS } from '../data/watched-registrars.js';
+import { clearCache } from '../background/cache.js';
 
 async function refreshPermissionStatus() {
   const hasAccess = await browser.permissions.contains({ origins: ['<all_urls>'] });
   document.getElementById('permission-status').textContent = hasAccess
-    ? '✅ Accès accordé.'
-    : '❌ Accès non accordé : FakeShield ne peut analyser aucune page.';
+    ? 'Accès accordé.'
+    : 'Accès non accordé : FakeShield ne peut analyser aucune page.';
+  document.getElementById('permission-dot').className = `status-dot ${hasAccess ? 'ok' : 'missing'}`;
   document.getElementById('activate-btn').hidden = hasAccess;
 }
 
@@ -82,6 +84,11 @@ document.getElementById('add-registrar-form').addEventListener('submit', async (
 });
 
 document.getElementById('builtin-registrars').textContent = WATCHED_REGISTRARS.join(', ');
+
+document.getElementById('clear-cache-btn').addEventListener('click', async () => {
+  const removed = await clearCache();
+  document.getElementById('clear-cache-status').textContent = `${removed} entrée(s) supprimée(s).`;
+});
 
 refreshPermissionStatus();
 refreshAllowlist();

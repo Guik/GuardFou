@@ -1,0 +1,76 @@
+/* Shared design tokens for the popup and options pages. The in-page banner
+   (injected via Shadow DOM in content/collect.js) can't easily load an
+   external stylesheet, so it mirrors these values rather than importing
+   them — keep both in sync if these change. */
+:root {
+  --color-bg: #ffffff;
+  --color-bg-secondary: #f5f5f7;
+  --color-bg-tertiary: #ebebef;
+  --color-text: #1d1d1f;
+  --color-text-secondary: #6e6e73;
+  --color-text-tertiary: #a1a1a6;
+  --color-border: rgba(0, 0, 0, 0.08);
+  --color-accent: #5e5ce6;
+  --color-accent-contrast: #ffffff;
+
+  --color-green: #248a3d;
+  --color-green-bg: #e7f6ec;
+  --color-orange: #c45f02;
+  --color-orange-bg: #fdf1e2;
+  --color-red: #d70015;
+  --color-red-bg: #fde8e8;
+
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-pill: 999px;
+
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+
+  --font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.06);
+  --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.08);
+
+  color-scheme: light;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --color-bg: #1c1c1e;
+    --color-bg-secondary: #2c2c2e;
+    --color-bg-tertiary: #3a3a3c;
+    --color-text: #f5f5f7;
+    --color-text-secondary: #98989d;
+    --color-text-tertiary: #6e6e73;
+    --color-border: rgba(255, 255, 255, 0.1);
+    --color-accent: #7a78ff;
+
+    --color-green: #32d74b;
+    --color-green-bg: rgba(50, 215, 75, 0.14);
+    --color-orange: #ff9f0a;
+    --color-orange-bg: rgba(255, 159, 10, 0.14);
+    --color-red: #ff453a;
+    --color-red-bg: rgba(255, 69, 58, 0.14);
+
+    --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
+    --shadow-md: 0 4px 20px rgba(0, 0, 0, 0.4);
+
+    color-scheme: dark;
+  }
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  background: var(--color-bg);
+  color: var(--color-text);
+  font-family: var(--font-family);
+  -webkit-font-smoothing: antialiased;
+}

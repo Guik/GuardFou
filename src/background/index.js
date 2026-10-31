@@ -2,13 +2,18 @@ import { getRegistrableDomain, getDomainLabel } from '../core/domain.js';
 import { findBrandByAlias, isOfficialDomain, looksLikeBrandPlusGenericWord, isNearMissSpelling } from '../core/brands.js';
 import { isWatchedRegistrar } from '../core/registrar.js';
 import { computeScore } from '../core/scoring.js';
+import { detectTechnologies, detectSocialLinks, findLegalLinks, summarizeSeoMeta } from '../core/identity.js';
 import { BRANDS_FR } from '../data/brands-fr.js';
 import { WATCHED_REGISTRARS } from '../data/watched-registrars.js';
 import { getDomainRdapInfo } from './rdap.js';
 import { getDnssecStatus } from './dnssec.js';
+import { getLegalPageAnalysis } from './legal.js';
 
 /** @type {Map<number, import('../core/scoring.js').Verdict>} */
 const verdictsByTab = new Map();
+
+/** @type {Map<number, {domain: string, payload: Record<string, any>}>} */
+const pageContextByTab = new Map();
 
 const BADGE_COLORS = { green: '#2e7d32', orange: '#ed6c02', red: '#c62828' };
 
@@ -19,13 +24,20 @@ browser.runtime.onMessage.addListener((message, sender) => {
   if (message?.type === 'GET_VERDICT') {
     return Promise.resolve(verdictsByTab.get(message.tabId) ?? null);
   }
+  if (message?.type === 'GET_IDENTITY_CARD') {
+    return buildIdentityCard(message.tabId);
+  }
   return undefined;
 });
 
-browser.tabs.onRemoved.addListener((tabId) => verdictsByTab.delete(tabId));
+browser.tabs.onRemoved.addListener((tabId) => {
+  verdictsByTab.delete(tabId);
+  pageContextByTab.delete(tabId);
+});
 browser.tabs.onUpdated.addListener((tabId, changeInfo) => {
   if (changeInfo.status === 'loading' && changeInfo.url) {
     verdictsByTab.delete(tabId);
+    pageContextByTab.delete(tabId);
     clearBadge(tabId);
   }
 });
@@ -33,6 +45,8 @@ browser.tabs.onUpdated.addListener((tabId, changeInfo) => {
 async function handlePageSignals(tabId, url, payload) {
   const domain = getRegistrableDomain(url);
   if (!domain) return;
+
+  pageContextByTab.set(tabId, { domain, payload });
 
   const { allowlist = [], customWatchedRegistrars = [] } = await browser.storage.local.get(['allowlist', 'customWatchedRegistrars']);
   const isAllowlisted = allowlist.includes(domain);
@@ -74,6 +88,41 @@ async function handlePageSignals(tabId, url, payload) {
   if (verdict.band === 'red') {
     browser.tabs.sendMessage(tabId, { type: 'SHOW_BANNER', verdict }).catch(() => {});
   }
+}
+
+/**
+ * Builds the "fiche d'identité" for a tab: purely informational, on-demand
+ * (only fetched when the popup's identity panel is opened), reusing
+ * whatever RDAP/legal-page data is already cached.
+ */
+async function buildIdentityCard(tabId) {
+  const ctx = pageContextByTab.get(tabId);
+  if (!ctx) return null;
+  const { domain, payload } = ctx;
+
+  const allLinks = payload?.allLinks ?? [];
+  const legalLinks = findLegalLinks(allLinks);
+
+  const [rdapInfo, legalAnalysis] = await Promise.all([
+    getDomainRdapInfo(domain),
+    getLegalPageAnalysis(legalLinks[0]?.href ?? null, payload?.htmlLang ?? null),
+  ]);
+
+  return {
+    domain,
+    registrationDate: rdapInfo.registeredAt,
+    lastChangedDate: rdapInfo.lastChangedAt,
+    expirationDate: rdapInfo.expiresAt,
+    registrarName: rdapInfo.registrarName,
+    technologies: detectTechnologies(payload?.techHints ?? '', payload?.generatorMeta ?? null),
+    socialLinks: detectSocialLinks(allLinks.map((l) => l.href)),
+    seoMetaSummary: payload?.seoMeta ? summarizeSeoMeta(payload.seoMeta) : [],
+    address: legalAnalysis.address,
+    legalText: legalAnalysis.legal,
+    // Not available without a paid/keyed API (SimilarWeb, Ahrefs, Moz...) — deferred.
+    popularity: null,
+    referringLinks: null,
+  };
 }
 
 function setBadge(tabId, verdict) {

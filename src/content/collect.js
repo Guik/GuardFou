@@ -1,6 +1,9 @@
-// Classic (non-module) content script: runs in every page, does no network
-// calls itself, just scrapes cheap DOM signals and hands them to the
-// background script, which does the scoring and any network lookups.
+// Classic (non-module) content script — Firefox's content_scripts manifest
+// key has no "type": "module" option, so this can't use ES imports. It does
+// no network calls itself, just scrapes raw DOM material (plus a few cheap
+// derived fields) and hands it to the background script, which does the
+// scoring, the richer identity-card parsing (via core/identity.js, an ES
+// module there), and any network calls.
 (function () {
   function getMetaContent(name) {
     const el = document.querySelector(`meta[property="${name}"], meta[name="${name}"]`);
@@ -40,12 +43,47 @@
     return hasEuroPrice && hasCartWording;
   }
 
+  function getAllLinks() {
+    // `a.href` (the DOM property, not getAttribute) resolves relative URLs
+    // against the page's base URI, so these are always absolute. The actual
+    // tech/social/legal-link detection logic lives in core/identity.js and
+    // runs in the background script, which can use ES modules.
+    return [...document.querySelectorAll('a[href]')].map((a) => ({ text: a.textContent.trim(), href: a.href }));
+  }
+
+  function getTechHints() {
+    // A compact substitute for shipping the whole page HTML to the
+    // background: enough surface (script/stylesheet URLs, body classes) for
+    // CMS/platform fingerprinting without the cost of a multi-MB payload.
+    const scriptSrcs = [...document.querySelectorAll('script[src]')].map((s) => s.src);
+    const linkHrefs = [...document.querySelectorAll('link[href]')].map((l) => l.href);
+    return [...scriptSrcs, ...linkHrefs, document.body.className || ''].join(' ');
+  }
+
+  function getSeoMeta() {
+    const images = document.querySelectorAll('img');
+    return {
+      hasMetaDescription: Boolean(getMetaContent('description')),
+      hasCanonical: Boolean(document.querySelector('link[rel="canonical"]')),
+      hasOgTitle: Boolean(getMetaContent('og:title')),
+      titleLength: (document.title || '').trim().length,
+      h1Count: document.querySelectorAll('h1').length,
+      imageCount: images.length,
+      imagesMissingAlt: [...images].filter((img) => !img.hasAttribute('alt')).length,
+    };
+  }
+
   const payload = {
     title: document.title || null,
     ogSiteName: getMetaContent('og:site_name'),
     jsonLdOrgName: getJsonLdOrgName(),
     footerCopyright: getFooterCopyright(),
     isLikelyShop: looksLikeShop(),
+    htmlLang: document.documentElement.getAttribute('lang'),
+    generatorMeta: getMetaContent('generator'),
+    techHints: getTechHints(),
+    allLinks: getAllLinks(),
+    seoMeta: getSeoMeta(),
   };
 
   browser.runtime.sendMessage({ type: 'FAKESHIELD_SIGNALS', payload }).catch(() => {});
@@ -56,24 +94,68 @@
     }
   });
 
-  // Static markup only (no interpolation); all dynamic text below is set
-  // via textContent, never innerHTML, so page-controlled strings (brand
-  // names, reasons) can never be interpreted as HTML.
+  // Static markup only (no interpolation); all dynamic text below is set via
+  // textContent, never innerHTML, so page-controlled strings (brand names,
+  // reasons) can never be interpreted as HTML.
   const BANNER_STYLE = `
     :host {
       all: initial;
       position: fixed; top: 0; left: 0; right: 0; z-index: 2147483647;
       display: block;
+      animation: fakeshield-drop 0.45s cubic-bezier(0.22, 1, 0.36, 1);
     }
-    .bar { font-family: system-ui, sans-serif; background: #c62828; color: #fff; padding: 10px 16px;
-           display: flex; align-items: center; justify-content: space-between; gap: 12px; box-shadow: 0 2px 6px rgba(0,0,0,.3); }
-    .msg { font-size: 14px; line-height: 1.4; }
-    .msg b { font-size: 15px; display: block; margin-bottom: 2px; }
-    button { background: rgba(255,255,255,.15); color: #fff; border: 1px solid rgba(255,255,255,.4);
-             border-radius: 4px; padding: 6px 10px; font-size: 13px; cursor: pointer; }
+    @keyframes fakeshield-drop {
+      from { transform: translateY(-100%); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
+    }
+    .bar {
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, sans-serif;
+      background: #d70015; color: #fff; padding: 12px 18px;
+      display: flex; align-items: center; gap: 14px;
+      box-shadow: 0 2px 12px rgba(0,0,0,.25);
+    }
+    .icon { flex-shrink: 0; width: 22px; height: 22px; }
+    .msg { flex: 1; min-width: 0; font-size: 13px; line-height: 1.4; }
+    .msg b { font-size: 14px; font-weight: 600; display: block; margin-bottom: 1px; letter-spacing: -0.01em; }
+    .msg span { opacity: 0.92; }
+    button {
+      font-family: inherit; background: rgba(255,255,255,.16); color: #fff; border: none;
+      border-radius: 999px; padding: 7px 14px; font-size: 12px; font-weight: 600; cursor: pointer;
+      transition: background-color 0.15s ease;
+    }
     button:hover { background: rgba(255,255,255,.3); }
     .actions { display: flex; gap: 8px; flex-shrink: 0; }
   `;
+
+  const SVG_NS = 'http://www.w3.org/2000/svg';
+
+  function createWarningIcon() {
+    const svg = document.createElementNS(SVG_NS, 'svg');
+    svg.setAttribute('viewBox', '0 0 24 24');
+    svg.setAttribute('fill', 'none');
+
+    const bg = document.createElementNS(SVG_NS, 'circle');
+    bg.setAttribute('cx', '12');
+    bg.setAttribute('cy', '12');
+    bg.setAttribute('r', '10');
+    bg.setAttribute('fill', '#fff');
+    bg.setAttribute('fill-opacity', '0.18');
+
+    const stem = document.createElementNS(SVG_NS, 'path');
+    stem.setAttribute('d', 'M12 7v6');
+    stem.setAttribute('stroke', '#fff');
+    stem.setAttribute('stroke-width', '2');
+    stem.setAttribute('stroke-linecap', 'round');
+
+    const dot = document.createElementNS(SVG_NS, 'circle');
+    dot.setAttribute('cx', '12');
+    dot.setAttribute('cy', '16.2');
+    dot.setAttribute('r', '1.15');
+    dot.setAttribute('fill', '#fff');
+
+    svg.append(bg, stem, dot);
+    return svg;
+  }
 
   function showBanner(verdict) {
     if (document.getElementById('fakeshield-banner-host')) return;
@@ -88,10 +170,14 @@
     const bar = document.createElement('div');
     bar.className = 'bar';
 
+    const icon = document.createElement('div');
+    icon.className = 'icon';
+    icon.appendChild(createWarningIcon());
+
     const msg = document.createElement('div');
     msg.className = 'msg';
     const title = document.createElement('b');
-    title.textContent = `⚠️ FakeShield : ce site est suspect (score ${verdict.score}/100)`;
+    title.textContent = `FakeShield : ce site est suspect (score ${verdict.score}/100)`;
     const detail = document.createElement('span');
     detail.textContent = verdict.reasons[0]?.message || '';
     msg.append(title, detail);
@@ -109,7 +195,7 @@
     dismissBtn.addEventListener('click', () => host.remove());
     actions.append(detailsBtn, dismissBtn);
 
-    bar.append(msg, actions);
+    bar.append(icon, msg, actions);
     shadow.append(style, bar);
     document.documentElement.appendChild(host);
   }

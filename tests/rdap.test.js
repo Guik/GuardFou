@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { extractDomainAgeDays, extractRegistrarName } from '../src/core/rdap.js';
+import { extractDomainAgeDays, extractRegistrarName, extractDomainDates } from '../src/core/rdap.js';
 
 const CHAUSSONCONSTRUCTION_RDAP = {
   objectClassName: 'domain',
@@ -39,4 +39,15 @@ test('extractDomainAgeDays computes days since the registration event', () => {
 test('extractDomainAgeDays returns null with no registration event', () => {
   assert.equal(extractDomainAgeDays({ events: [{ eventAction: 'expiration', eventDate: '2027-01-01T00:00:00Z' }] }), null);
   assert.equal(extractDomainAgeDays({}), null);
+});
+
+test('extractDomainDates reads registration, last-changed and expiration', () => {
+  const dates = extractDomainDates(CHAUSSONCONSTRUCTION_RDAP);
+  assert.equal(dates.registeredAt, '2026-08-04T08:36:30Z');
+  assert.equal(dates.expiresAt, '2027-08-04T08:36:30Z');
+  assert.equal(dates.lastChangedAt, null); // not present in this fixture
+});
+
+test('extractDomainDates handles a missing events array', () => {
+  assert.deepEqual(extractDomainDates({}), { registeredAt: null, lastChangedAt: null, expiresAt: null });
 });

@@ -2,28 +2,57 @@
 <html lang="fr">
 <head>
   <meta charset="utf-8" />
+  <link rel="stylesheet" href="../shared/tokens.css" />
   <link rel="stylesheet" href="popup.css" />
 </head>
 <body>
   <header>
     <img src="../../icons/icon-48.png" alt="" width="20" height="20" />
-    <strong>FakeShield</strong>
+    <span class="wordmark">FakeShield</span>
   </header>
 
-  <section id="activate" hidden>
-    <p>FakeShield a besoin d'accéder aux pages que vous visitez pour les analyser.</p>
-    <button id="activate-btn">Activer FakeShield</button>
+  <section id="activate" class="state" hidden>
+    <p class="lede">FakeShield a besoin d'accéder aux pages que vous visitez pour les analyser.</p>
+    <button id="activate-btn" class="btn btn-primary">Activer FakeShield</button>
   </section>
 
-  <section id="result" hidden>
-    <div id="band-badge" class="band"></div>
-    <p id="domain"></p>
-    <ul id="reasons"></ul>
-    <button id="trust-btn">Faire confiance à ce site</button>
+  <section id="result" class="state" hidden>
+    <div class="score-row">
+      <div class="score-ring" id="score-ring">
+        <svg viewBox="0 0 120 120" width="84" height="84">
+          <circle class="ring-track" cx="60" cy="60" r="52" />
+          <circle class="ring-progress" id="ring-progress" cx="60" cy="60" r="52" />
+        </svg>
+        <div class="score-ring-label">
+          <span id="score-number" class="score-number">—</span>
+        </div>
+      </div>
+      <div class="score-meta">
+        <p id="band-label" class="band-label"></p>
+        <p id="domain" class="domain"></p>
+      </div>
+    </div>
+
+    <ul id="reasons" class="reasons"></ul>
+
+    <button id="trust-btn" class="btn btn-ghost">Faire confiance à ce site</button>
   </section>
 
-  <section id="empty" hidden>
-    <p>Aucune analyse pour cette page (ce n'est pas une page de boutique détectée, ou la page vient juste de charger).</p>
+  <section id="empty" class="state" hidden>
+    <p class="lede muted">Aucune analyse pour cette page — ce n'est pas une page de boutique détectée, ou la page vient juste de charger.</p>
+  </section>
+
+  <section id="identity-toggle" class="state" hidden>
+    <button id="identity-btn" class="btn btn-ghost">Voir la fiche d'identité du site</button>
+  </section>
+
+  <section id="identity" class="state" hidden>
+    <div class="identity-header">
+      <h2>Fiche d'identité</h2>
+      <button id="identity-close-btn" class="btn-icon" aria-label="Fermer">✕</button>
+    </div>
+    <p id="identity-loading" class="lede muted">Analyse en cours…</p>
+    <dl id="identity-fields" class="identity-fields" hidden></dl>
   </section>
 
   <footer>

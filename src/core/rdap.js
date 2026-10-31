@@ -18,6 +18,20 @@ export function extractDomainAgeDays(rdapData) {
 }
 
 /**
+ * Registration/last-change/expiration dates from the RDAP events array, as
+ * ISO strings (or null when absent) — for display, not scoring.
+ * @param {{events?: Array<{eventAction:string, eventDate:string}>}} rdapData
+ */
+export function extractDomainDates(rdapData) {
+  const findEvent = (action) => (rdapData?.events || []).find((e) => e.eventAction === action)?.eventDate ?? null;
+  return {
+    registeredAt: findEvent('registration'),
+    lastChangedAt: findEvent('last changed'),
+    expiresAt: findEvent('expiration'),
+  };
+}
+
+/**
  * Registrar's display name (vCard "fn") from the entity with role "registrar".
  * @param {{entities?: Array<{roles?: string[], vcardArray?: [string, Array<any[]>]}>}} rdapData
  * @returns {string|null}

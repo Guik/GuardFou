@@ -1,71 +1,286 @@
 body {
-  width: 320px;
+  width: 348px;
+  max-height: 560px;
+  overflow-y: auto;
   margin: 0;
-  font-family: system-ui, sans-serif;
-  font-size: 14px;
-  color: #1a1a1a;
+  font-size: 13px;
+  line-height: 1.45;
 }
 
 header {
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 10px 14px;
-  border-bottom: 1px solid #eee;
+  gap: var(--space-2);
+  padding: var(--space-3) var(--space-4);
 }
 
-section {
-  padding: 12px 14px;
+header img {
+  border-radius: 5px;
 }
 
-.band {
-  display: inline-block;
-  padding: 4px 10px;
-  border-radius: 12px;
+.wordmark {
+  font-size: 14px;
   font-weight: 600;
-  color: #fff;
-  margin-bottom: 8px;
+  letter-spacing: -0.01em;
 }
 
-.band.green { background: #2e7d32; }
-.band.orange { background: #ed6c02; }
-.band.red { background: #c62828; }
+.state {
+  padding: var(--space-2) var(--space-4) var(--space-4);
+}
 
-#domain {
+.lede {
+  margin: 0 0 var(--space-3);
+}
+
+.muted {
+  color: var(--color-text-secondary);
+}
+
+/* Score ring ------------------------------------------------------------ */
+
+.score-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  margin-bottom: var(--space-4);
+}
+
+.score-ring {
+  position: relative;
+  flex-shrink: 0;
+  width: 84px;
+  height: 84px;
+}
+
+.score-ring svg {
+  transform: rotate(-90deg);
+}
+
+.ring-track,
+.ring-progress {
+  fill: none;
+  stroke-width: 9;
+}
+
+.ring-track {
+  stroke: var(--color-bg-tertiary);
+}
+
+.ring-progress {
+  stroke-linecap: round;
+  transition: stroke-dashoffset 0.7s cubic-bezier(0.22, 1, 0.36, 1), stroke 0.3s ease;
+}
+
+#score-ring.green .ring-progress { stroke: var(--color-green); }
+#score-ring.orange .ring-progress { stroke: var(--color-orange); }
+#score-ring.red .ring-progress { stroke: var(--color-red); }
+
+.score-ring-label {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.score-number {
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums;
+}
+
+.score-meta {
+  min-width: 0;
+}
+
+.band-label {
+  margin: 0 0 2px;
+  font-size: 15px;
   font-weight: 600;
-  margin: 0 0 8px;
 }
 
-#reasons {
-  margin: 0 0 10px;
-  padding-left: 18px;
+.band-label.green { color: var(--color-green); }
+.band-label.orange { color: var(--color-orange); }
+.band-label.red { color: var(--color-red); }
+
+.domain {
+  margin: 0;
+  color: var(--color-text-secondary);
+  font-size: 12px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
-#reasons li {
-  margin-bottom: 4px;
+/* Reasons ----------------------------------------------------------------- */
+
+.reasons {
+  list-style: none;
+  margin: 0 0 var(--space-4);
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
 }
 
-button {
+.reasons li {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  background: var(--color-bg-secondary);
+  border-radius: var(--radius-sm);
+}
+
+.reasons li::before {
+  content: '';
+  flex-shrink: 0;
+  width: 6px;
+  height: 6px;
+  margin-top: 6px;
+  border-radius: 50%;
+  background: var(--color-text-tertiary);
+}
+
+.reasons li.weight-positive::before { background: var(--color-red); }
+.reasons li.weight-negative::before { background: var(--color-green); }
+
+/* Buttons ------------------------------------------------------------- */
+
+.btn {
   width: 100%;
-  padding: 8px;
-  border: 1px solid #ccc;
-  border-radius: 6px;
-  background: #f5f5f5;
-  cursor: pointer;
+  padding: 9px 14px;
+  border: none;
+  border-radius: var(--radius-sm);
+  font-family: inherit;
   font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity 0.15s ease, background-color 0.15s ease;
 }
 
-button:hover {
-  background: #eee;
+.btn-primary {
+  background: var(--color-accent);
+  color: #fff;
 }
+
+.btn-primary:hover {
+  opacity: 0.88;
+}
+
+.btn-ghost {
+  background: var(--color-bg-secondary);
+  color: var(--color-text);
+}
+
+.btn-ghost:hover {
+  background: var(--color-bg-tertiary);
+}
+
+.btn-icon {
+  border: none;
+  background: none;
+  color: var(--color-text-secondary);
+  font-size: 13px;
+  cursor: pointer;
+  padding: var(--space-1);
+  line-height: 1;
+}
+
+.btn-icon:hover {
+  color: var(--color-text);
+}
+
+/* Identity card --------------------------------------------------------- */
+
+.identity-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--space-2);
+}
+
+.identity-header h2 {
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--color-text-secondary);
+  margin: 0;
+}
+
+.identity-fields {
+  margin: 0;
+}
+
+.identity-fields dt {
+  font-weight: 600;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: var(--color-text-tertiary);
+  margin-top: var(--space-3);
+}
+
+.identity-fields dt:first-child {
+  margin-top: 0;
+}
+
+.identity-fields dd {
+  margin: 3px 0 0;
+}
+
+.identity-fields ul {
+  margin: 2px 0 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.identity-fields .seo-ok,
+.identity-fields .seo-fail {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+}
+
+.identity-fields .seo-ok::before,
+.identity-fields .seo-fail::before {
+  flex-shrink: 0;
+  margin-top: 1px;
+  font-size: 11px;
+}
+
+.identity-fields .seo-ok::before { content: '✓'; color: var(--color-green); }
+.identity-fields .seo-fail::before { content: '!'; color: var(--color-orange); font-weight: 700; }
+
+.identity-fields .warning {
+  color: var(--color-red);
+  font-weight: 600;
+}
+
+.identity-fields .muted {
+  color: var(--color-text-tertiary);
+  font-style: italic;
+}
+
+/* Footer ------------------------------------------------------------- */
 
 footer {
-  padding: 8px 14px;
-  border-top: 1px solid #eee;
+  padding: var(--space-2) var(--space-4) var(--space-3);
+  border-top: 1px solid var(--color-border);
   text-align: right;
 }
 
 footer a {
-  font-size: 12px;
-  color: #666;
+  font-size: 11px;
+  color: var(--color-text-secondary);
+  text-decoration: none;
+}
+
+footer a:hover {
+  color: var(--color-text);
 }
