@@ -6,6 +6,7 @@ import {
   hasUserinfoAtSymbol,
   hasFakeHttpsToken,
   hasRedirectionInPath,
+  isInsecureHttp,
 } from '../core/domain.js';
 import { findBrandByAlias, isOfficialDomain, looksLikeBrandPlusGenericWord, isNearMissSpelling } from '../core/brands.js';
 import { isWatchedRegistrar } from '../core/registrar.js';
@@ -103,6 +104,7 @@ async function handlePageSignals(tabId, url, payload) {
     hasUserinfoAtSymbol: hasUserinfoAtSymbol(url),
     hasFakeHttpsToken: hasFakeHttpsToken(url),
     hasRedirectionInPath: hasRedirectionInPath(url),
+    isInsecureHttp: isInsecureHttp(url),
   };
 
   // These need network calls: only pay for them when there's an actual

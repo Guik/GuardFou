@@ -8,6 +8,7 @@ import {
   hasUserinfoAtSymbol,
   hasFakeHttpsToken,
   hasRedirectionInPath,
+  isInsecureHttp,
 } from '../src/core/domain.js';
 
 test('getRegistrableDomain strips subdomains and path', () => {
@@ -62,4 +63,13 @@ test('hasFakeHttpsToken ignores "https" appearing only in the path', () => {
 test('hasRedirectionInPath catches a spliced second URL', () => {
   assert.equal(hasRedirectionInPath('http://legit.com//evil.com/'), true);
   assert.equal(hasRedirectionInPath('https://chausson.fr/produits/parquet'), false);
+});
+
+test('isInsecureHttp flags plain HTTP, not HTTPS', () => {
+  assert.equal(isInsecureHttp('http://chaussonconstruction.com/'), true);
+  assert.equal(isInsecureHttp('https://chausson.fr/'), false);
+});
+
+test('isInsecureHttp handles an unparsable URL gracefully', () => {
+  assert.equal(isInsecureHttp('not a url'), false);
 });

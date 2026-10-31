@@ -115,6 +115,11 @@ test('a short registration span on an old domain adds nothing (just a normal ann
   assert.ok(!verdict.reasons.some((r) => r.id === 'short-registration-span'));
 });
 
+test('plain HTTP adds a small weight', () => {
+  const verdict = computeScore({ isInsecureHttp: true });
+  assert.ok(verdict.reasons.some((r) => r.id === 'insecure-http' && r.weight === 10));
+});
+
 test('none of the new structural signals fire when false/absent', () => {
   const verdict = computeScore({});
   assert.equal(verdict.reasons.length, 0);

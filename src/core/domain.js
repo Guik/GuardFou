@@ -87,3 +87,19 @@ export function hasRedirectionInPath(url) {
     return false;
   }
 }
+
+/**
+ * True when the page is served over plain HTTP. Firefox's own address bar
+ * already flags this, so the weight for this signal stays modest — it's
+ * meant to reinforce other signals on a page that otherwise looks like a
+ * shop, not to carry the verdict on its own.
+ * @param {string} url
+ * @returns {boolean}
+ */
+export function isInsecureHttp(url) {
+  try {
+    return new URL(url).protocol === 'http:';
+  } catch {
+    return false;
+  }
+}

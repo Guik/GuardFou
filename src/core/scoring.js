@@ -25,6 +25,7 @@ export const THRESHOLDS = { orange: 30, red: 60 };
  *  - hasFakeHttpsToken: boolean ("https" embedded in the hostname itself)
  *  - hasRedirectionInPath: boolean ("//" inside the URL path)
  *  - isShortRegistrationSpan: boolean (domain registered for ~1 year only)
+ *  - isInsecureHttp: boolean (page served over plain HTTP, not HTTPS)
  *
  * @param {Record<string, any>} signals
  * @returns {Verdict}
@@ -66,6 +67,17 @@ export function computeScore(signals) {
       id: 'redirection-in-path',
       weight: 10,
       message: "L'adresse contient un « // » dans son chemin, ce qui peut servir à dissimuler une redirection vers un autre site.",
+    });
+  }
+
+  // Firefox's own address bar already flags plain HTTP, so this stays a
+  // small nudge — it reinforces other signals rather than carrying the
+  // verdict on its own.
+  if (signals.isInsecureHttp) {
+    reasons.push({
+      id: 'insecure-http',
+      weight: 10,
+      message: "Le site n'utilise pas HTTPS : la connexion n'est pas chiffrée.",
     });
   }
 
