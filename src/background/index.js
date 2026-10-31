@@ -1,8 +1,11 @@
 import { getRegistrableDomain, getDomainLabel } from '../core/domain.js';
 import { findBrandByAlias, isOfficialDomain, looksLikeBrandPlusGenericWord, isNearMissSpelling } from '../core/brands.js';
+import { isWatchedRegistrar } from '../core/registrar.js';
 import { computeScore } from '../core/scoring.js';
 import { BRANDS_FR } from '../data/brands-fr.js';
-import { getDomainAgeDays } from './rdap.js';
+import { WATCHED_REGISTRARS } from '../data/watched-registrars.js';
+import { getDomainRdapInfo } from './rdap.js';
+import { getDnssecStatus } from './dnssec.js';
 
 /** @type {Map<number, import('../core/scoring.js').Verdict>} */
 const verdictsByTab = new Map();
@@ -31,8 +34,9 @@ async function handlePageSignals(tabId, url, payload) {
   const domain = getRegistrableDomain(url);
   if (!domain) return;
 
-  const { allowlist = [] } = await browser.storage.local.get('allowlist');
+  const { allowlist = [], customWatchedRegistrars = [] } = await browser.storage.local.get(['allowlist', 'customWatchedRegistrars']);
   const isAllowlisted = allowlist.includes(domain);
+  const watchedRegistrars = [...WATCHED_REGISTRARS, ...customWatchedRegistrars];
 
   const claimedText = [payload?.title, payload?.ogSiteName, payload?.jsonLdOrgName, payload?.footerCopyright]
     .filter(Boolean)
@@ -48,11 +52,18 @@ async function handlePageSignals(tabId, url, payload) {
     isNearMissSpelling: matchedBrand ? isNearMissSpelling(domainLabel, matchedBrand) : false,
   };
 
-  // Domain age needs a network call: only pay for it when the page looks
-  // like a shop, or when it already looks suspicious from free signals.
+  // These need network calls: only pay for them when the page looks like a
+  // shop, or when it already looks suspicious from free signals.
   const worthCheckingAge = !isAllowlisted && (payload?.isLikelyShop || signals.matchedBrand);
   if (worthCheckingAge) {
-    signals.domainAgeDays = await getDomainAgeDays(domain);
+    const [rdapInfo, dnssec] = await Promise.all([
+      getDomainRdapInfo(domain),
+      getDnssecStatus(domain),
+    ]);
+    signals.domainAgeDays = rdapInfo.ageDays;
+    signals.registrarName = rdapInfo.registrarName;
+    signals.isWatchedRegistrar = isWatchedRegistrar(rdapInfo.registrarName, watchedRegistrars);
+    signals.dnssec = dnssec;
   }
 
   const verdict = computeScore(signals);

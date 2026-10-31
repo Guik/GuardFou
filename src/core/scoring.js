@@ -17,6 +17,9 @@ export const THRESHOLDS = { orange: 30, red: 60 };
  *  - looksLikeBrandPlusGenericWord: boolean
  *  - isNearMissSpelling: boolean
  *  - isAllowlisted: boolean
+ *  - dnssec: { signed: boolean, validated: boolean, bogus: boolean } | null
+ *  - registrarName: string | null
+ *  - isWatchedRegistrar: boolean (registrarName matched your watched-registrars list)
  *
  * @param {Record<string, any>} signals
  * @returns {Verdict}
@@ -37,6 +40,29 @@ export function computeScore(signals) {
     } else if (signals.domainAgeDays > 365 * 5) {
       reasons.push({ id: 'domain-old', weight: -15, message: 'Le nom de domaine existe depuis plus de 5 ans.' });
     }
+  }
+
+  // A watched registrar alone proves nothing — they're mostly large,
+  // legitimate wholesale registrars. Only nudge the score when it's paired
+  // with a recently-created domain, where it reinforces that signal.
+  if (signals.isWatchedRegistrar && typeof signals.domainAgeDays === 'number' && signals.domainAgeDays < 365 * 2) {
+    reasons.push({
+      id: 'watched-registrar-recent-domain',
+      weight: 8,
+      message: `Domaine récent enregistré via ${signals.registrarName}, un bureau d'enregistrement déjà vu sur des boutiques éphémères.`,
+    });
+  }
+
+  if (signals.dnssec?.bogus) {
+    reasons.push({
+      id: 'dnssec-bogus',
+      weight: 20,
+      message: 'La validation DNSSEC du domaine échoue (signature invalide) : signe possible de détournement ou de usurpation DNS.',
+    });
+  } else if (signals.dnssec?.validated) {
+    // Most legitimate shops don't sign their zone either, so the absence of
+    // DNSSEC is deliberately not penalised — only a known-bad signature is.
+    reasons.push({ id: 'dnssec-ok', weight: -5, message: 'Le domaine est protégé par DNSSEC et la signature est valide.' });
   }
 
   if (signals.matchedBrand && !signals.isOfficialDomain) {

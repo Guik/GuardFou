@@ -60,7 +60,11 @@
   // via textContent, never innerHTML, so page-controlled strings (brand
   // names, reasons) can never be interpreted as HTML.
   const BANNER_STYLE = `
-    :host { position: fixed; top: 0; left: 0; right: 0; z-index: 2147483647; }
+    :host {
+      all: initial;
+      position: fixed; top: 0; left: 0; right: 0; z-index: 2147483647;
+      display: block;
+    }
     .bar { font-family: system-ui, sans-serif; background: #c62828; color: #fff; padding: 10px 16px;
            display: flex; align-items: center; justify-content: space-between; gap: 12px; box-shadow: 0 2px 6px rgba(0,0,0,.3); }
     .msg { font-size: 14px; line-height: 1.4; }
@@ -76,7 +80,6 @@
 
     const host = document.createElement('div');
     host.id = 'fakeshield-banner-host';
-    host.style.all = 'initial';
     const shadow = host.attachShadow({ mode: 'closed' });
 
     const style = document.createElement('style');

@@ -49,3 +49,34 @@ test('unknown signals (null domain age) do not crash and add no reason', () => {
   assert.equal(verdict.reasons.length, 0);
   assert.equal(verdict.band, 'green');
 });
+
+test('a bogus DNSSEC signature is a red flag', () => {
+  const verdict = computeScore({ dnssec: { signed: false, validated: false, bogus: true } });
+  assert.ok(verdict.reasons.some((r) => r.id === 'dnssec-bogus' && r.weight === 20));
+});
+
+test('a validated DNSSEC signature slightly lowers the score', () => {
+  const verdict = computeScore({ dnssec: { signed: true, validated: true, bogus: false } });
+  assert.ok(verdict.reasons.some((r) => r.id === 'dnssec-ok' && r.weight === -5));
+  assert.equal(verdict.score, 0); // negative weights are clamped, not just "less red"
+});
+
+test('an unsigned zone (the common case) adds no reason either way', () => {
+  const verdict = computeScore({ dnssec: { signed: false, validated: false, bogus: false } });
+  assert.equal(verdict.reasons.length, 0);
+});
+
+test('a watched registrar on a brand-new domain adds a small weight', () => {
+  const verdict = computeScore({ isWatchedRegistrar: true, registrarName: 'Realtime Register B.V.', domainAgeDays: 88 });
+  assert.ok(verdict.reasons.some((r) => r.id === 'watched-registrar-recent-domain' && r.weight === 8));
+});
+
+test('a watched registrar alone (no age data) adds nothing', () => {
+  const verdict = computeScore({ isWatchedRegistrar: true, registrarName: 'Realtime Register B.V.' });
+  assert.equal(verdict.reasons.length, 0);
+});
+
+test('a watched registrar on an old domain adds nothing (registrar alone proves nothing)', () => {
+  const verdict = computeScore({ isWatchedRegistrar: true, registrarName: 'Realtime Register B.V.', domainAgeDays: 365 * 10 });
+  assert.ok(!verdict.reasons.some((r) => r.id === 'watched-registrar-recent-domain'));
+});

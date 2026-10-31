@@ -24,6 +24,20 @@
     </form>
   </section>
 
-  <script src="options.js"></script>
+  <section>
+    <h2>Bureaux d'enregistrement surveillés</h2>
+    <p>
+      Signalés légèrement (+8) uniquement si le domaine est aussi récent (&lt; 2 ans) —
+      le registrar seul ne prouve rien. Liste intégrée : <em id="builtin-registrars"></em>.
+      Ajoutez-en d'autres que vous avez vous-même constatés.
+    </p>
+    <ul id="registrar-list"></ul>
+    <form id="add-registrar-form">
+      <input id="add-registrar-input" type="text" placeholder="Nom du bureau d'enregistrement" />
+      <button type="submit">Ajouter</button>
+    </form>
+  </section>
+
+  <script src="options.js" type="module"></script>
 </body>
 </html>

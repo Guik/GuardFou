@@ -1,3 +1,5 @@
+import { WATCHED_REGISTRARS } from '../data/watched-registrars.js';
+
 async function refreshPermissionStatus() {
   const hasAccess = await browser.permissions.contains({ origins: ['<all_urls>'] });
   document.getElementById('permission-status').textContent = hasAccess
@@ -45,5 +47,42 @@ document.getElementById('add-form').addEventListener('submit', async (event) => 
   refreshAllowlist();
 });
 
+async function refreshRegistrarList() {
+  const { customWatchedRegistrars = [] } = await browser.storage.local.get('customWatchedRegistrars');
+  const ul = document.getElementById('registrar-list');
+  ul.innerHTML = '';
+  for (const name of customWatchedRegistrars) {
+    const li = document.createElement('li');
+    const span = document.createElement('span');
+    span.textContent = name;
+    const removeBtn = document.createElement('button');
+    removeBtn.textContent = 'Retirer';
+    removeBtn.addEventListener('click', async () => {
+      const next = customWatchedRegistrars.filter((r) => r !== name);
+      await browser.storage.local.set({ customWatchedRegistrars: next });
+      refreshRegistrarList();
+    });
+    li.append(span, removeBtn);
+    ul.appendChild(li);
+  }
+}
+
+document.getElementById('add-registrar-form').addEventListener('submit', async (event) => {
+  event.preventDefault();
+  const input = document.getElementById('add-registrar-input');
+  const name = input.value.trim().toLowerCase();
+  if (!name) return;
+  const { customWatchedRegistrars = [] } = await browser.storage.local.get('customWatchedRegistrars');
+  if (!customWatchedRegistrars.includes(name)) {
+    customWatchedRegistrars.push(name);
+    await browser.storage.local.set({ customWatchedRegistrars });
+  }
+  input.value = '';
+  refreshRegistrarList();
+});
+
+document.getElementById('builtin-registrars').textContent = WATCHED_REGISTRARS.join(', ');
+
 refreshPermissionStatus();
 refreshAllowlist();
+refreshRegistrarList();
