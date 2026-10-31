@@ -9,11 +9,31 @@ import { getDomainRdapInfo } from './rdap.js';
 import { getDnssecStatus } from './dnssec.js';
 import { getLegalPageAnalysis } from './legal.js';
 
-/** @type {Map<number, import('../core/scoring.js').Verdict>} */
-const verdictsByTab = new Map();
+// Firefox can unload this background script after a few minutes of
+// inactivity (it's an event page, not a persistent one). A plain in-memory
+// Map would lose every tab's verdict and scraped page data the moment that
+// happens, even though the toolbar badge — which the browser manages
+// natively per tab — keeps showing the old result. browser.storage.session
+// is backed by the browser itself rather than this script's lifetime, so it
+// survives that restart; it's still cleared when the browser session ends.
+const verdictsByTab = sessionTabStore('fakeshield:verdict:');
+const pageContextByTab = sessionTabStore('fakeshield:pagecontext:');
 
-/** @type {Map<number, {domain: string, payload: Record<string, any>}>} */
-const pageContextByTab = new Map();
+function sessionTabStore(prefix) {
+  return {
+    async get(tabId) {
+      const key = prefix + tabId;
+      const stored = await browser.storage.session.get(key);
+      return stored[key] ?? null;
+    },
+    async set(tabId, value) {
+      await browser.storage.session.set({ [prefix + tabId]: value });
+    },
+    async delete(tabId) {
+      await browser.storage.session.remove(prefix + tabId);
+    },
+  };
+}
 
 const BADGE_COLORS = { green: '#2e7d32', orange: '#ed6c02', red: '#c62828' };
 
@@ -22,7 +42,7 @@ browser.runtime.onMessage.addListener((message, sender) => {
     return handlePageSignals(sender.tab.id, sender.tab.url, message.payload);
   }
   if (message?.type === 'GET_VERDICT') {
-    return Promise.resolve(verdictsByTab.get(message.tabId) ?? null);
+    return verdictsByTab.get(message.tabId);
   }
   if (message?.type === 'GET_IDENTITY_CARD') {
     return buildIdentityCard(message.tabId);
@@ -31,13 +51,13 @@ browser.runtime.onMessage.addListener((message, sender) => {
 });
 
 browser.tabs.onRemoved.addListener((tabId) => {
-  verdictsByTab.delete(tabId);
-  pageContextByTab.delete(tabId);
+  verdictsByTab.delete(tabId).catch(() => {});
+  pageContextByTab.delete(tabId).catch(() => {});
 });
 browser.tabs.onUpdated.addListener((tabId, changeInfo) => {
   if (changeInfo.status === 'loading' && changeInfo.url) {
-    verdictsByTab.delete(tabId);
-    pageContextByTab.delete(tabId);
+    verdictsByTab.delete(tabId).catch(() => {});
+    pageContextByTab.delete(tabId).catch(() => {});
     clearBadge(tabId);
   }
 });
@@ -46,7 +66,7 @@ async function handlePageSignals(tabId, url, payload) {
   const domain = getRegistrableDomain(url);
   if (!domain) return;
 
-  pageContextByTab.set(tabId, { domain, payload });
+  await pageContextByTab.set(tabId, { domain, payload });
 
   const { allowlist = [], customWatchedRegistrars = [] } = await browser.storage.local.get(['allowlist', 'customWatchedRegistrars']);
   const isAllowlisted = allowlist.includes(domain);
@@ -82,7 +102,7 @@ async function handlePageSignals(tabId, url, payload) {
 
   const verdict = computeScore(signals);
   verdict.domain = domain;
-  verdictsByTab.set(tabId, verdict);
+  await verdictsByTab.set(tabId, verdict);
   setBadge(tabId, verdict);
 
   if (verdict.band === 'red') {
@@ -96,7 +116,7 @@ async function handlePageSignals(tabId, url, payload) {
  * whatever RDAP/legal-page data is already cached.
  */
 async function buildIdentityCard(tabId) {
-  const ctx = pageContextByTab.get(tabId);
+  const ctx = await pageContextByTab.get(tabId);
   if (!ctx) return null;
   const { domain, payload } = ctx;
 
