@@ -80,3 +80,42 @@ test('a watched registrar on an old domain adds nothing (registrar alone proves 
   const verdict = computeScore({ isWatchedRegistrar: true, registrarName: 'Realtime Register B.V.', domainAgeDays: 365 * 10 });
   assert.ok(!verdict.reasons.some((r) => r.id === 'watched-registrar-recent-domain'));
 });
+
+test('a literal IP hostname alone is orange, and tips to red combined with another flag', () => {
+  const alone = computeScore({ isIpHostname: true });
+  assert.ok(alone.reasons.some((r) => r.id === 'ip-hostname' && r.weight === 45));
+  assert.equal(alone.band, 'orange');
+
+  const combined = computeScore({ isIpHostname: true, hasUserinfoAtSymbol: true });
+  assert.equal(combined.band, 'red');
+});
+
+test('a userinfo @ trick is a strong red flag', () => {
+  const verdict = computeScore({ hasUserinfoAtSymbol: true });
+  assert.ok(verdict.reasons.some((r) => r.id === 'userinfo-at-symbol' && r.weight === 30));
+});
+
+test('a fake https token in the hostname adds a small weight', () => {
+  const verdict = computeScore({ hasFakeHttpsToken: true });
+  assert.ok(verdict.reasons.some((r) => r.id === 'fake-https-token' && r.weight === 10));
+});
+
+test('a // redirection in the path adds a small weight', () => {
+  const verdict = computeScore({ hasRedirectionInPath: true });
+  assert.ok(verdict.reasons.some((r) => r.id === 'redirection-in-path' && r.weight === 10));
+});
+
+test('a short registration span on a brand-new domain adds a small weight', () => {
+  const verdict = computeScore({ isShortRegistrationSpan: true, domainAgeDays: 88 });
+  assert.ok(verdict.reasons.some((r) => r.id === 'short-registration-span' && r.weight === 10));
+});
+
+test('a short registration span on an old domain adds nothing (just a normal annual renewal)', () => {
+  const verdict = computeScore({ isShortRegistrationSpan: true, domainAgeDays: 365 * 10 });
+  assert.ok(!verdict.reasons.some((r) => r.id === 'short-registration-span'));
+});
+
+test('none of the new structural signals fire when false/absent', () => {
+  const verdict = computeScore({});
+  assert.equal(verdict.reasons.length, 0);
+});

@@ -32,6 +32,26 @@ export function extractDomainDates(rdapData) {
 }
 
 /**
+ * True when the domain was registered for only about a year (registration
+ * to expiration), the cheapest commitment a registrar offers. On its own
+ * this proves nothing — plenty of real sites just renew annually for
+ * years — it's only meaningful paired with a domain that's also brand new
+ * (see core/scoring.js): a long-term business usually secures its domain
+ * for several years up front, while a throwaway site typically doesn't.
+ * @param {string|null} registeredAt ISO date
+ * @param {string|null} expiresAt ISO date
+ * @returns {boolean}
+ */
+export function isShortRegistrationSpan(registeredAt, expiresAt) {
+  if (!registeredAt || !expiresAt) return false;
+  const start = new Date(registeredAt).getTime();
+  const end = new Date(expiresAt).getTime();
+  if (Number.isNaN(start) || Number.isNaN(end)) return false;
+  const spanDays = (end - start) / 86400000;
+  return spanDays > 0 && spanDays <= 370; // ~1 year, with slack for leap years/billing quirks
+}
+
+/**
  * Registrar's display name (vCard "fn") from the entity with role "registrar".
  * @param {{entities?: Array<{roles?: string[], vcardArray?: [string, Array<any[]>]}>}} rdapData
  * @returns {string|null}

@@ -1,8 +1,17 @@
-import { getRegistrableDomain, getDomainLabel } from '../core/domain.js';
+import {
+  getRegistrableDomain,
+  getDomainLabel,
+  getHostname,
+  isIpAddress,
+  hasUserinfoAtSymbol,
+  hasFakeHttpsToken,
+  hasRedirectionInPath,
+} from '../core/domain.js';
 import { findBrandByAlias, isOfficialDomain, looksLikeBrandPlusGenericWord, isNearMissSpelling } from '../core/brands.js';
 import { isWatchedRegistrar } from '../core/registrar.js';
 import { computeScore } from '../core/scoring.js';
 import { detectTechnologies, detectSocialLinks, findLegalLinks, summarizeSeoMeta } from '../core/identity.js';
+import { isShortRegistrationSpan } from '../core/rdap.js';
 import { BRANDS_FR } from '../data/brands-fr.js';
 import { WATCHED_REGISTRARS } from '../data/watched-registrars.js';
 import { getDomainRdapInfo } from './rdap.js';
@@ -64,31 +73,42 @@ browser.tabs.onUpdated.addListener((tabId, changeInfo) => {
 
 async function handlePageSignals(tabId, url, payload) {
   const domain = getRegistrableDomain(url);
-  if (!domain) return;
+  const isIpHostname = isIpAddress(url);
+  // A bare IP has no registrable domain but is still very much worth
+  // analyzing (it's one of the strongest signals we have) — only bail out
+  // when there's truly nothing to key off, e.g. about:/file: pages.
+  if (!domain && !isIpHostname) return;
 
-  await pageContextByTab.set(tabId, { domain, payload });
+  const displayId = domain ?? getHostname(url) ?? url;
+  await pageContextByTab.set(tabId, { domain: displayId, payload });
 
   const { allowlist = [], customWatchedRegistrars = [] } = await browser.storage.local.get(['allowlist', 'customWatchedRegistrars']);
-  const isAllowlisted = allowlist.includes(domain);
+  const isAllowlisted = allowlist.includes(displayId);
   const watchedRegistrars = [...WATCHED_REGISTRARS, ...customWatchedRegistrars];
 
   const claimedText = [payload?.title, payload?.ogSiteName, payload?.jsonLdOrgName, payload?.footerCopyright]
     .filter(Boolean)
     .join(' • ');
   const matchedBrand = !isAllowlisted ? findBrandByAlias(claimedText, BRANDS_FR) : null;
-  const domainLabel = getDomainLabel(domain) ?? domain;
+  const domainLabel = domain ? (getDomainLabel(domain) ?? domain) : null;
 
   const signals = {
     isAllowlisted,
     matchedBrand,
-    isOfficialDomain: matchedBrand ? isOfficialDomain(domain, matchedBrand) : false,
-    looksLikeBrandPlusGenericWord: matchedBrand ? looksLikeBrandPlusGenericWord(domainLabel, matchedBrand) : false,
-    isNearMissSpelling: matchedBrand ? isNearMissSpelling(domainLabel, matchedBrand) : false,
+    isOfficialDomain: matchedBrand && domain ? isOfficialDomain(domain, matchedBrand) : false,
+    looksLikeBrandPlusGenericWord: matchedBrand && domainLabel ? looksLikeBrandPlusGenericWord(domainLabel, matchedBrand) : false,
+    isNearMissSpelling: matchedBrand && domainLabel ? isNearMissSpelling(domainLabel, matchedBrand) : false,
+    // Cheap, synchronous, URL-structural checks — always computed, no network.
+    isIpHostname,
+    hasUserinfoAtSymbol: hasUserinfoAtSymbol(url),
+    hasFakeHttpsToken: hasFakeHttpsToken(url),
+    hasRedirectionInPath: hasRedirectionInPath(url),
   };
 
-  // These need network calls: only pay for them when the page looks like a
-  // shop, or when it already looks suspicious from free signals.
-  const worthCheckingAge = !isAllowlisted && (payload?.isLikelyShop || signals.matchedBrand);
+  // These need network calls: only pay for them when there's an actual
+  // domain to look up (not a bare IP) and the page looks like a shop, or
+  // already looks suspicious from free signals.
+  const worthCheckingAge = !isAllowlisted && domain && (payload?.isLikelyShop || signals.matchedBrand);
   if (worthCheckingAge) {
     const [rdapInfo, dnssec] = await Promise.all([
       getDomainRdapInfo(domain),
@@ -97,11 +117,12 @@ async function handlePageSignals(tabId, url, payload) {
     signals.domainAgeDays = rdapInfo.ageDays;
     signals.registrarName = rdapInfo.registrarName;
     signals.isWatchedRegistrar = isWatchedRegistrar(rdapInfo.registrarName, watchedRegistrars);
+    signals.isShortRegistrationSpan = isShortRegistrationSpan(rdapInfo.registeredAt, rdapInfo.expiresAt);
     signals.dnssec = dnssec;
   }
 
   const verdict = computeScore(signals);
-  verdict.domain = domain;
+  verdict.domain = displayId;
   await verdictsByTab.set(tabId, verdict);
   setBadge(tabId, verdict);
 
