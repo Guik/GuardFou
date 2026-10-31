@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <link rel="stylesheet" href="popup.css" />
+</head>
+<body>
+  <header>
+    <img src="../../icons/icon-48.png" alt="" width="20" height="20" />
+    <strong>FakeShield</strong>
+  </header>
+
+  <section id="activate" hidden>
+    <p>FakeShield a besoin d'accéder aux pages que vous visitez pour les analyser.</p>
+    <button id="activate-btn">Activer FakeShield</button>
+  </section>
+
+  <section id="result" hidden>
+    <div id="band-badge" class="band"></div>
+    <p id="domain"></p>
+    <ul id="reasons"></ul>
+    <button id="trust-btn">Faire confiance à ce site</button>
+  </section>
+
+  <section id="empty" hidden>
+    <p>Aucune analyse pour cette page (ce n'est pas une page de boutique détectée, ou la page vient juste de charger).</p>
+  </section>
+
+  <footer>
+    <a id="options-link" href="#">Réglages</a>
+  </footer>
+
+  <script src="popup.js"></script>
+</body>
+</html>

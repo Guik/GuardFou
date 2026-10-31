@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <title>Réglages FakeShield</title>
+  <link rel="stylesheet" href="options.css" />
+</head>
+<body>
+  <h1>FakeShield — Réglages</h1>
+
+  <section>
+    <h2>Accès aux pages</h2>
+    <p id="permission-status">Vérification…</p>
+    <button id="activate-btn">Activer l'accès aux pages visitées</button>
+  </section>
+
+  <section>
+    <h2>Sites de confiance</h2>
+    <p>Ces domaines ne seront jamais signalés.</p>
+    <ul id="allowlist"></ul>
+    <form id="add-form">
+      <input id="add-input" type="text" placeholder="exemple.fr" />
+      <button type="submit">Ajouter</button>
+    </form>
+  </section>
+
+  <script src="options.js"></script>
+</body>
+</html>

@@ -1,0 +1,51 @@
+body {
+  font-family: system-ui, sans-serif;
+  max-width: 480px;
+  margin: 24px auto;
+  color: #1a1a1a;
+}
+
+section {
+  margin-bottom: 24px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid #eee;
+}
+
+h1 {
+  font-size: 18px;
+}
+
+h2 {
+  font-size: 15px;
+}
+
+#allowlist {
+  padding-left: 0;
+  list-style: none;
+}
+
+#allowlist li {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 6px 0;
+  border-bottom: 1px solid #f3f3f3;
+}
+
+#allowlist button {
+  border: none;
+  background: none;
+  color: #c62828;
+  cursor: pointer;
+}
+
+#add-form {
+  display: flex;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+#add-input {
+  flex: 1;
+  padding: 6px 8px;
+}

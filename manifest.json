@@ -1,0 +1,40 @@
+{
+  "manifest_version": 3,
+  "name": "FakeShield",
+  "version": "0.1.0",
+  "description": "Détecte les faux sites marchands : usurpation de marque, domaine trop récent, mentions légales suspectes.",
+  "icons": {
+    "48": "icons/icon-48.png",
+    "96": "icons/icon-96.png"
+  },
+  "browser_specific_settings": {
+    "gecko": {
+      "id": "fakeshield@guik.fr",
+      "strict_min_version": "128.0"
+    }
+  },
+  "permissions": ["storage"],
+  "optional_host_permissions": ["<all_urls>"],
+  "background": {
+    "scripts": ["src/background/index.js"],
+    "type": "module"
+  },
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["src/content/collect.js"],
+      "run_at": "document_idle"
+    }
+  ],
+  "action": {
+    "default_popup": "src/popup/popup.html",
+    "default_icon": {
+      "48": "icons/icon-48.png",
+      "96": "icons/icon-96.png"
+    }
+  },
+  "options_ui": {
+    "page": "src/options/options.html",
+    "open_in_tab": true
+  }
+}
