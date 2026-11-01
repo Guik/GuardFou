@@ -148,10 +148,17 @@ async function computeNetworkSignals(domain, payload, watchedRegistrars, claimed
   // under-reports completeness even for a fully compliant site. Capped at
   // 3 (and deduplicated) so a page with many legal-ish links doesn't
   // trigger a pile of fetches.
-  const legalUrls = [...new Set(legalLinks.map((l) => l.href))].slice(0, 3);
-  if (legalUrls.length === 0 && currentUrl && pageLooksLikeOwnLegalDocument(payload?.title, currentUrl)) {
-    legalUrls.push(currentUrl);
-  }
+  //
+  // The page you're actually on goes first, whenever it qualifies as a
+  // legal document itself — not just as a last resort when no links were
+  // found. Two pages on the same site can have differently-templated
+  // footers (one linking to both mentions légales and CGV, another only
+  // to itself), so without this, being directly on a legal page could give
+  // *less* coverage than being elsewhere on the site, which is backwards.
+  const candidateUrls = [];
+  if (currentUrl && pageLooksLikeOwnLegalDocument(payload?.title, currentUrl)) candidateUrls.push(currentUrl);
+  candidateUrls.push(...legalLinks.map((l) => l.href));
+  const legalUrls = [...new Set(candidateUrls)].slice(0, 3);
   const [rdapInfo, dnssec, legalAnalysis] = await Promise.all([
     getDomainRdapInfo(domain),
     getDnssecStatus(domain),
