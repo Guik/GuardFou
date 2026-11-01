@@ -6,11 +6,18 @@ import { getCompanyInfo } from './companyRegistry.js';
 const TTL_MS = 7 * 24 * 60 * 60 * 1000;
 
 /**
- * Fetches and analyzes a legal-notice page (mentions légales / CGV...),
- * best-effort. Cached a week since legal pages rarely change. Returns a
- * "not found" shape when there's no legal link at all, without a network
- * call.
- * @param {string|null} legalUrl absolute URL of the legal/terms page
+ * Fetches and analyzes a site's legal-notice page(s) — mentions légales,
+ * CGV, privacy policy — best-effort, and combines their text before
+ * checking. Real sites routinely split this information across separate
+ * documents (mentions légales for company identity/hébergeur, CGV for
+ * commercial terms including TVA/médiateur), so checking only one
+ * systematically under-reports completeness even for a fully compliant
+ * site — confirmed on adepem.com, which has both.
+ *
+ * Each page is fetched and cached individually by its own URL, so adding
+ * or dropping a URL from the list doesn't invalidate what's already
+ * cached for the others.
+ * @param {string[]} legalUrls absolute URLs of the legal/terms page(s), already deduplicated/capped by the caller
  * @param {string|null} declaredLang e.g. "fr" from the shop page's <html lang>
  * @returns {Promise<{
  *   address: string|null,
@@ -23,39 +30,51 @@ const TTL_MS = 7 * 24 * 60 * 60 * 1000;
  *   },
  * }>}
  */
-export async function getLegalPageAnalysis(legalUrl, declaredLang) {
-  if (!legalUrl) return emptyAnalysis(declaredLang);
+export async function getLegalPageAnalysis(legalUrls, declaredLang) {
+  const urls = legalUrls.filter(Boolean);
+  if (urls.length === 0) return emptyAnalysis(declaredLang);
 
-  const cacheKey = `legal:${legalUrl}`;
+  const texts = await Promise.all(urls.map(getLegalPageText));
+  const combinedText = texts.filter(Boolean).join(' ').trim();
+  if (!combinedText) return emptyAnalysis(declaredLang);
+
+  return {
+    address: extractPhysicalAddress(combinedText),
+    legal: analyzeLegalText(combinedText, declaredLang),
+    mandatoryMentions: checkMandatoryLegalMentions(combinedText),
+    companyCheck: await checkCompanyRegistry(combinedText),
+  };
+}
+
+/**
+ * A single page's text (+ mailto:/tel: contact targets appended), or ''
+ * on any failure. Cached per URL.
+ * @param {string} url
+ * @returns {Promise<string>}
+ */
+async function getLegalPageText(url) {
+  const cacheKey = `legalpage:${url}`;
   const cached = await getCached(cacheKey, TTL_MS);
   if (cached !== undefined) return cached;
 
-  const result = await fetchAndAnalyze(legalUrl, declaredLang);
-  // Only cache a real answer — a failed/erroring fetch must not freeze a
-  // "no data" result in place for a week; it should just retry next time.
-  if (result.ok) await setCached(cacheKey, result.analysis);
-  return result.analysis;
+  const result = await fetchPageText(url);
+  // Only cache a real answer — a failed/erroring fetch must not freeze an
+  // empty result in place for a week; it should just retry next time.
+  if (result.ok) await setCached(cacheKey, result.text);
+  return result.text;
 }
 
-async function fetchAndAnalyze(legalUrl, declaredLang) {
+async function fetchPageText(url) {
   try {
-    const res = await fetch(legalUrl);
-    if (!res.ok) return { ok: false, analysis: emptyAnalysis(declaredLang) };
+    const res = await fetch(url);
+    if (!res.ok) return { ok: false, text: '' };
     const html = await res.text();
     // Append mailto:/tel: href targets so contact info shown only as a
     // "Nous contacter" link (not spelled out in visible text) still counts.
     const text = `${stripHtmlToText(html)} ${extractContactLinks(html)}`.trim();
-    return {
-      ok: true,
-      analysis: {
-        address: extractPhysicalAddress(text),
-        legal: analyzeLegalText(text, declaredLang),
-        mandatoryMentions: checkMandatoryLegalMentions(text),
-        companyCheck: await checkCompanyRegistry(text),
-      },
-    };
+    return { ok: true, text };
   } catch {
-    return { ok: false, analysis: emptyAnalysis(declaredLang) };
+    return { ok: false, text: '' };
   }
 }
 

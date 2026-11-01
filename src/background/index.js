@@ -142,11 +142,20 @@ async function handlePageSignals(tabId, url, payload) {
  */
 async function computeNetworkSignals(domain, payload, watchedRegistrars, claimedText, currentUrl) {
   const legalLinks = findLegalLinks(payload?.allLinks ?? [], domain);
-  const legalUrl = legalLinks[0]?.href ?? (currentUrl && pageLooksLikeOwnLegalDocument(payload?.title, currentUrl) ? currentUrl : null);
+  // Real sites routinely split legal info across separate documents
+  // (mentions légales for company identity, CGV for commercial terms
+  // including TVA/médiateur) — checking only the top-priority one
+  // under-reports completeness even for a fully compliant site. Capped at
+  // 3 (and deduplicated) so a page with many legal-ish links doesn't
+  // trigger a pile of fetches.
+  const legalUrls = [...new Set(legalLinks.map((l) => l.href))].slice(0, 3);
+  if (legalUrls.length === 0 && currentUrl && pageLooksLikeOwnLegalDocument(payload?.title, currentUrl)) {
+    legalUrls.push(currentUrl);
+  }
   const [rdapInfo, dnssec, legalAnalysis] = await Promise.all([
     getDomainRdapInfo(domain),
     getDnssecStatus(domain),
-    getLegalPageAnalysis(legalUrl, payload?.htmlLang ?? null),
+    getLegalPageAnalysis(legalUrls, payload?.htmlLang ?? null),
   ]);
 
   const signals = {
@@ -178,7 +187,7 @@ async function computeNetworkSignals(domain, payload, watchedRegistrars, claimed
     }
   }
 
-  return { signals, rdapInfo, legalAnalysis, legalUrl };
+  return { signals, rdapInfo, legalAnalysis, legalUrls };
 }
 
 async function publishVerdict(tabId, displayId, signals) {
@@ -211,13 +220,13 @@ async function buildIdentityCard(tabId) {
 
   let rdapInfo = { ageDays: null, registrarName: null, registeredAt: null, lastChangedAt: null, expiresAt: null };
   let legalAnalysis = { address: null, legal: { present: false, length: 0, detectedLang: 'unknown', languageMismatch: false, tooShort: false }, mandatoryMentions: null, companyCheck: { candidate: null, checksumValid: null, registry: null } };
-  let legalUrl = null;
+  let legalUrls = [];
 
   if (!isAllowlisted && domain) {
     const network = await computeNetworkSignals(domain, payload, watchedRegistrars, claimedText, url);
     rdapInfo = network.rdapInfo;
     legalAnalysis = network.legalAnalysis;
-    legalUrl = network.legalUrl;
+    legalUrls = network.legalUrls;
     await publishVerdict(tabId, displayId, { ...baseSignals, ...network.signals });
   }
 
@@ -232,7 +241,7 @@ async function buildIdentityCard(tabId) {
     seoMetaSummary: payload?.seoMeta ? summarizeSeoMeta(payload.seoMeta) : [],
     address: legalAnalysis.address,
     legalText: legalAnalysis.legal,
-    legalUrl,
+    legalUrls,
     mandatoryMentions: legalAnalysis.mandatoryMentions,
     companyCheck: legalAnalysis.companyCheck,
     // Not available without a paid/keyed API (SimilarWeb, Ahrefs, Moz...) — deferred.
