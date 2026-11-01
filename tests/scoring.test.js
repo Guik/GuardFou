@@ -152,6 +152,36 @@ test('legalPageMissing and legalMentions are mutually exclusive in practice', ()
   assert.ok(!verdict.reasons.some((r) => r.id === 'incomplete-legal-mentions'));
 });
 
+test('an invalid SIRET checksum adds a moderate weight', () => {
+  const verdict = computeScore({ siretInvalidChecksum: true });
+  assert.ok(verdict.reasons.some((r) => r.id === 'siret-invalid-checksum' && r.weight === 15));
+});
+
+test('a SIRET not found in the registry is a stronger red flag', () => {
+  const verdict = computeScore({ siretNotFound: true });
+  assert.ok(verdict.reasons.some((r) => r.id === 'siret-not-found' && r.weight === 25));
+});
+
+test('a closed company is the strongest of the SIRET flags', () => {
+  const verdict = computeScore({ companyClosed: true, registeredCompanyName: 'CHAUSSON MATERIAUX' });
+  const reason = verdict.reasons.find((r) => r.id === 'company-closed');
+  assert.ok(reason);
+  assert.equal(reason.weight, 30);
+  assert.ok(reason.message.includes('CHAUSSON MATERIAUX'));
+});
+
+test('a SIRET belonging to a different company name is flagged', () => {
+  const verdict = computeScore({ companyNameMismatch: true, registeredCompanyName: 'CHAUSSON MATERIAUX' });
+  assert.ok(verdict.reasons.some((r) => r.id === 'company-name-mismatch' && r.weight === 20));
+});
+
+test('SIRET checks are mutually exclusive — only the most relevant one fires', () => {
+  const verdict = computeScore({ siretInvalidChecksum: true, siretNotFound: true, companyClosed: true, companyNameMismatch: true });
+  const siretReasons = verdict.reasons.filter((r) => r.id.startsWith('siret-') || r.id.startsWith('company-'));
+  assert.equal(siretReasons.length, 1);
+  assert.equal(siretReasons[0].id, 'siret-invalid-checksum');
+});
+
 test('none of the new structural signals fire when false/absent', () => {
   const verdict = computeScore({});
   assert.equal(verdict.reasons.length, 0);

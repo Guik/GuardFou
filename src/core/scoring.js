@@ -30,6 +30,14 @@ export const THRESHOLDS = { orange: 30, red: 60 };
  *  - legalMentions: { missingUniversalCount, missingConditionalCount } | null
  *    (from core/identity.js's checkMandatoryLegalMentions, only when a
  *    legal page was found — mutually exclusive with legalPageMissing)
+ *  - siretInvalidChecksum: boolean (a SIRET/SIREN was found but fails Luhn)
+ *  - siretNotFound: boolean (checksum-valid SIRET/SIREN absent from the
+ *    official French company registry)
+ *  - companyClosed: boolean (the registered company is cessée/closed)
+ *  - companyNameMismatch: boolean (registered name doesn't match the
+ *    brand/name the page claims to be — a real SIRET reused for a
+ *    different business)
+ *  - registeredCompanyName: string | null (for the mismatch message)
  *
  * @param {Record<string, any>} signals
  * @returns {Verdict}
@@ -147,6 +155,36 @@ export function computeScore(signals) {
         message: `Mentions légales incomplètes : ${total} information${total > 1 ? 's' : ''} obligatoire${total > 1 ? 's' : ''} absente${total > 1 ? 's' : ''} (dénomination, SIRET, adresse, hébergeur...).`,
       });
     }
+  }
+
+  // SIRET/SIREN cross-referenced against the official French company
+  // registry (recherche-entreprises.api.gouv.fr). A checksum failure is
+  // weighted lighter since it could just be a typo; the registry-backed
+  // checks are near-direct evidence.
+  if (signals.siretInvalidChecksum) {
+    reasons.push({
+      id: 'siret-invalid-checksum',
+      weight: 15,
+      message: "Le numéro SIRET/SIREN indiqué dans les mentions légales est mal formé (échec de la clé de contrôle).",
+    });
+  } else if (signals.siretNotFound) {
+    reasons.push({
+      id: 'siret-not-found',
+      weight: 25,
+      message: "Le numéro SIRET/SIREN indiqué n'existe pas au registre officiel des entreprises françaises.",
+    });
+  } else if (signals.companyClosed) {
+    reasons.push({
+      id: 'company-closed',
+      weight: 30,
+      message: `L'entreprise associée au SIRET (« ${signals.registeredCompanyName} ») est déclarée cessée au registre officiel.`,
+    });
+  } else if (signals.companyNameMismatch) {
+    reasons.push({
+      id: 'company-name-mismatch',
+      weight: 20,
+      message: `Le SIRET est valide et actif, mais correspond à « ${signals.registeredCompanyName} » — un nom différent de celui affiché sur le site, signe possible d'un numéro SIRET réel réutilisé.`,
+    });
   }
 
   if (signals.matchedBrand && !signals.isOfficialDomain) {

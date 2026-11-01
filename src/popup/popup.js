@@ -90,6 +90,11 @@ function formatDate(isoString) {
   return Number.isNaN(date.getTime()) ? 'Inconnue' : DATE_FORMAT.format(date);
 }
 
+function formatSiret(candidate) {
+  const d = candidate.digits;
+  return candidate.type === 'siret' ? `${d.slice(0, 3)} ${d.slice(3, 6)} ${d.slice(6, 9)} ${d.slice(9)}` : `${d.slice(0, 3)} ${d.slice(3, 6)} ${d.slice(6)}`;
+}
+
 function addField(dl, term, buildDescription) {
   const dt = document.createElement('dt');
   dt.textContent = term;
@@ -190,6 +195,37 @@ function renderIdentityCard(card) {
       li.textContent = item.label;
       li.className = item.present ? 'seo-ok' : 'seo-fail';
       ul.appendChild(li);
+    }
+    dd.appendChild(ul);
+  });
+
+  addField(dl, 'Vérification SIRET/SIREN', (dd) => {
+    const check = card.companyCheck;
+    if (!check?.candidate) {
+      dd.textContent = 'Aucun numéro SIRET/SIREN trouvé sur la page.';
+      dd.className = 'muted';
+      return;
+    }
+    const ul = document.createElement('ul');
+    const numberLi = document.createElement('li');
+    numberLi.textContent = `Numéro trouvé : ${formatSiret(check.candidate)}`;
+    ul.appendChild(numberLi);
+
+    if (check.checksumValid === false) {
+      const li = document.createElement('li');
+      li.textContent = 'Format invalide (échec de la clé de contrôle) — numéro probablement mal formé ou fabriqué.';
+      li.className = 'warning';
+      ul.appendChild(li);
+    } else if (check.registry && !check.registry.found) {
+      const li = document.createElement('li');
+      li.textContent = "N'existe pas au registre officiel des entreprises françaises.";
+      li.className = 'warning';
+      ul.appendChild(li);
+    } else if (check.registry?.found) {
+      const statusLi = document.createElement('li');
+      statusLi.textContent = `Entreprise enregistrée : ${check.registry.name} (${check.registry.status === 'A' ? 'active' : 'cessée'})`;
+      statusLi.className = check.registry.status === 'A' ? 'seo-ok' : 'warning';
+      ul.appendChild(statusLi);
     }
     dd.appendChild(ul);
   });

@@ -10,6 +10,7 @@ import {
 } from '../core/domain.js';
 import { findBrandByAlias, isOfficialDomain, looksLikeBrandPlusGenericWord, isNearMissSpelling } from '../core/brands.js';
 import { isWatchedRegistrar } from '../core/registrar.js';
+import { companyNameMatchesClaim } from '../core/siret.js';
 import { computeScore } from '../core/scoring.js';
 import { detectTechnologies, detectSocialLinks, findLegalLinks, summarizeSeoMeta } from '../core/identity.js';
 import { isShortRegistrationSpan } from '../core/rdap.js';
@@ -128,6 +129,21 @@ async function handlePageSignals(tabId, url, payload) {
     } else {
       signals.legalPageMissing = true;
     }
+
+    const { candidate, checksumValid, registry } = legalAnalysis.companyCheck;
+    if (candidate) {
+      if (checksumValid === false) {
+        signals.siretInvalidChecksum = true;
+      } else if (registry && !registry.found) {
+        signals.siretNotFound = true;
+      } else if (registry?.status === 'C') {
+        signals.companyClosed = true;
+        signals.registeredCompanyName = registry.name;
+      } else if (registry?.found && !companyNameMatchesClaim(registry.name, claimedText)) {
+        signals.companyNameMismatch = true;
+        signals.registeredCompanyName = registry.name;
+      }
+    }
   }
 
   const verdict = computeScore(signals);
@@ -170,6 +186,7 @@ async function buildIdentityCard(tabId) {
     address: legalAnalysis.address,
     legalText: legalAnalysis.legal,
     mandatoryMentions: legalAnalysis.mandatoryMentions,
+    companyCheck: legalAnalysis.companyCheck,
     // Not available without a paid/keyed API (SimilarWeb, Ahrefs, Moz...) — deferred.
     popularity: null,
     referringLinks: null,
