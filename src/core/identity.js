@@ -6,6 +6,8 @@
  * consommation), not just a best-practice nitpick like the SEO checklist.
  */
 
+import { extractSirenOrSiret } from './siret.js';
+
 const TECH_SIGNATURES = [
   { name: 'WordPress / WooCommerce', test: /wp-content|wp-includes/i },
   { name: 'Shopify', test: /cdn\.shopify\.com|Shopify\.theme|myshopify\.com/i },
@@ -115,7 +117,11 @@ export function findLegalLinks(links) {
  */
 export function extractPhysicalAddress(text) {
   const match = text.match(
-    /\b\d{1,4}[a-zA-Z]?\s*(?:,|\s)\s*(?:rue|avenue|boulevard|impasse|chemin|all[ée]e|route|place|quai|cours)\s+[^\n,;]{3,60},?\s*\d{5}\s+[A-ZÀ-Ÿ][\wÀ-ÿ'\-\s]{1,30}\b/,
+    // The city-name tail deliberately excludes whitespace (just one word,
+    // not \s) — with it, a greedy/backtracking match on text with no comma
+    // after the street (common: "104 rue de Maubeuge 75010 PARIS Immatriculation:...")
+    // would bleed straight into the next field's label.
+    /\b\d{1,4}[a-zA-Z]?\s*(?:,|\s)\s*(?:rue|avenue|boulevard|impasse|chemin|all[ée]e|route|place|quai|cours)\s+[^\n,;:]{3,60},?\s*\d{5}\s+[A-ZÀ-Ÿ][\wÀ-ÿ'\-]{1,30}\b/,
   );
   return match ? match[0].replace(/\s+/g, ' ').trim() : null;
 }
@@ -174,9 +180,23 @@ const UNIVERSAL_LEGAL_MENTIONS = [
   {
     key: 'legalForm',
     label: 'Dénomination sociale / forme juridique',
-    test: (t) => /\b(sarl|sasu?|eurl|scp|sci|snc|ei|eirl|auto-entrepreneur|micro-entreprise|association)\b/i.test(t),
+    // Either an actual legal-form keyword, or the "dénomination sociale" /
+    // "raison sociale" label itself — a page can properly name the company
+    // ("Dénomination sociale : ADEPEM") without restating one of these
+    // specific abbreviations, and that's just as valid.
+    test: (t) =>
+      /\b(sarl|sasu?|eurl|scp|sci|snc|ei|eirl|auto-entrepreneur|micro-entreprise|associations?|assoc\.?)\b/i.test(t)
+      || /d[ée]nomination\s+sociale|raison\s+sociale/i.test(t),
   },
-  { key: 'siren', label: 'Numéro SIRET/SIREN', test: (t) => /\bsiren\b|\bsiret\b/i.test(t) },
+  {
+    key: 'siren',
+    label: 'Numéro SIRET/SIREN',
+    // Reuses the same extraction the SIRET registry cross-check uses (see
+    // core/siret.js), which also catches a SIREN given via its RCS
+    // registration ("RCS Paris B 321045395") rather than literally labeled
+    // "SIREN" — a real, common pattern a plain keyword search would miss.
+    test: (t) => extractSirenOrSiret(t) !== null,
+  },
   { key: 'address', label: 'Adresse du siège social', test: (t) => Boolean(extractPhysicalAddress(t)) },
   {
     key: 'contact',
@@ -197,7 +217,14 @@ const UNIVERSAL_LEGAL_MENTIONS = [
 // Weighted lower in scoring for exactly that reason.
 const CONDITIONAL_LEGAL_MENTIONS = [
   { key: 'rcs', label: "Immatriculation RCS", test: (t) => /\brcs\b/i.test(t) },
-  { key: 'capital', label: 'Capital social', test: (t) => /capital\s+social/i.test(t) },
+  {
+    key: 'capital',
+    label: 'Capital social',
+    // "Capital social" as an exact phrase, or just "Capital :" followed by
+    // an amount — real pages often write the shorter form and it's just as
+    // clear from context.
+    test: (t) => /capital\s+social/i.test(t) || /\bcapital\s*:?\s*[\d][\d.,\s]*\s*(?:€|euros?)\b/i.test(t),
+  },
   {
     key: 'vat',
     label: 'Numéro de TVA intracommunautaire',
@@ -251,6 +278,22 @@ export function stripHtmlToText(html) {
     .replace(/&quot;/gi, '"')
     .replace(/\s+/g, ' ')
     .trim();
+}
+
+/**
+ * Pulls email/phone contact info out of mailto:/tel: links in the raw HTML.
+ * Many sites show a "Nous contacter" link whose visible text never includes
+ * the actual address — stripHtmlToText discards href attributes along with
+ * every other tag, so that contact info would otherwise be invisible to the
+ * mandatory-mentions check even though it genuinely exists on the page.
+ * Returns a text fragment meant to be appended to the stripped page text,
+ * not the raw addresses themselves (callers don't need to parse this).
+ * @param {string} html
+ */
+export function extractContactLinks(html) {
+  const emails = [...html.matchAll(/href\s*=\s*["']mailto:([^"'?]+)/gi)].map((m) => m[1]);
+  const phones = [...html.matchAll(/href\s*=\s*["']tel:([^"']+)/gi)].map((m) => m[1]);
+  return [...emails, ...phones].join(' ');
 }
 
 /**

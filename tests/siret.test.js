@@ -32,6 +32,15 @@ test('extractSirenOrSiret returns null with nothing to find', () => {
   assert.equal(extractSirenOrSiret('Mentions légales. Tous droits réservés.'), null);
 });
 
+// Real text from www.adepem.com/conditions-generales-vente — the SIREN is
+// only given via the RCS registration line, with no "SIREN"/"SIRET" label
+// anywhere on the page.
+test('extractSirenOrSiret finds a SIREN given only via its RCS registration', () => {
+  const result = extractSirenOrSiret('Immatriculation: RCS Paris B 321045395');
+  assert.deepEqual(result, { type: 'siren', digits: '321045395' });
+  assert.equal(isValidSiren(result.digits), true); // real, Luhn-valid number
+});
+
 test('isValidSiren/isValidSiret accept the real Chausson Matériaux numbers', () => {
   assert.equal(isValidSiren(REAL_SIREN), true);
   assert.equal(isValidSiret(REAL_SIRET), true);

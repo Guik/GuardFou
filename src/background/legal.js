@@ -1,5 +1,5 @@
 import { getCached, setCached } from './cache.js';
-import { stripHtmlToText, extractPhysicalAddress, analyzeLegalText, checkMandatoryLegalMentions } from '../core/identity.js';
+import { stripHtmlToText, extractContactLinks, extractPhysicalAddress, analyzeLegalText, checkMandatoryLegalMentions } from '../core/identity.js';
 import { extractSirenOrSiret, isValidSirenOrSiret } from '../core/siret.js';
 import { getCompanyInfo } from './companyRegistry.js';
 
@@ -42,7 +42,9 @@ async function fetchAndAnalyze(legalUrl, declaredLang) {
     const res = await fetch(legalUrl);
     if (!res.ok) return { ok: false, analysis: emptyAnalysis(declaredLang) };
     const html = await res.text();
-    const text = stripHtmlToText(html);
+    // Append mailto:/tel: href targets so contact info shown only as a
+    // "Nous contacter" link (not spelled out in visible text) still counts.
+    const text = `${stripHtmlToText(html)} ${extractContactLinks(html)}`.trim();
     return {
       ok: true,
       analysis: {

@@ -20,6 +20,16 @@ export function extractSirenOrSiret(text) {
     if (digits.length >= 9) return { type: 'siren', digits: digits.slice(0, 9) };
   }
 
+  // A company's SIREN is routinely given via its RCS registration instead
+  // of the word "SIREN" itself, e.g. "RCS Paris B 321045395" — real text
+  // seen on an actual legal-notice page, which the two checks above missed
+  // entirely despite the number being right there.
+  const rcsLabeled = text.match(/\brcs\b[^\n]{0,40}?(\d[\d\s]{7,13}\d)/i);
+  if (rcsLabeled) {
+    const digits = rcsLabeled[1].replace(/\D/g, '');
+    if (digits.length === 9) return { type: 'siren', digits };
+  }
+
   const bareSiret = text.match(/\b\d{3}[\s.]?\d{3}[\s.]?\d{3}[\s.]?\d{5}\b/);
   if (bareSiret) return { type: 'siret', digits: bareSiret[0].replace(/\D/g, '') };
 

@@ -9,6 +9,7 @@ import {
   analyzeLegalText,
   summarizeSeoMeta,
   stripHtmlToText,
+  extractContactLinks,
   checkMandatoryLegalMentions,
 } from '../src/core/identity.js';
 
@@ -136,6 +137,26 @@ test('stripHtmlToText removes scripts, styles, tags and decodes entities', () =>
   assert.ok(text.includes('12 rue des Lilas')); // &nbsp; turned into a space, not glued
 });
 
+test('extractContactLinks pulls email and phone out of mailto:/tel: hrefs', () => {
+  const html = '<a href="mailto:contact@adepem.com">Nous contacter</a> <a href="tel:+33477123456">Appelez-nous</a>';
+  const links = extractContactLinks(html);
+  assert.ok(links.includes('contact@adepem.com'));
+  assert.ok(links.includes('+33477123456'));
+});
+
+test('extractContactLinks finds nothing when there are no mailto:/tel: links', () => {
+  assert.equal(extractContactLinks('<a href="/contact">Nous contacter</a>'), '');
+});
+
+test('a mailto: link whose visible text has no email is still detected as contact info once appended', () => {
+  const html = '<a href="mailto:contact@adepem.com">Nous contacter</a>';
+  const visibleText = stripHtmlToText(html);
+  assert.ok(!visibleText.includes('@')); // the visible text alone has no email
+  const combined = `${visibleText} ${extractContactLinks(html)}`;
+  const result = checkMandatoryLegalMentions(`${combined} Dénomination sociale: Test. SIRET: 123 456 789 00012. 1 rue de Paris 75001 Paris.`);
+  assert.equal(result.universal.find((m) => m.key === 'contact').present, true);
+});
+
 test('checkMandatoryLegalMentions returns null with no text', () => {
   assert.equal(checkMandatoryLegalMentions(null), null);
   assert.equal(checkMandatoryLegalMentions(''), null);
@@ -180,6 +201,39 @@ test('checkMandatoryLegalMentions does not require RCS/capital for a sole trader
   // RCS/capital social correctly don't apply to a sole trader, so they're
   // absent here — the caller weights this tier lower for exactly that reason.
   assert.ok(result.missingConditionalCount > 0);
+});
+
+// Real text from www.adepem.com/conditions-generales-vente. Caught three
+// false negatives on this real page: no legal-form keyword (just
+// "Dénomination sociale:" with no SARL/SAS/etc after it), the SIREN given
+// only via "RCS Paris B ..." with no "SIREN" label, and "Capital:" without
+// the word "social".
+test('checkMandatoryLegalMentions reads the real adepem.com CGV page correctly', () => {
+  const text = `Dénomination sociale: ADEPEM
+Capital: 15.244,90 Euros
+Siège social: 104 rue de Maubeuge 75010 PARIS
+Immatriculation: RCS Paris B 321045395
+Code APE: 514F
+N° TVA intracommunautaire: FR-321 045 395 00019
+Site web: https://www.adepem.com`;
+  const result = checkMandatoryLegalMentions(text);
+  const present = (key) => [...result.universal, ...result.conditional].find((m) => m.key === key).present;
+  assert.equal(present('legalForm'), true);
+  assert.equal(present('siren'), true);
+  assert.equal(present('address'), true);
+  assert.equal(present('rcs'), true);
+  assert.equal(present('capital'), true);
+  assert.equal(present('vat'), true);
+  // Genuinely absent from this excerpt, not detection bugs:
+  assert.equal(present('contact'), false);
+  assert.equal(present('host'), false);
+  assert.equal(present('publicationDirector'), false);
+  assert.equal(present('mediator'), false);
+});
+
+test('extractPhysicalAddress does not bleed into the next field when there is no comma before the postal code', () => {
+  const text = 'Siège social: 104 rue de Maubeuge 75010 PARIS Immatriculation: RCS Paris B 321045395';
+  assert.equal(extractPhysicalAddress(text), '104 rue de Maubeuge 75010 PARIS');
 });
 
 test('summarizeSeoMeta flags missing description and multiple H1s', () => {
