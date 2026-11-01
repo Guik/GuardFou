@@ -104,8 +104,11 @@ function formatSiret(candidate) {
 // content is invisible to copy/paste and to some screen readers.
 function addChecklistItem(ul, label, ok) {
   const li = document.createElement('li');
-  li.textContent = `${ok ? '✓' : '!'} ${label}`;
-  li.className = ok ? 'seo-ok' : 'seo-fail';
+  li.className = 'checklist-item';
+  const marker = document.createElement('span');
+  marker.className = ok ? 'seo-ok' : 'seo-fail';
+  marker.textContent = ok ? '✓' : '!';
+  li.append(marker, document.createTextNode(` ${label}`));
   ul.appendChild(li);
 }
 

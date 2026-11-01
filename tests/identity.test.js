@@ -131,10 +131,30 @@ test('stripHtmlToText removes scripts, styles, tags and decodes entities', () =>
   const text = stripHtmlToText(html);
   assert.ok(!text.includes('color:red'));
   assert.ok(!text.includes('var x'));
-  assert.ok(text.includes('Mentions'));
+  assert.ok(text.includes('Mentions légales')); // &eacute; actually decoded to "é", not left as "&eacute;"
   assert.ok(text.includes('& CGV')); // &amp; decoded
   assert.ok(text.includes('"Chausson"')); // &quot; decoded
   assert.ok(text.includes('12 rue des Lilas')); // &nbsp; turned into a space, not glued
+});
+
+// Real bug: www.adepem.com's legal page HTML-encodes accented letters and
+// the euro sign as named entities ("D&eacute;nomination", "&euro;") rather
+// than embedding the literal characters, which silently broke the
+// mandatory-mentions regexes until stripHtmlToText decoded more than the
+// basic five entities.
+test('stripHtmlToText decodes accented-letter and currency entities, not just the basic five', () => {
+  assert.equal(stripHtmlToText('D&eacute;nomination'), 'Dénomination');
+  assert.equal(stripHtmlToText('15,90&nbsp;&euro;'), '15,90 €');
+  assert.equal(stripHtmlToText('Soci&eacute;t&eacute; Fran&ccedil;aise'), 'Société Française');
+});
+
+test('stripHtmlToText decodes numeric entities (decimal and hex)', () => {
+  assert.equal(stripHtmlToText('D&#233;nomination'), 'Dénomination');
+  assert.equal(stripHtmlToText('D&#xe9;nomination'), 'Dénomination');
+});
+
+test('stripHtmlToText leaves an unrecognized named entity as-is rather than guessing', () => {
+  assert.equal(stripHtmlToText('&notarealentity;'), '&notarealentity;');
 });
 
 test('extractContactLinks pulls email and phone out of mailto:/tel: hrefs', () => {
@@ -229,6 +249,16 @@ Site web: https://www.adepem.com`;
   assert.equal(present('host'), false);
   assert.equal(present('publicationDirector'), false);
   assert.equal(present('mediator'), false);
+});
+
+// Real bug: `\b` was shared across the whole (?:€|euros?) alternation, but
+// \b only makes sense after a word character — it silently never matched
+// the "€" branch at all, so "Capital: 15.244,90 €" (the actual encoding on
+// a real page, once &euro; is decoded) was reported as missing even though
+// "Capital: ... Euros" (the spelled-out word) worked fine.
+test('checkMandatoryLegalMentions recognises "Capital : <amount> €" with the euro symbol, not just the word "Euros"', () => {
+  const result = checkMandatoryLegalMentions('Capital: 15.244,90 € SIRET: 123456789. 1 rue de Paris 75001 Paris.');
+  assert.equal(result.conditional.find((m) => m.key === 'capital').present, true);
 });
 
 test('extractPhysicalAddress does not bleed into the next field when there is no comma before the postal code', () => {

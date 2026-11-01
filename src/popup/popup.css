@@ -240,10 +240,25 @@ header img {
   gap: 2px;
 }
 
-/* The ✓/! marker is real text (not CSS-generated content) so it survives
-   copy/paste and screen readers — see popup.js's addChecklistItem. */
+/* The ✓/! marker is real text in its own <span> (not CSS-generated
+   content), so it survives copy/paste and screen readers while only the
+   marker itself — not the label — carries the status color. See popup.js's
+   addChecklistItem. */
+.identity-fields .checklist-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+}
+
+.identity-fields .seo-ok,
+.identity-fields .seo-fail {
+  flex-shrink: 0;
+  margin-top: 1px;
+  font-size: 11px;
+}
+
 .identity-fields .seo-ok { color: var(--color-green); }
-.identity-fields .seo-fail { color: var(--color-orange); font-weight: 600; }
+.identity-fields .seo-fail { color: var(--color-orange); font-weight: 700; }
 
 .identity-fields .warning {
   color: var(--color-red);

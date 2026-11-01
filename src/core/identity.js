@@ -223,7 +223,9 @@ const CONDITIONAL_LEGAL_MENTIONS = [
     // "Capital social" as an exact phrase, or just "Capital :" followed by
     // an amount — real pages often write the shorter form and it's just as
     // clear from context.
-    test: (t) => /capital\s+social/i.test(t) || /\bcapital\s*:?\s*[\d][\d.,\s]*\s*(?:€|euros?)\b/i.test(t),
+    // `\b` doesn't work after "€" (not a word character) — it only
+    // belongs on the "euros?" branch, not shared across the alternation.
+    test: (t) => /capital\s+social/i.test(t) || /\bcapital\s*:?\s*[\d][\d.,\s]*\s*(?:€|euros?\b)/i.test(t),
   },
   {
     key: 'vat',
@@ -257,6 +259,42 @@ export function checkMandatoryLegalMentions(text) {
   };
 }
 
+// Named entities worth decoding beyond the basic five: older/legacy-authored
+// pages routinely spell out accented French letters and the euro sign this
+// way rather than embedding the literal UTF-8 character. Left undecoded,
+// "D&eacute;nomination" or "15,90&nbsp;&euro;" silently break any regex that
+// expects to see "é" or "€" — found via a real mandatory-mentions page that
+// used exactly this encoding.
+const NAMED_HTML_ENTITIES = {
+  nbsp: ' ', amp: '&', lt: '<', gt: '>', quot: '"', apos: "'",
+  eacute: 'é', egrave: 'è', ecirc: 'ê', euml: 'ë',
+  Eacute: 'É', Egrave: 'È', Ecirc: 'Ê', Euml: 'Ë',
+  agrave: 'à', acirc: 'â', auml: 'ä',
+  Agrave: 'À', Acirc: 'Â', Auml: 'Ä',
+  ccedil: 'ç', Ccedil: 'Ç',
+  ocirc: 'ô', ouml: 'ö', Ocirc: 'Ô', Ouml: 'Ö',
+  ugrave: 'ù', ucirc: 'û', uuml: 'ü',
+  Ugrave: 'Ù', Ucirc: 'Û', Uuml: 'Ü',
+  icirc: 'î', iuml: 'ï', Icirc: 'Î', Iuml: 'Ï',
+  ntilde: 'ñ', Ntilde: 'Ñ',
+  oelig: 'œ', OElig: 'Œ', aelig: 'æ', AElig: 'Æ',
+  euro: '€', pound: '£', cent: '¢', yen: '¥',
+  deg: '°', hellip: '…', ndash: '–', mdash: '—',
+  laquo: '«', raquo: '»',
+};
+
+/**
+ * Decodes numeric (&#233; / &#xE9;) and the common named HTML entities —
+ * not a full HTML5 entity table, but enough for French legal-page text.
+ * @param {string} text
+ */
+function decodeHtmlEntities(text) {
+  return text
+    .replace(/&#(\d+);/g, (_, code) => String.fromCodePoint(Number(code)))
+    .replace(/&#[xX]([0-9a-fA-F]+);/g, (_, hex) => String.fromCodePoint(parseInt(hex, 16)))
+    .replace(/&([a-zA-Z]+);/g, (full, name) => (name in NAMED_HTML_ENTITIES ? NAMED_HTML_ENTITIES[name] : full));
+}
+
 /**
  * Minimal HTML-to-text conversion (no DOMParser dependency, so it works the
  * same in a content script or a background page). Good enough for language
@@ -268,16 +306,8 @@ export function stripHtmlToText(html) {
     .replace(/<script[\s\S]*?<\/script>/gi, ' ')
     .replace(/<style[\s\S]*?<\/style>/gi, ' ')
     .replace(/<!--[\s\S]*?-->/g, ' ');
-  return withoutNoise
-    .replace(/<[^>]+>/g, ' ')
-    .replace(/&nbsp;/gi, ' ')
-    .replace(/&amp;/gi, '&')
-    .replace(/&lt;/gi, '<')
-    .replace(/&gt;/gi, '>')
-    .replace(/&(?:#39|apos);/gi, "'")
-    .replace(/&quot;/gi, '"')
-    .replace(/\s+/g, ' ')
-    .trim();
+  const withoutTags = withoutNoise.replace(/<[^>]+>/g, ' ');
+  return decodeHtmlEntities(withoutTags).replace(/\s+/g, ' ').trim();
 }
 
 /**
