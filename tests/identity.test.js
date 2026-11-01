@@ -9,6 +9,7 @@ import {
   analyzeLegalText,
   summarizeSeoMeta,
   stripHtmlToText,
+  checkMandatoryLegalMentions,
 } from '../src/core/identity.js';
 
 test('detectTechnologies finds WooCommerce/WordPress markers', () => {
@@ -111,6 +112,52 @@ test('stripHtmlToText removes scripts, styles, tags and decodes entities', () =>
   assert.ok(text.includes('& CGV')); // &amp; decoded
   assert.ok(text.includes('"Chausson"')); // &quot; decoded
   assert.ok(text.includes('12 rue des Lilas')); // &nbsp; turned into a space, not glued
+});
+
+test('checkMandatoryLegalMentions returns null with no text', () => {
+  assert.equal(checkMandatoryLegalMentions(null), null);
+  assert.equal(checkMandatoryLegalMentions(''), null);
+});
+
+test('checkMandatoryLegalMentions finds a complete SARL legal notice', () => {
+  const text = `
+    Chausson Matériaux, SARL au capital social de 50 000 euros.
+    Siège social : 12 rue des Lilas, 75001 Paris.
+    SIRET : 123 456 789 00012 — RCS Paris B 123 456 789.
+    N° TVA intracommunautaire : FR12 345678901.
+    Contact : contact@chausson.fr — 01 23 45 67 89.
+    Directeur de la publication : Jean Dupont.
+    Hébergeur : OVH SAS, 2 rue Kellermann, 59100 Roubaix.
+    Médiateur de la consommation : CM2C, en cas de litige non résolu.
+  `;
+  const result = checkMandatoryLegalMentions(text);
+  assert.equal(result.missingUniversalCount, 0);
+  assert.equal(result.missingConditionalCount, 0);
+  assert.ok(result.universal.every((m) => m.present));
+  assert.ok(result.conditional.every((m) => m.present));
+});
+
+test('checkMandatoryLegalMentions flags a near-empty templated notice', () => {
+  const text = 'Mentions légales. Tous droits réservés.';
+  const result = checkMandatoryLegalMentions(text);
+  assert.equal(result.missingUniversalCount, 6);
+  assert.equal(result.missingConditionalCount, 4);
+});
+
+test('checkMandatoryLegalMentions does not require RCS/capital for a sole trader', () => {
+  const text = `
+    Jean Martin, auto-entrepreneur.
+    Adresse : 5 avenue Victor Hugo, 69002 Lyon.
+    SIRET : 987 654 321 00019.
+    Contact : jean.martin@example.fr.
+    Hébergeur : OVH SAS, Roubaix.
+    Directeur de la publication : Jean Martin.
+  `;
+  const result = checkMandatoryLegalMentions(text);
+  assert.equal(result.missingUniversalCount, 0);
+  // RCS/capital social correctly don't apply to a sole trader, so they're
+  // absent here — the caller weights this tier lower for exactly that reason.
+  assert.ok(result.missingConditionalCount > 0);
 });
 
 test('summarizeSeoMeta flags missing description and multiple H1s', () => {

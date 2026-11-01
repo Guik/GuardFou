@@ -1,5 +1,5 @@
 import { getCached, setCached } from './cache.js';
-import { stripHtmlToText, extractPhysicalAddress, analyzeLegalText } from '../core/identity.js';
+import { stripHtmlToText, extractPhysicalAddress, analyzeLegalText, checkMandatoryLegalMentions } from '../core/identity.js';
 
 const TTL_MS = 7 * 24 * 60 * 60 * 1000;
 
@@ -10,10 +10,10 @@ const TTL_MS = 7 * 24 * 60 * 60 * 1000;
  * call.
  * @param {string|null} legalUrl absolute URL of the legal/terms page
  * @param {string|null} declaredLang e.g. "fr" from the shop page's <html lang>
- * @returns {Promise<{address: string|null, legal: ReturnType<typeof analyzeLegalText>}>}
+ * @returns {Promise<{address: string|null, legal: ReturnType<typeof analyzeLegalText>, mandatoryMentions: ReturnType<typeof checkMandatoryLegalMentions>}>}
  */
 export async function getLegalPageAnalysis(legalUrl, declaredLang) {
-  if (!legalUrl) return { address: null, legal: analyzeLegalText(null, declaredLang) };
+  if (!legalUrl) return emptyAnalysis(declaredLang);
 
   const cacheKey = `legal:${legalUrl}`;
   const cached = await getCached(cacheKey, TTL_MS);
@@ -29,11 +29,22 @@ export async function getLegalPageAnalysis(legalUrl, declaredLang) {
 async function fetchAndAnalyze(legalUrl, declaredLang) {
   try {
     const res = await fetch(legalUrl);
-    if (!res.ok) return { ok: false, analysis: { address: null, legal: analyzeLegalText(null, declaredLang) } };
+    if (!res.ok) return { ok: false, analysis: emptyAnalysis(declaredLang) };
     const html = await res.text();
     const text = stripHtmlToText(html);
-    return { ok: true, analysis: { address: extractPhysicalAddress(text), legal: analyzeLegalText(text, declaredLang) } };
+    return {
+      ok: true,
+      analysis: {
+        address: extractPhysicalAddress(text),
+        legal: analyzeLegalText(text, declaredLang),
+        mandatoryMentions: checkMandatoryLegalMentions(text),
+      },
+    };
   } catch {
-    return { ok: false, analysis: { address: null, legal: analyzeLegalText(null, declaredLang) } };
+    return { ok: false, analysis: emptyAnalysis(declaredLang) };
   }
+}
+
+function emptyAnalysis(declaredLang) {
+  return { address: null, legal: analyzeLegalText(null, declaredLang), mandatoryMentions: null };
 }

@@ -120,6 +120,38 @@ test('plain HTTP adds a small weight', () => {
   assert.ok(verdict.reasons.some((r) => r.id === 'insecure-http' && r.weight === 10));
 });
 
+test('no legal page at all adds a fixed weight', () => {
+  const verdict = computeScore({ legalPageMissing: true });
+  assert.ok(verdict.reasons.some((r) => r.id === 'legal-page-missing' && r.weight === 15));
+});
+
+test('incomplete legal mentions weight universal fields higher than conditional ones', () => {
+  const verdict = computeScore({
+    legalMentions: { missingUniversalCount: 2, missingConditionalCount: 3 },
+  });
+  const reason = verdict.reasons.find((r) => r.id === 'incomplete-legal-mentions');
+  assert.ok(reason);
+  assert.equal(reason.weight, 2 * 5 + 3 * 2); // 16
+});
+
+test('complete legal mentions add no reason', () => {
+  const verdict = computeScore({
+    legalMentions: { missingUniversalCount: 0, missingConditionalCount: 0 },
+  });
+  assert.ok(!verdict.reasons.some((r) => r.id === 'incomplete-legal-mentions'));
+});
+
+test('legalPageMissing and legalMentions are mutually exclusive in practice', () => {
+  // If both were somehow set, legalPageMissing takes priority (there's no
+  // text to have checked fields against if the page itself is missing).
+  const verdict = computeScore({
+    legalPageMissing: true,
+    legalMentions: { missingUniversalCount: 5, missingConditionalCount: 4 },
+  });
+  assert.ok(verdict.reasons.some((r) => r.id === 'legal-page-missing'));
+  assert.ok(!verdict.reasons.some((r) => r.id === 'incomplete-legal-mentions'));
+});
+
 test('none of the new structural signals fire when false/absent', () => {
   const verdict = computeScore({});
   assert.equal(verdict.reasons.length, 0);

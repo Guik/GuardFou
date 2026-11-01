@@ -166,6 +166,34 @@ function renderIdentityCard(card) {
     dd.appendChild(ul);
   });
 
+  addField(dl, 'Mentions légales obligatoires', (dd) => {
+    const mentions = card.mandatoryMentions;
+    if (!mentions) {
+      dd.textContent = 'Non vérifiables (pas de page de mentions légales trouvée).';
+      dd.className = 'muted';
+      return;
+    }
+    const ul = document.createElement('ul');
+    for (const item of mentions.universal) {
+      const li = document.createElement('li');
+      li.textContent = item.label;
+      li.className = item.present ? 'seo-ok' : 'seo-fail';
+      ul.appendChild(li);
+    }
+    const sep = document.createElement('li');
+    sep.textContent = 'Selon statut juridique :';
+    sep.className = 'muted';
+    sep.style.marginTop = '6px';
+    ul.appendChild(sep);
+    for (const item of mentions.conditional) {
+      const li = document.createElement('li');
+      li.textContent = item.label;
+      li.className = item.present ? 'seo-ok' : 'seo-fail';
+      ul.appendChild(li);
+    }
+    dd.appendChild(ul);
+  });
+
   addField(dl, 'Optimisation SEO (balises meta)', (dd) => {
     const ul = document.createElement('ul');
     for (const item of card.seoMetaSummary) {

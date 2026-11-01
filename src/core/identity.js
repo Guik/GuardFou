@@ -1,6 +1,9 @@
 /**
- * Pure helpers behind the "fiche d'identité" (site identity card): purely
- * informational, best-effort signals — none of this feeds the score.
+ * Pure helpers behind the "fiche d'identité" (site identity card). Most of
+ * these are purely informational and don't feed the score — the exception
+ * is checkMandatoryLegalMentions, since missing legally-required mentions
+ * is actual evidence under French law (LCEN art. 6-III, Code de la
+ * consommation), not just a best-practice nitpick like the SEO checklist.
  */
 
 const TECH_SIGNATURES = [
@@ -141,6 +144,68 @@ export function analyzeLegalText(text, declaredLang) {
     detectedLang,
     languageMismatch,
     tooShort: trimmed.length < 200,
+  };
+}
+
+// Mandatory under LCEN art. 6-III for every site, commercial or not — no
+// company type is exempt from these.
+const UNIVERSAL_LEGAL_MENTIONS = [
+  {
+    key: 'legalForm',
+    label: 'Dénomination sociale / forme juridique',
+    test: (t) => /\b(sarl|sasu?|eurl|scp|sci|snc|ei|eirl|auto-entrepreneur|micro-entreprise|association)\b/i.test(t),
+  },
+  { key: 'siren', label: 'Numéro SIRET/SIREN', test: (t) => /\bsiren\b|\bsiret\b/i.test(t) },
+  { key: 'address', label: 'Adresse du siège social', test: (t) => Boolean(extractPhysicalAddress(t)) },
+  {
+    key: 'contact',
+    label: 'Coordonnées de contact (téléphone ou email)',
+    test: (t) => /[\w.+-]+@[\w-]+\.[a-z]{2,}/i.test(t) || /(?:\+33|0)\s?[1-9](?:[\s.-]?\d{2}){4}/.test(t),
+  },
+  { key: 'host', label: "Identité de l'hébergeur du site", test: (t) => /h[ée]bergeur|h[ée]bergement du site/i.test(t) },
+  {
+    key: 'publicationDirector',
+    label: 'Directeur de la publication',
+    test: (t) => /directeur\s+(?:de\s+la\s+)?publication|responsable\s+(?:de\s+la\s+)?publication/i.test(t),
+  },
+];
+
+// Only mandatory for certain company types or activities — a sole trader
+// (auto-entrepreneur) legitimately has no RCS number or share capital, and a
+// VAT-exempt small business legitimately has no intracommunity VAT number.
+// Weighted lower in scoring for exactly that reason.
+const CONDITIONAL_LEGAL_MENTIONS = [
+  { key: 'rcs', label: "Immatriculation RCS", test: (t) => /\brcs\b/i.test(t) },
+  { key: 'capital', label: 'Capital social', test: (t) => /capital\s+social/i.test(t) },
+  {
+    key: 'vat',
+    label: 'Numéro de TVA intracommunautaire',
+    test: (t) => /tva\s+intracommunautaire/i.test(t) || /\bfr\d{2}\s?\d{9}\b/i.test(t),
+  },
+  {
+    key: 'mediator',
+    label: 'Médiateur de la consommation',
+    test: (t) => /m[ée]diat(?:eur|rice|ion)/i.test(t) && /consommation/i.test(t),
+  },
+];
+
+/**
+ * Checks a legal-notice page's text against the mandatory-mentions template
+ * for French websites. Returns null when there's no text to check (the
+ * caller should treat "no legal page at all" as a separate, stronger
+ * signal — see core/scoring.js).
+ * @param {string|null} text
+ */
+export function checkMandatoryLegalMentions(text) {
+  if (!text) return null;
+  const check = (field) => ({ key: field.key, label: field.label, present: field.test(text) });
+  const universal = UNIVERSAL_LEGAL_MENTIONS.map(check);
+  const conditional = CONDITIONAL_LEGAL_MENTIONS.map(check);
+  return {
+    universal,
+    conditional,
+    missingUniversalCount: universal.filter((m) => !m.present).length,
+    missingConditionalCount: conditional.filter((m) => !m.present).length,
   };
 }
 

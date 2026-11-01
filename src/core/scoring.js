@@ -26,6 +26,10 @@ export const THRESHOLDS = { orange: 30, red: 60 };
  *  - hasRedirectionInPath: boolean ("//" inside the URL path)
  *  - isShortRegistrationSpan: boolean (domain registered for ~1 year only)
  *  - isInsecureHttp: boolean (page served over plain HTTP, not HTTPS)
+ *  - legalPageMissing: boolean (no mentions-légales page found at all)
+ *  - legalMentions: { missingUniversalCount, missingConditionalCount } | null
+ *    (from core/identity.js's checkMandatoryLegalMentions, only when a
+ *    legal page was found — mutually exclusive with legalPageMissing)
  *
  * @param {Record<string, any>} signals
  * @returns {Verdict}
@@ -124,6 +128,25 @@ export function computeScore(signals) {
     // Most legitimate shops don't sign their zone either, so the absence of
     // DNSSEC is deliberately not penalised — only a known-bad signature is.
     reasons.push({ id: 'dnssec-ok', weight: -5, message: 'Le domaine est protégé par DNSSEC et la signature est valide.' });
+  }
+
+  if (signals.legalPageMissing) {
+    reasons.push({
+      id: 'legal-page-missing',
+      weight: 15,
+      message: 'Aucune page de mentions légales trouvée sur le site, pourtant obligatoire pour tout site en France.',
+    });
+  } else if (signals.legalMentions) {
+    const { missingUniversalCount, missingConditionalCount } = signals.legalMentions;
+    const weight = missingUniversalCount * 5 + missingConditionalCount * 2;
+    if (weight > 0) {
+      const total = missingUniversalCount + missingConditionalCount;
+      reasons.push({
+        id: 'incomplete-legal-mentions',
+        weight,
+        message: `Mentions légales incomplètes : ${total} information${total > 1 ? 's' : ''} obligatoire${total > 1 ? 's' : ''} absente${total > 1 ? 's' : ''} (dénomination, SIRET, adresse, hébergeur...).`,
+      });
+    }
   }
 
   if (signals.matchedBrand && !signals.isOfficialDomain) {

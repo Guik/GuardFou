@@ -112,15 +112,22 @@ async function handlePageSignals(tabId, url, payload) {
   // already looks suspicious from free signals.
   const worthCheckingAge = !isAllowlisted && domain && (payload?.isLikelyShop || signals.matchedBrand);
   if (worthCheckingAge) {
-    const [rdapInfo, dnssec] = await Promise.all([
+    const legalLinks = findLegalLinks(payload?.allLinks ?? []);
+    const [rdapInfo, dnssec, legalAnalysis] = await Promise.all([
       getDomainRdapInfo(domain),
       getDnssecStatus(domain),
+      getLegalPageAnalysis(legalLinks[0]?.href ?? null, payload?.htmlLang ?? null),
     ]);
     signals.domainAgeDays = rdapInfo.ageDays;
     signals.registrarName = rdapInfo.registrarName;
     signals.isWatchedRegistrar = isWatchedRegistrar(rdapInfo.registrarName, watchedRegistrars);
     signals.isShortRegistrationSpan = isShortRegistrationSpan(rdapInfo.registeredAt, rdapInfo.expiresAt);
     signals.dnssec = dnssec;
+    if (legalAnalysis.legal.present) {
+      signals.legalMentions = legalAnalysis.mandatoryMentions;
+    } else {
+      signals.legalPageMissing = true;
+    }
   }
 
   const verdict = computeScore(signals);
@@ -162,6 +169,7 @@ async function buildIdentityCard(tabId) {
     seoMetaSummary: payload?.seoMeta ? summarizeSeoMeta(payload.seoMeta) : [],
     address: legalAnalysis.address,
     legalText: legalAnalysis.legal,
+    mandatoryMentions: legalAnalysis.mandatoryMentions,
     // Not available without a paid/keyed API (SimilarWeb, Ahrefs, Moz...) — deferred.
     popularity: null,
     referringLinks: null,
