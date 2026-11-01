@@ -125,18 +125,18 @@ test('no legal page at all adds a fixed weight', () => {
   assert.ok(verdict.reasons.some((r) => r.id === 'legal-page-missing' && r.weight === 15));
 });
 
-test('incomplete legal mentions weight universal fields higher than conditional ones', () => {
+test('incomplete legal mentions sum each missing field\'s own weight', () => {
   const verdict = computeScore({
     legalMentions: {
       universal: [
-        { key: 'legalForm', label: 'Dénomination sociale / forme juridique', present: false },
-        { key: 'siren', label: 'Numéro SIRET/SIREN', present: false },
-        { key: 'address', label: 'Adresse du siège social', present: true },
+        { key: 'legalForm', label: 'Dénomination sociale / forme juridique', weight: 5, present: false },
+        { key: 'siren', label: 'Numéro SIRET/SIREN', weight: 5, present: false },
+        { key: 'address', label: 'Adresse du siège social', weight: 5, present: true },
       ],
       conditional: [
-        { key: 'rcs', label: 'Immatriculation RCS', present: false },
-        { key: 'capital', label: 'Capital social', present: false },
-        { key: 'vat', label: 'Numéro de TVA intracommunautaire', present: false },
+        { key: 'rcs', label: 'Immatriculation RCS', weight: 2, present: false },
+        { key: 'capital', label: 'Capital social', weight: 2, present: false },
+        { key: 'vat', label: 'Numéro de TVA intracommunautaire', weight: 2, present: false },
       ],
       missingUniversalCount: 2,
       missingConditionalCount: 3,
@@ -144,10 +144,48 @@ test('incomplete legal mentions weight universal fields higher than conditional 
   });
   const reason = verdict.reasons.find((r) => r.id === 'incomplete-legal-mentions');
   assert.ok(reason);
-  assert.equal(reason.weight, 2 * 5 + 3 * 2); // 16
+  assert.equal(reason.weight, 16); // 5 + 5 + 2 + 2 + 2
   // The message should name actually-missing fields, not a fixed example list.
   assert.ok(reason.message.includes('Dénomination sociale / forme juridique'));
   assert.ok(!reason.message.includes('Adresse du siège social')); // this one is present
+});
+
+test('missing only lower-weight administrative fields contributes much less than missing SIRET/address', () => {
+  const administrativeOnly = computeScore({
+    legalMentions: {
+      universal: [
+        { key: 'legalForm', label: 'Dénomination', weight: 5, present: true },
+        { key: 'siren', label: 'SIRET/SIREN', weight: 5, present: true },
+        { key: 'address', label: 'Adresse', weight: 5, present: true },
+        { key: 'contact', label: 'Contact', weight: 2, present: false },
+        { key: 'host', label: 'Hébergeur', weight: 2, present: false },
+        { key: 'publicationDirector', label: 'Directeur de la publication', weight: 2, present: false },
+      ],
+      conditional: [],
+      missingUniversalCount: 3,
+      missingConditionalCount: 0,
+    },
+  });
+  const identityOnly = computeScore({
+    legalMentions: {
+      universal: [
+        { key: 'legalForm', label: 'Dénomination', weight: 5, present: false },
+        { key: 'siren', label: 'SIRET/SIREN', weight: 5, present: false },
+        { key: 'address', label: 'Adresse', weight: 5, present: false },
+        { key: 'contact', label: 'Contact', weight: 2, present: true },
+        { key: 'host', label: 'Hébergeur', weight: 2, present: true },
+        { key: 'publicationDirector', label: 'Directeur de la publication', weight: 2, present: true },
+      ],
+      conditional: [],
+      missingUniversalCount: 3,
+      missingConditionalCount: 0,
+    },
+  });
+  const administrativeReason = administrativeOnly.reasons.find((r) => r.id === 'incomplete-legal-mentions');
+  const identityReason = identityOnly.reasons.find((r) => r.id === 'incomplete-legal-mentions');
+  assert.equal(administrativeReason.weight, 6); // 2 + 2 + 2
+  assert.equal(identityReason.weight, 15); // 5 + 5 + 5
+  assert.ok(identityReason.weight > administrativeReason.weight);
 });
 
 test('complete legal mentions add no reason', () => {

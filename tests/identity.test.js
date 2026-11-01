@@ -251,6 +251,20 @@ Site web: https://www.adepem.com`;
   assert.equal(present('mediator'), false);
 });
 
+test('on this real adepem.com excerpt, the missing fields are all low-weight administrative ones', () => {
+  const text = `Dénomination sociale: ADEPEM
+Capital: 15.244,90 Euros
+Siège social: 104 rue de Maubeuge 75010 PARIS
+Immatriculation: RCS Paris B 321045395
+N° TVA intracommunautaire: FR-321 045 395 00019`;
+  const result = checkMandatoryLegalMentions(text);
+  const missing = [...result.universal, ...result.conditional].filter((m) => !m.present);
+  // None of the missing fields are the high-weight identity ones
+  // (dénomination/SIRET/adresse are all present here) — every missing
+  // field should be weight 2, not 5.
+  assert.ok(missing.every((m) => m.weight === 2));
+});
+
 // Real bug: `\b` was shared across the whole (?:€|euros?) alternation, but
 // \b only makes sense after a word character — it silently never matched
 // the "€" branch at all, so "Capital: 15.244,90 €" (the actual encoding on

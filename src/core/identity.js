@@ -175,11 +175,17 @@ export function analyzeLegalText(text, declaredLang) {
 }
 
 // Mandatory under LCEN art. 6-III for every site, commercial or not — no
-// company type is exempt from these.
+// company type is exempt from these. Weighted per field, not per tier:
+// SIRET/SIREN, address and dénomination are hard to fabricate convincingly
+// and are exactly what the SIRET registry cross-check verifies, so they
+// carry more weight (5) than the administrative fields (contact, hébergeur,
+// directeur de publication, weight 2) that plenty of legitimate small sites
+// genuinely forget without that saying much about fraud intent.
 const UNIVERSAL_LEGAL_MENTIONS = [
   {
     key: 'legalForm',
     label: 'Dénomination sociale / forme juridique',
+    weight: 5,
     // Either an actual legal-form keyword, or the "dénomination sociale" /
     // "raison sociale" label itself — a page can properly name the company
     // ("Dénomination sociale : ADEPEM") without restating one of these
@@ -191,22 +197,25 @@ const UNIVERSAL_LEGAL_MENTIONS = [
   {
     key: 'siren',
     label: 'Numéro SIRET/SIREN',
+    weight: 5,
     // Reuses the same extraction the SIRET registry cross-check uses (see
     // core/siret.js), which also catches a SIREN given via its RCS
     // registration ("RCS Paris B 321045395") rather than literally labeled
     // "SIREN" — a real, common pattern a plain keyword search would miss.
     test: (t) => extractSirenOrSiret(t) !== null,
   },
-  { key: 'address', label: 'Adresse du siège social', test: (t) => Boolean(extractPhysicalAddress(t)) },
+  { key: 'address', label: 'Adresse du siège social', weight: 5, test: (t) => Boolean(extractPhysicalAddress(t)) },
   {
     key: 'contact',
     label: 'Coordonnées de contact (téléphone ou email)',
+    weight: 2,
     test: (t) => /[\w.+-]+@[\w-]+\.[a-z]{2,}/i.test(t) || /(?:\+33|0)\s?[1-9](?:[\s.-]?\d{2}){4}/.test(t),
   },
-  { key: 'host', label: "Identité de l'hébergeur du site", test: (t) => /h[ée]bergeur|h[ée]bergement du site/i.test(t) },
+  { key: 'host', label: "Identité de l'hébergeur du site", weight: 2, test: (t) => /h[ée]bergeur|h[ée]bergement du site/i.test(t) },
   {
     key: 'publicationDirector',
     label: 'Directeur de la publication',
+    weight: 2,
     test: (t) => /directeur\s+(?:de\s+la\s+)?publication|responsable\s+(?:de\s+la\s+)?publication/i.test(t),
   },
 ];
@@ -216,10 +225,11 @@ const UNIVERSAL_LEGAL_MENTIONS = [
 // VAT-exempt small business legitimately has no intracommunity VAT number.
 // Weighted lower in scoring for exactly that reason.
 const CONDITIONAL_LEGAL_MENTIONS = [
-  { key: 'rcs', label: "Immatriculation RCS", test: (t) => /\brcs\b/i.test(t) },
+  { key: 'rcs', label: "Immatriculation RCS", weight: 2, test: (t) => /\brcs\b/i.test(t) },
   {
     key: 'capital',
     label: 'Capital social',
+    weight: 2,
     // "Capital social" as an exact phrase, or just "Capital :" followed by
     // an amount — real pages often write the shorter form and it's just as
     // clear from context.
@@ -230,11 +240,13 @@ const CONDITIONAL_LEGAL_MENTIONS = [
   {
     key: 'vat',
     label: 'Numéro de TVA intracommunautaire',
+    weight: 2,
     test: (t) => /tva\s+intracommunautaire/i.test(t) || /\bfr\d{2}\s?\d{9}\b/i.test(t),
   },
   {
     key: 'mediator',
     label: 'Médiateur de la consommation',
+    weight: 2,
     test: (t) => /m[ée]diat(?:eur|rice|ion)/i.test(t) && /consommation/i.test(t),
   },
 ];
@@ -248,7 +260,7 @@ const CONDITIONAL_LEGAL_MENTIONS = [
  */
 export function checkMandatoryLegalMentions(text) {
   if (!text) return null;
-  const check = (field) => ({ key: field.key, label: field.label, present: field.test(text) });
+  const check = (field) => ({ key: field.key, label: field.label, weight: field.weight, present: field.test(text) });
   const universal = UNIVERSAL_LEGAL_MENTIONS.map(check);
   const conditional = CONDITIONAL_LEGAL_MENTIONS.map(check);
   return {

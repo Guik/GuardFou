@@ -27,7 +27,8 @@ export const THRESHOLDS = { orange: 30, red: 60 };
  *  - isShortRegistrationSpan: boolean (domain registered for ~1 year only)
  *  - isInsecureHttp: boolean (page served over plain HTTP, not HTTPS)
  *  - legalPageMissing: boolean (no mentions-légales page found at all)
- *  - legalMentions: { missingUniversalCount, missingConditionalCount } | null
+ *  - legalMentions: { universal, conditional } | null — field objects
+ *    carry their own { key, label, weight, present }
  *    (from core/identity.js's checkMandatoryLegalMentions, only when a
  *    legal page was found — mutually exclusive with legalPageMissing)
  *  - siretInvalidChecksum: boolean (a SIRET/SIREN was found but fails Luhn)
@@ -145,12 +146,17 @@ export function computeScore(signals) {
       message: 'Aucune page de mentions légales trouvée sur le site, pourtant obligatoire pour tout site en France.',
     });
   } else if (signals.legalMentions) {
-    const { universal = [], conditional = [], missingUniversalCount, missingConditionalCount } = signals.legalMentions;
-    const weight = missingUniversalCount * 5 + missingConditionalCount * 2;
+    const { universal = [], conditional = [] } = signals.legalMentions;
+    // Each field carries its own weight now (SIRET/adresse/dénomination
+    // matter more than e.g. hébergeur/contact — see core/identity.js),
+    // rather than a flat per-tier multiplier, so the score — and the
+    // preview below — naturally reflect how important what's missing
+    // actually is, sorted most-severe first.
+    const missing = [...universal, ...conditional].filter((m) => !m.present).sort((a, b) => b.weight - a.weight);
+    const weight = missing.reduce((sum, m) => sum + m.weight, 0);
     if (weight > 0) {
-      const missingLabels = [...universal, ...conditional].filter((m) => !m.present).map((m) => m.label);
-      const total = missingLabels.length;
-      const preview = missingLabels.slice(0, 3).join(', ');
+      const total = missing.length;
+      const preview = missing.slice(0, 3).map((m) => m.label).join(', ');
       const rest = total > 3 ? `, +${total - 3} autre${total - 3 > 1 ? 's' : ''}` : '';
       reasons.push({
         id: 'incomplete-legal-mentions',
