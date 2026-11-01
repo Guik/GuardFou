@@ -99,6 +99,16 @@ function formatSiret(candidate) {
   return candidate.type === 'siret' ? `${d.slice(0, 3)} ${d.slice(3, 6)} ${d.slice(6, 9)} ${d.slice(9)}` : `${d.slice(0, 3)} ${d.slice(3, 6)} ${d.slice(6)}`;
 }
 
+// The ✓/! marker is part of the actual text (not a CSS ::before symbol), so
+// it's included when the user copies/selects the list — CSS-generated
+// content is invisible to copy/paste and to some screen readers.
+function addChecklistItem(ul, label, ok) {
+  const li = document.createElement('li');
+  li.textContent = `${ok ? '✓' : '!'} ${label}`;
+  li.className = ok ? 'seo-ok' : 'seo-fail';
+  ul.appendChild(li);
+}
+
 function addField(dl, term, buildDescription) {
   const dt = document.createElement('dt');
   dt.textContent = term;
@@ -184,10 +194,7 @@ function renderIdentityCard(card) {
     }
     const ul = document.createElement('ul');
     for (const item of mentions.universal) {
-      const li = document.createElement('li');
-      li.textContent = item.label;
-      li.className = item.present ? 'seo-ok' : 'seo-fail';
-      ul.appendChild(li);
+      addChecklistItem(ul, item.label, item.present);
     }
     const sep = document.createElement('li');
     sep.textContent = 'Selon statut juridique :';
@@ -195,10 +202,7 @@ function renderIdentityCard(card) {
     sep.style.marginTop = '6px';
     ul.appendChild(sep);
     for (const item of mentions.conditional) {
-      const li = document.createElement('li');
-      li.textContent = item.label;
-      li.className = item.present ? 'seo-ok' : 'seo-fail';
-      ul.appendChild(li);
+      addChecklistItem(ul, item.label, item.present);
     }
     dd.appendChild(ul);
   });
@@ -237,10 +241,7 @@ function renderIdentityCard(card) {
   addField(dl, 'Optimisation SEO (balises meta)', (dd) => {
     const ul = document.createElement('ul');
     for (const item of card.seoMetaSummary) {
-      const li = document.createElement('li');
-      li.textContent = item.label;
-      li.className = item.ok ? 'seo-ok' : 'seo-fail';
-      ul.appendChild(li);
+      addChecklistItem(ul, item.label, item.ok);
     }
     dd.appendChild(ul);
   });

@@ -240,22 +240,10 @@ header img {
   gap: 2px;
 }
 
-.identity-fields .seo-ok,
-.identity-fields .seo-fail {
-  display: flex;
-  align-items: flex-start;
-  gap: 6px;
-}
-
-.identity-fields .seo-ok::before,
-.identity-fields .seo-fail::before {
-  flex-shrink: 0;
-  margin-top: 1px;
-  font-size: 11px;
-}
-
-.identity-fields .seo-ok::before { content: '✓'; color: var(--color-green); }
-.identity-fields .seo-fail::before { content: '!'; color: var(--color-orange); font-weight: 700; }
+/* The ✓/! marker is real text (not CSS-generated content) so it survives
+   copy/paste and screen readers — see popup.js's addChecklistItem. */
+.identity-fields .seo-ok { color: var(--color-green); }
+.identity-fields .seo-fail { color: var(--color-orange); font-weight: 600; }
 
 .identity-fields .warning {
   color: var(--color-red);
