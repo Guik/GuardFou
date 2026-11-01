@@ -47,40 +47,68 @@ test('detectSocialLinks skips non-absolute hrefs instead of guessing', () => {
   assert.deepEqual(detectSocialLinks(['#', '/relative/path', 'javascript:void(0)']), []);
 });
 
+// a.href (the DOM property collect.js actually uses) is always an absolute
+// URL, so these fixtures use absolute URLs too rather than bare paths.
 test('findLegalLinks filters by link text', () => {
   const links = [
-    { text: 'Mentions légales', href: '/mentions-legales' },
-    { text: 'Accueil', href: '/' },
-    { text: 'CGV', href: '/cgv' },
-    { text: 'Politique de confidentialité', href: '/politique-de-confidentialite' },
+    { text: 'Mentions légales', href: 'https://example.fr/mentions-legales' },
+    { text: 'Accueil', href: 'https://example.fr/' },
+    { text: 'CGV', href: 'https://example.fr/cgv' },
+    { text: 'Politique de confidentialité', href: 'https://example.fr/politique-de-confidentialite' },
   ];
-  const result = findLegalLinks(links);
+  const result = findLegalLinks(links, 'example.fr');
   assert.equal(result.length, 3);
-  assert.ok(result.some((l) => l.href === '/mentions-legales'));
-  assert.ok(result.some((l) => l.href === '/cgv'));
-  assert.ok(result.some((l) => l.href === '/politique-de-confidentialite'));
+  assert.ok(result.some((l) => l.href.endsWith('/mentions-legales')));
+  assert.ok(result.some((l) => l.href.endsWith('/cgv')));
+  assert.ok(result.some((l) => l.href.endsWith('/politique-de-confidentialite')));
 });
 
 test('findLegalLinks prioritizes "mentions légales" over a privacy policy when both exist', () => {
   const links = [
     // Privacy policy appears first in the DOM, as is common in footers.
-    { text: 'Politique de confidentialité', href: '/politique-de-confidentialite' },
-    { text: 'Mentions légales', href: '/mentions-legales' },
-    { text: 'CGV', href: '/cgv' },
+    { text: 'Politique de confidentialité', href: 'https://example.fr/politique-de-confidentialite' },
+    { text: 'Mentions légales', href: 'https://example.fr/mentions-legales' },
+    { text: 'CGV', href: 'https://example.fr/cgv' },
   ];
-  const result = findLegalLinks(links);
-  assert.equal(result[0].href, '/mentions-legales');
+  const result = findLegalLinks(links, 'example.fr');
+  assert.ok(result[0].href.endsWith('/mentions-legales'));
 });
 
 test('findLegalLinks falls back to CGV/CGU, then privacy policy, when no mentions légales link exists', () => {
-  const withCgv = findLegalLinks([
-    { text: 'Politique de confidentialité', href: '/privacy' },
-    { text: 'CGV', href: '/cgv' },
-  ]);
-  assert.equal(withCgv[0].href, '/cgv');
+  const withCgv = findLegalLinks(
+    [
+      { text: 'Politique de confidentialité', href: 'https://example.fr/privacy' },
+      { text: 'CGV', href: 'https://example.fr/cgv' },
+    ],
+    'example.fr',
+  );
+  assert.ok(withCgv[0].href.endsWith('/cgv'));
 
-  const privacyOnly = findLegalLinks([{ text: 'Politique de confidentialité', href: '/privacy' }]);
-  assert.equal(privacyOnly[0].href, '/privacy');
+  const privacyOnly = findLegalLinks([{ text: 'Politique de confidentialité', href: 'https://example.fr/privacy' }], 'example.fr');
+  assert.ok(privacyOnly[0].href.endsWith('/privacy'));
+});
+
+// Real bug: adepem.com links to iubenda.com for its privacy policy (common
+// pattern — many sites outsource privacy-policy hosting to a third-party
+// generator, often via a cookie-consent banner). That page is a generic
+// templated notice hosted by Iubenda, not adepem.com, and structurally
+// cannot contain adepem's own SIRET/dénomination/hébergeur — checking it
+// for mandatory mentions isn't weaker evidence, it's the wrong document.
+test('findLegalLinks excludes a legal-looking link that points to a different domain entirely', () => {
+  const links = [
+    { text: 'Politique de confidentialité', href: 'https://www.iubenda.com/privacy-policy/95071294' },
+  ];
+  assert.deepEqual(findLegalLinks(links, 'adepem.com'), []);
+});
+
+test('findLegalLinks still accepts a same-domain link served from a subdomain', () => {
+  const links = [{ text: 'Mentions légales', href: 'https://legal.example.fr/mentions-legales' }];
+  const result = findLegalLinks(links, 'example.fr');
+  assert.equal(result.length, 1);
+});
+
+test('findLegalLinks skips a link with an unparsable href rather than guessing', () => {
+  assert.deepEqual(findLegalLinks([{ text: 'Mentions légales', href: 'not a url' }], 'example.fr'), []);
 });
 
 test('extractPhysicalAddress finds a plausible French address', () => {

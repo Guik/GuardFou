@@ -96,13 +96,31 @@ export function detectSocialLinks(hrefs) {
  * sorts before a privacy policy or CGV/CGU, since callers typically use
  * only the first result (see background/index.js's legalLinks[0]) and that
  * document is the one that actually carries the mandatory-mentions fields.
+ *
+ * Only same-domain links are considered. Plenty of sites outsource their
+ * privacy policy to a third-party generator (Iubenda, TermsFeed...) and
+ * link to it — a real, legitimate link, but that page is a generic
+ * templated privacy notice hosted by someone else entirely, and
+ * structurally cannot contain the site's own SIRET/dénomination/hébergeur.
+ * Checking it for mandatory mentions isn't just weaker evidence, it's the
+ * wrong document — confirmed live against adepem.com, which links to
+ * iubenda.com for its privacy policy.
  * @param {Array<{text: string, href: string}>} links
+ * @param {string} siteDomain the registrable domain of the site being analyzed
  */
-export function findLegalLinks(links) {
+export function findLegalLinks(links, siteDomain) {
   const matched = [];
   for (const link of links) {
     const tier = LEGAL_LINK_TIERS.find((t) => t.test.test(link.text || ''));
-    if (tier) matched.push({ link, priority: tier.priority });
+    if (!tier) continue;
+    let hostname;
+    try {
+      hostname = new URL(link.href).hostname.toLowerCase();
+    } catch {
+      continue; // not an absolute URL: skip rather than guess
+    }
+    if (!hostnameMatchesDomain(hostname, siteDomain)) continue; // third-party-hosted: not useful here
+    matched.push({ link, priority: tier.priority });
   }
   matched.sort((a, b) => a.priority - b.priority);
   return matched.map((m) => m.link);

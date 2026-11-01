@@ -137,7 +137,7 @@ async function handlePageSignals(tabId, url, payload) {
  * from the identity card) is cheap after the first real fetch.
  */
 async function computeNetworkSignals(domain, payload, watchedRegistrars, claimedText) {
-  const legalLinks = findLegalLinks(payload?.allLinks ?? []);
+  const legalLinks = findLegalLinks(payload?.allLinks ?? [], domain);
   const legalUrl = legalLinks[0]?.href ?? null;
   const [rdapInfo, dnssec, legalAnalysis] = await Promise.all([
     getDomainRdapInfo(domain),
