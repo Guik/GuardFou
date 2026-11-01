@@ -12,7 +12,7 @@ import { findBrandByAlias, isOfficialDomain, looksLikeBrandPlusGenericWord, isNe
 import { isWatchedRegistrar } from '../core/registrar.js';
 import { companyNameMatchesClaim } from '../core/siret.js';
 import { computeScore } from '../core/scoring.js';
-import { detectTechnologies, detectSocialLinks, findLegalLinks, summarizeSeoMeta } from '../core/identity.js';
+import { detectTechnologies, detectSocialLinks, findLegalLinks, pageLooksLikeOwnLegalDocument, summarizeSeoMeta } from '../core/identity.js';
 import { isShortRegistrationSpan } from '../core/rdap.js';
 import { BRANDS_FR } from '../data/brands-fr.js';
 import { WATCHED_REGISTRARS } from '../data/watched-registrars.js';
@@ -110,7 +110,7 @@ async function handlePageSignals(tabId, url, payload) {
   // Stashed so buildIdentityCard can later run the same network-dependent
   // checks (RDAP/DNSSEC/legal+SIRET) without redoing brand-matching, and so
   // it can fold the result back into the real score — see there for why.
-  await pageContextByTab.set(tabId, { domain, displayId, payload, baseSignals, claimedText, watchedRegistrars, isAllowlisted });
+  await pageContextByTab.set(tabId, { domain, displayId, payload, baseSignals, claimedText, watchedRegistrars, isAllowlisted, url });
 
   // The network-dependent checks (RDAP, DNSSEC, legal page, SIRET registry)
   // only run automatically when the page looks like a shop or matches a
@@ -122,7 +122,7 @@ async function handlePageSignals(tabId, url, payload) {
   // whatever the card ends up showing.
   const worthCheckingAge = !isAllowlisted && domain && (payload?.isLikelyShop || matchedBrand);
   const signals = worthCheckingAge
-    ? { ...baseSignals, ...(await computeNetworkSignals(domain, payload, watchedRegistrars, claimedText)).signals }
+    ? { ...baseSignals, ...(await computeNetworkSignals(domain, payload, watchedRegistrars, claimedText, url)).signals }
     : baseSignals;
 
   await publishVerdict(tabId, displayId, signals);
@@ -135,10 +135,14 @@ async function handlePageSignals(tabId, url, payload) {
  * card displays. Each underlying fetch has its own cache, so calling this
  * twice for the same domain/legal page (once from the automatic pass, once
  * from the identity card) is cheap after the first real fetch.
+ * @param {string} [currentUrl] the tab's own URL — used as a fallback legal
+ *   page when no link on the page points to one (many sites don't
+ *   hyperlink the nav item for the page you're already on, so visiting a
+ *   legal page directly would otherwise find nothing to check)
  */
-async function computeNetworkSignals(domain, payload, watchedRegistrars, claimedText) {
+async function computeNetworkSignals(domain, payload, watchedRegistrars, claimedText, currentUrl) {
   const legalLinks = findLegalLinks(payload?.allLinks ?? [], domain);
-  const legalUrl = legalLinks[0]?.href ?? null;
+  const legalUrl = legalLinks[0]?.href ?? (currentUrl && pageLooksLikeOwnLegalDocument(payload?.title, currentUrl) ? currentUrl : null);
   const [rdapInfo, dnssec, legalAnalysis] = await Promise.all([
     getDomainRdapInfo(domain),
     getDnssecStatus(domain),
@@ -201,7 +205,7 @@ async function publishVerdict(tabId, displayId, signals) {
 async function buildIdentityCard(tabId) {
   const ctx = await pageContextByTab.get(tabId);
   if (!ctx) return null;
-  const { domain, displayId, payload, baseSignals, claimedText, watchedRegistrars, isAllowlisted } = ctx;
+  const { domain, displayId, payload, baseSignals, claimedText, watchedRegistrars, isAllowlisted, url } = ctx;
 
   const allLinks = payload?.allLinks ?? [];
 
@@ -210,7 +214,7 @@ async function buildIdentityCard(tabId) {
   let legalUrl = null;
 
   if (!isAllowlisted && domain) {
-    const network = await computeNetworkSignals(domain, payload, watchedRegistrars, claimedText);
+    const network = await computeNetworkSignals(domain, payload, watchedRegistrars, claimedText, url);
     rdapInfo = network.rdapInfo;
     legalAnalysis = network.legalAnalysis;
     legalUrl = network.legalUrl;

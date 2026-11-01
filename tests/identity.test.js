@@ -4,6 +4,7 @@ import {
   detectTechnologies,
   detectSocialLinks,
   findLegalLinks,
+  pageLooksLikeOwnLegalDocument,
   extractPhysicalAddress,
   guessLanguage,
   analyzeLegalText,
@@ -109,6 +110,26 @@ test('findLegalLinks still accepts a same-domain link served from a subdomain', 
 
 test('findLegalLinks skips a link with an unparsable href rather than guessing', () => {
   assert.deepEqual(findLegalLinks([{ text: 'Mentions légales', href: 'not a url' }], 'example.fr'), []);
+});
+
+// Real case: adepem.com's own CGV page doesn't link to itself in its nav
+// (common — many sites don't hyperlink the "you are here" item), so once
+// the Iubenda third-party link is correctly excluded, nothing was left to
+// check at all.
+test('pageLooksLikeOwnLegalDocument recognises the real adepem.com CGV URL by its path', () => {
+  assert.equal(pageLooksLikeOwnLegalDocument(null, 'https://www.adepem.com/conditions-generales-vente'), true);
+});
+
+test('pageLooksLikeOwnLegalDocument recognises a legal-sounding title', () => {
+  assert.equal(pageLooksLikeOwnLegalDocument('Mentions légales - Ma Boutique', 'https://example.fr/infos'), true);
+});
+
+test('pageLooksLikeOwnLegalDocument returns false for an ordinary page', () => {
+  assert.equal(pageLooksLikeOwnLegalDocument('Accueil - Ma Boutique', 'https://example.fr/'), false);
+});
+
+test('pageLooksLikeOwnLegalDocument handles an unparsable URL gracefully', () => {
+  assert.equal(pageLooksLikeOwnLegalDocument('Accueil', 'not a url'), false);
 });
 
 test('extractPhysicalAddress finds a plausible French address', () => {

@@ -127,6 +127,30 @@ export function findLegalLinks(links, siteDomain) {
 }
 
 /**
+ * True when the current page's own title or URL path suggests it IS a
+ * legal-notice/CGV/privacy document — for when no link on the page points
+ * to one. Many sites don't hyperlink the nav item for the page you're
+ * already on, so without this, visiting a legal page directly (rather than
+ * via a link from elsewhere on the site) would find nothing to check even
+ * though you're looking right at it. The URL path has its hyphens/
+ * underscores turned into spaces first ("conditions-generales-vente" →
+ * "conditions generales vente") so it matches the same patterns as link
+ * text.
+ * @param {string|null} title
+ * @param {string} url
+ */
+export function pageLooksLikeOwnLegalDocument(title, url) {
+  let pathAsWords = '';
+  try {
+    pathAsWords = new URL(url).pathname.replace(/[-_/]/g, ' ');
+  } catch {
+    pathAsWords = '';
+  }
+  const combined = `${title || ''} ${pathAsWords}`;
+  return LEGAL_LINK_TIERS.some((tier) => tier.test.test(combined));
+}
+
+/**
  * A very rough best-effort guess at a French postal address
  * ("12 rue des Lilas, 75001 Paris") in free text. Returns null when nothing
  * matching is found — this is a weak heuristic, not a validated address
