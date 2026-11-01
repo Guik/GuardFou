@@ -31,7 +31,19 @@ function hostnameMatchesDomain(hostname, domain) {
   return hostname === domain || hostname.endsWith(`.${domain}`);
 }
 
-const LEGAL_LINK_TEXT = /mentions?\s*l[ée]gales?|cgv\b|cgu\b|conditions?\s*g[ée]n[ée]rales?|legal\s*notice|terms\s*(and|&)?\s*conditions|privacy\s*policy|politique\s*de\s*confidentialit[ée]|protection\s*des\s*donn[ée]es/i;
+// Tiered rather than one flat pattern: "mentions légales" / "legal notice"
+// is the document that actually carries the mandatory-mentions template
+// (SIRET, hébergeur, directeur de la publication...). A privacy policy or
+// CGV/CGU is a real, often-separate document that legitimately won't
+// contain most of those fields — if a site has both and we grab the
+// privacy policy first just because it's earlier in the DOM, every
+// mandatory-mentions check fails even on a fully compliant site. Lower
+// priority number = checked first.
+const LEGAL_LINK_TIERS = [
+  { priority: 0, test: /mentions?\s*l[ée]gales?|legal\s*notice/i },
+  { priority: 1, test: /cgv\b|cgu\b|conditions?\s*g[ée]n[ée]rales?|terms\s*(and|&)?\s*conditions/i },
+  { priority: 2, test: /privacy\s*policy|politique\s*de\s*confidentialit[ée]|protection\s*des\s*donn[ée]es/i },
+];
 
 /**
  * Detected e-commerce/CMS platforms from a page's raw HTML and <meta
@@ -78,11 +90,20 @@ export function detectSocialLinks(hrefs) {
 
 /**
  * Filters a page's links down to the ones that look like a legal-notice /
- * terms page, by link text.
+ * terms page, by link text — ordered so an actual "mentions légales" link
+ * sorts before a privacy policy or CGV/CGU, since callers typically use
+ * only the first result (see background/index.js's legalLinks[0]) and that
+ * document is the one that actually carries the mandatory-mentions fields.
  * @param {Array<{text: string, href: string}>} links
  */
 export function findLegalLinks(links) {
-  return links.filter((link) => LEGAL_LINK_TEXT.test(link.text || ''));
+  const matched = [];
+  for (const link of links) {
+    const tier = LEGAL_LINK_TIERS.find((t) => t.test.test(link.text || ''));
+    if (tier) matched.push({ link, priority: tier.priority });
+  }
+  matched.sort((a, b) => a.priority - b.priority);
+  return matched.map((m) => m.link);
 }
 
 /**

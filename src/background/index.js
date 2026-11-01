@@ -82,7 +82,6 @@ async function handlePageSignals(tabId, url, payload) {
   if (!domain && !isIpHostname) return;
 
   const displayId = domain ?? getHostname(url) ?? url;
-  await pageContextByTab.set(tabId, { domain: displayId, payload });
 
   const { allowlist = [], customWatchedRegistrars = [] } = await browser.storage.local.get(['allowlist', 'customWatchedRegistrars']);
   const isAllowlisted = allowlist.includes(displayId);
@@ -94,7 +93,7 @@ async function handlePageSignals(tabId, url, payload) {
   const matchedBrand = !isAllowlisted ? findBrandByAlias(claimedText, BRANDS_FR) : null;
   const domainLabel = domain ? (getDomainLabel(domain) ?? domain) : null;
 
-  const signals = {
+  const baseSignals = {
     isAllowlisted,
     matchedBrand,
     isOfficialDomain: matchedBrand && domain ? isOfficialDomain(domain, matchedBrand) : false,
@@ -108,44 +107,76 @@ async function handlePageSignals(tabId, url, payload) {
     isInsecureHttp: isInsecureHttp(url),
   };
 
-  // These need network calls: only pay for them when there's an actual
-  // domain to look up (not a bare IP) and the page looks like a shop, or
-  // already looks suspicious from free signals.
-  const worthCheckingAge = !isAllowlisted && domain && (payload?.isLikelyShop || signals.matchedBrand);
-  if (worthCheckingAge) {
-    const legalLinks = findLegalLinks(payload?.allLinks ?? []);
-    const [rdapInfo, dnssec, legalAnalysis] = await Promise.all([
-      getDomainRdapInfo(domain),
-      getDnssecStatus(domain),
-      getLegalPageAnalysis(legalLinks[0]?.href ?? null, payload?.htmlLang ?? null),
-    ]);
-    signals.domainAgeDays = rdapInfo.ageDays;
-    signals.registrarName = rdapInfo.registrarName;
-    signals.isWatchedRegistrar = isWatchedRegistrar(rdapInfo.registrarName, watchedRegistrars);
-    signals.isShortRegistrationSpan = isShortRegistrationSpan(rdapInfo.registeredAt, rdapInfo.expiresAt);
-    signals.dnssec = dnssec;
-    if (legalAnalysis.legal.present) {
-      signals.legalMentions = legalAnalysis.mandatoryMentions;
-    } else {
-      signals.legalPageMissing = true;
-    }
+  // Stashed so buildIdentityCard can later run the same network-dependent
+  // checks (RDAP/DNSSEC/legal+SIRET) without redoing brand-matching, and so
+  // it can fold the result back into the real score — see there for why.
+  await pageContextByTab.set(tabId, { domain, displayId, payload, baseSignals, claimedText, watchedRegistrars, isAllowlisted });
 
-    const { candidate, checksumValid, registry } = legalAnalysis.companyCheck;
-    if (candidate) {
-      if (checksumValid === false) {
-        signals.siretInvalidChecksum = true;
-      } else if (registry && !registry.found) {
-        signals.siretNotFound = true;
-      } else if (registry?.status === 'C') {
-        signals.companyClosed = true;
-        signals.registeredCompanyName = registry.name;
-      } else if (registry?.found && !companyNameMatchesClaim(registry.name, claimedText)) {
-        signals.companyNameMismatch = true;
-        signals.registeredCompanyName = registry.name;
-      }
+  // The network-dependent checks (RDAP, DNSSEC, legal page, SIRET registry)
+  // only run automatically when the page looks like a shop or matches a
+  // known brand, to avoid firing them on every random page you browse.
+  // Pages that don't meet that bar (a non-commerce site, an association...)
+  // simply won't get those checks until you explicitly open the identity
+  // card — see buildIdentityCard, which runs them unconditionally and
+  // updates the stored verdict so the headline score stays consistent with
+  // whatever the card ends up showing.
+  const worthCheckingAge = !isAllowlisted && domain && (payload?.isLikelyShop || matchedBrand);
+  const signals = worthCheckingAge
+    ? { ...baseSignals, ...(await computeNetworkSignals(domain, payload, watchedRegistrars, claimedText)).signals }
+    : baseSignals;
+
+  await publishVerdict(tabId, displayId, signals);
+}
+
+/**
+ * Runs every network-dependent check (RDAP age/registrar/dates, DNSSEC,
+ * legal-page fetch + mandatory-mentions + SIRET registry cross-check) and
+ * turns the results into both scoring signals and the raw data the identity
+ * card displays. Each underlying fetch has its own cache, so calling this
+ * twice for the same domain/legal page (once from the automatic pass, once
+ * from the identity card) is cheap after the first real fetch.
+ */
+async function computeNetworkSignals(domain, payload, watchedRegistrars, claimedText) {
+  const legalLinks = findLegalLinks(payload?.allLinks ?? []);
+  const [rdapInfo, dnssec, legalAnalysis] = await Promise.all([
+    getDomainRdapInfo(domain),
+    getDnssecStatus(domain),
+    getLegalPageAnalysis(legalLinks[0]?.href ?? null, payload?.htmlLang ?? null),
+  ]);
+
+  const signals = {
+    domainAgeDays: rdapInfo.ageDays,
+    registrarName: rdapInfo.registrarName,
+    isWatchedRegistrar: isWatchedRegistrar(rdapInfo.registrarName, watchedRegistrars),
+    isShortRegistrationSpan: isShortRegistrationSpan(rdapInfo.registeredAt, rdapInfo.expiresAt),
+    dnssec,
+  };
+
+  if (legalAnalysis.legal.present) {
+    signals.legalMentions = legalAnalysis.mandatoryMentions;
+  } else {
+    signals.legalPageMissing = true;
+  }
+
+  const { candidate, checksumValid, registry } = legalAnalysis.companyCheck;
+  if (candidate) {
+    if (checksumValid === false) {
+      signals.siretInvalidChecksum = true;
+    } else if (registry && !registry.found) {
+      signals.siretNotFound = true;
+    } else if (registry?.status === 'C') {
+      signals.companyClosed = true;
+      signals.registeredCompanyName = registry.name;
+    } else if (registry?.found && !companyNameMatchesClaim(registry.name, claimedText)) {
+      signals.companyNameMismatch = true;
+      signals.registeredCompanyName = registry.name;
     }
   }
 
+  return { signals, rdapInfo, legalAnalysis };
+}
+
+async function publishVerdict(tabId, displayId, signals) {
   const verdict = computeScore(signals);
   verdict.domain = displayId;
   await verdictsByTab.set(tabId, verdict);
@@ -154,28 +185,37 @@ async function handlePageSignals(tabId, url, payload) {
   if (verdict.band === 'red') {
     browser.tabs.sendMessage(tabId, { type: 'SHOW_BANNER', verdict }).catch(() => {});
   }
+  return verdict;
 }
 
 /**
- * Builds the "fiche d'identité" for a tab: purely informational, on-demand
- * (only fetched when the popup's identity panel is opened), reusing
- * whatever RDAP/legal-page data is already cached.
+ * Builds the "fiche d'identité" for a tab, on-demand (only when the popup's
+ * identity panel is opened). Unlike the automatic pass in handlePageSignals,
+ * this always runs the full network-dependent checks regardless of whether
+ * the page looked like a shop — you asked for a deep look, so it also
+ * recomputes and republishes the real verdict/badge from those results,
+ * rather than leaving the headline score stuck at whatever the lighter
+ * automatic pass decided was "worth checking".
  */
 async function buildIdentityCard(tabId) {
   const ctx = await pageContextByTab.get(tabId);
   if (!ctx) return null;
-  const { domain, payload } = ctx;
+  const { domain, displayId, payload, baseSignals, claimedText, watchedRegistrars, isAllowlisted } = ctx;
 
   const allLinks = payload?.allLinks ?? [];
-  const legalLinks = findLegalLinks(allLinks);
 
-  const [rdapInfo, legalAnalysis] = await Promise.all([
-    getDomainRdapInfo(domain),
-    getLegalPageAnalysis(legalLinks[0]?.href ?? null, payload?.htmlLang ?? null),
-  ]);
+  let rdapInfo = { ageDays: null, registrarName: null, registeredAt: null, lastChangedAt: null, expiresAt: null };
+  let legalAnalysis = { address: null, legal: { present: false, length: 0, detectedLang: 'unknown', languageMismatch: false, tooShort: false }, mandatoryMentions: null, companyCheck: { candidate: null, checksumValid: null, registry: null } };
+
+  if (!isAllowlisted && domain) {
+    const network = await computeNetworkSignals(domain, payload, watchedRegistrars, claimedText);
+    rdapInfo = network.rdapInfo;
+    legalAnalysis = network.legalAnalysis;
+    await publishVerdict(tabId, displayId, { ...baseSignals, ...network.signals });
+  }
 
   return {
-    domain,
+    domain: displayId,
     registrationDate: rdapInfo.registeredAt,
     lastChangedDate: rdapInfo.lastChangedAt,
     expirationDate: rdapInfo.expiresAt,

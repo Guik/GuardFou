@@ -4,6 +4,7 @@ const RING_RADIUS = 52;
 const RING_CIRCUMFERENCE = 2 * Math.PI * RING_RADIUS;
 
 let currentTabId = null;
+let currentVerdict = null;
 
 async function main() {
   const hasAccess = await browser.permissions.contains({ origins: ['<all_urls>'] });
@@ -35,6 +36,7 @@ async function main() {
 }
 
 function renderScore(verdict) {
+  currentVerdict = verdict;
   const ring = document.getElementById('score-ring');
   ring.className = `score-ring ${verdict.band}`;
 
@@ -68,15 +70,17 @@ function renderScore(verdict) {
     }
   }
 
-  document.getElementById('trust-btn').addEventListener('click', async () => {
-    const { allowlist = [] } = await browser.storage.local.get('allowlist');
-    if (!allowlist.includes(verdict.domain)) {
-      allowlist.push(verdict.domain);
-      await browser.storage.local.set({ allowlist });
-    }
-    window.location.reload();
-  });
 }
+
+document.getElementById('trust-btn').addEventListener('click', async () => {
+  if (!currentVerdict) return;
+  const { allowlist = [] } = await browser.storage.local.get('allowlist');
+  if (!allowlist.includes(currentVerdict.domain)) {
+    allowlist.push(currentVerdict.domain);
+    await browser.storage.local.set({ allowlist });
+  }
+  window.location.reload();
+});
 
 function show(sectionId) {
   for (const id of ['activate', 'result', 'empty']) {
@@ -268,6 +272,16 @@ document.getElementById('identity-btn').addEventListener('click', async () => {
   }
   renderIdentityCard(card);
   document.getElementById('identity-fields').hidden = false;
+
+  // Opening the card can trigger checks the lighter automatic pass skipped
+  // (e.g. a page that didn't look like a shop), which may change the real
+  // score — refresh the headline view so it never contradicts the details
+  // right below it.
+  const verdict = await browser.runtime.sendMessage({ type: 'GET_VERDICT', tabId: currentTabId });
+  if (verdict) {
+    show('result');
+    renderScore(verdict);
+  }
 });
 
 document.getElementById('identity-close-btn').addEventListener('click', () => {

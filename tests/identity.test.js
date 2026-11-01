@@ -60,6 +60,28 @@ test('findLegalLinks filters by link text', () => {
   assert.ok(result.some((l) => l.href === '/politique-de-confidentialite'));
 });
 
+test('findLegalLinks prioritizes "mentions légales" over a privacy policy when both exist', () => {
+  const links = [
+    // Privacy policy appears first in the DOM, as is common in footers.
+    { text: 'Politique de confidentialité', href: '/politique-de-confidentialite' },
+    { text: 'Mentions légales', href: '/mentions-legales' },
+    { text: 'CGV', href: '/cgv' },
+  ];
+  const result = findLegalLinks(links);
+  assert.equal(result[0].href, '/mentions-legales');
+});
+
+test('findLegalLinks falls back to CGV/CGU, then privacy policy, when no mentions légales link exists', () => {
+  const withCgv = findLegalLinks([
+    { text: 'Politique de confidentialité', href: '/privacy' },
+    { text: 'CGV', href: '/cgv' },
+  ]);
+  assert.equal(withCgv[0].href, '/cgv');
+
+  const privacyOnly = findLegalLinks([{ text: 'Politique de confidentialité', href: '/privacy' }]);
+  assert.equal(privacyOnly[0].href, '/privacy');
+});
+
 test('extractPhysicalAddress finds a plausible French address', () => {
   const text = 'Notre siège : 12 rue des Lilas, 75001 Paris. Contactez-nous.';
   const address = extractPhysicalAddress(text);
