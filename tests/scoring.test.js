@@ -127,11 +127,27 @@ test('no legal page at all adds a fixed weight', () => {
 
 test('incomplete legal mentions weight universal fields higher than conditional ones', () => {
   const verdict = computeScore({
-    legalMentions: { missingUniversalCount: 2, missingConditionalCount: 3 },
+    legalMentions: {
+      universal: [
+        { key: 'legalForm', label: 'Dénomination sociale / forme juridique', present: false },
+        { key: 'siren', label: 'Numéro SIRET/SIREN', present: false },
+        { key: 'address', label: 'Adresse du siège social', present: true },
+      ],
+      conditional: [
+        { key: 'rcs', label: 'Immatriculation RCS', present: false },
+        { key: 'capital', label: 'Capital social', present: false },
+        { key: 'vat', label: 'Numéro de TVA intracommunautaire', present: false },
+      ],
+      missingUniversalCount: 2,
+      missingConditionalCount: 3,
+    },
   });
   const reason = verdict.reasons.find((r) => r.id === 'incomplete-legal-mentions');
   assert.ok(reason);
   assert.equal(reason.weight, 2 * 5 + 3 * 2); // 16
+  // The message should name actually-missing fields, not a fixed example list.
+  assert.ok(reason.message.includes('Dénomination sociale / forme juridique'));
+  assert.ok(!reason.message.includes('Adresse du siège social')); // this one is present
 });
 
 test('complete legal mentions add no reason', () => {

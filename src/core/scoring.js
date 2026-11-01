@@ -145,14 +145,17 @@ export function computeScore(signals) {
       message: 'Aucune page de mentions légales trouvée sur le site, pourtant obligatoire pour tout site en France.',
     });
   } else if (signals.legalMentions) {
-    const { missingUniversalCount, missingConditionalCount } = signals.legalMentions;
+    const { universal = [], conditional = [], missingUniversalCount, missingConditionalCount } = signals.legalMentions;
     const weight = missingUniversalCount * 5 + missingConditionalCount * 2;
     if (weight > 0) {
-      const total = missingUniversalCount + missingConditionalCount;
+      const missingLabels = [...universal, ...conditional].filter((m) => !m.present).map((m) => m.label);
+      const total = missingLabels.length;
+      const preview = missingLabels.slice(0, 3).join(', ');
+      const rest = total > 3 ? `, +${total - 3} autre${total - 3 > 1 ? 's' : ''}` : '';
       reasons.push({
         id: 'incomplete-legal-mentions',
         weight,
-        message: `Mentions légales incomplètes : ${total} information${total > 1 ? 's' : ''} obligatoire${total > 1 ? 's' : ''} absente${total > 1 ? 's' : ''} (dénomination, SIRET, adresse, hébergeur...).`,
+        message: `Mentions légales incomplètes : ${total} information${total > 1 ? 's' : ''} obligatoire${total > 1 ? 's' : ''} absente${total > 1 ? 's' : ''} (${preview}${rest}).`,
       });
     }
   }
