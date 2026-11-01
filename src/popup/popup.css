@@ -229,6 +229,11 @@ header img {
 
 .identity-fields dd {
   margin: 3px 0 0;
+  overflow-wrap: break-word;
+}
+
+.identity-fields dd a {
+  color: var(--color-accent);
 }
 
 .identity-fields ul {

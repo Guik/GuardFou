@@ -154,6 +154,20 @@ function renderIdentityCard(card) {
     dd.appendChild(ul);
   });
 
+  addField(dl, 'Page analysée pour les mentions légales', (dd) => {
+    if (!card.legalUrl) {
+      dd.textContent = 'Aucun lien de mentions légales/CGV/CGU trouvé sur la page.';
+      dd.className = 'muted';
+      return;
+    }
+    const link = document.createElement('a');
+    link.href = card.legalUrl;
+    link.textContent = card.legalUrl;
+    link.target = '_blank';
+    link.rel = 'noopener noreferrer';
+    dd.appendChild(link);
+  });
+
   addField(dl, 'Mentions légales', (dd) => {
     const legal = card.legalText;
     if (!legal.present) {

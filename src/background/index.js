@@ -138,10 +138,11 @@ async function handlePageSignals(tabId, url, payload) {
  */
 async function computeNetworkSignals(domain, payload, watchedRegistrars, claimedText) {
   const legalLinks = findLegalLinks(payload?.allLinks ?? []);
+  const legalUrl = legalLinks[0]?.href ?? null;
   const [rdapInfo, dnssec, legalAnalysis] = await Promise.all([
     getDomainRdapInfo(domain),
     getDnssecStatus(domain),
-    getLegalPageAnalysis(legalLinks[0]?.href ?? null, payload?.htmlLang ?? null),
+    getLegalPageAnalysis(legalUrl, payload?.htmlLang ?? null),
   ]);
 
   const signals = {
@@ -173,7 +174,7 @@ async function computeNetworkSignals(domain, payload, watchedRegistrars, claimed
     }
   }
 
-  return { signals, rdapInfo, legalAnalysis };
+  return { signals, rdapInfo, legalAnalysis, legalUrl };
 }
 
 async function publishVerdict(tabId, displayId, signals) {
@@ -206,11 +207,13 @@ async function buildIdentityCard(tabId) {
 
   let rdapInfo = { ageDays: null, registrarName: null, registeredAt: null, lastChangedAt: null, expiresAt: null };
   let legalAnalysis = { address: null, legal: { present: false, length: 0, detectedLang: 'unknown', languageMismatch: false, tooShort: false }, mandatoryMentions: null, companyCheck: { candidate: null, checksumValid: null, registry: null } };
+  let legalUrl = null;
 
   if (!isAllowlisted && domain) {
     const network = await computeNetworkSignals(domain, payload, watchedRegistrars, claimedText);
     rdapInfo = network.rdapInfo;
     legalAnalysis = network.legalAnalysis;
+    legalUrl = network.legalUrl;
     await publishVerdict(tabId, displayId, { ...baseSignals, ...network.signals });
   }
 
@@ -225,6 +228,7 @@ async function buildIdentityCard(tabId) {
     seoMetaSummary: payload?.seoMeta ? summarizeSeoMeta(payload.seoMeta) : [],
     address: legalAnalysis.address,
     legalText: legalAnalysis.legal,
+    legalUrl,
     mandatoryMentions: legalAnalysis.mandatoryMentions,
     companyCheck: legalAnalysis.companyCheck,
     // Not available without a paid/keyed API (SimilarWeb, Ahrefs, Moz...) — deferred.
