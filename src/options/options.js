@@ -1,5 +1,5 @@
 import { WATCHED_REGISTRARS } from '../data/watched-registrars.js';
-import { clearCache } from '../background/cache.js';
+import { clearCache, isCacheDisabled } from '../background/cache.js';
 
 async function refreshPermissionStatus() {
   const hasAccess = await browser.permissions.contains({ origins: ['<all_urls>'] });
@@ -90,6 +90,16 @@ document.getElementById('clear-cache-btn').addEventListener('click', async () =>
   document.getElementById('clear-cache-status').textContent = `${removed} entrée(s) supprimée(s).`;
 });
 
+const disableCacheCheckbox = document.getElementById('disable-cache-checkbox');
+disableCacheCheckbox.addEventListener('change', async () => {
+  await browser.storage.local.set({ cacheDisabled: disableCacheCheckbox.checked });
+});
+
+async function refreshCacheToggle() {
+  disableCacheCheckbox.checked = await isCacheDisabled();
+}
+
 refreshPermissionStatus();
 refreshAllowlist();
 refreshRegistrarList();
+refreshCacheToggle();

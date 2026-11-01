@@ -1,12 +1,19 @@
 export const CACHE_PREFIX = 'fakeshield:cache:';
 const PREFIX = CACHE_PREFIX;
 
+/** @returns {Promise<boolean>} */
+export async function isCacheDisabled() {
+  const { cacheDisabled = false } = await browser.storage.local.get('cacheDisabled');
+  return cacheDisabled;
+}
+
 /**
  * @param {string} key
  * @param {number} ttlMs
- * @returns {Promise<any>} undefined when missing or expired
+ * @returns {Promise<any>} undefined when missing, expired, or caching is disabled
  */
 export async function getCached(key, ttlMs) {
+  if (await isCacheDisabled()) return undefined;
   const storageKey = PREFIX + key;
   const stored = await browser.storage.local.get(storageKey);
   const entry = stored[storageKey];
@@ -19,6 +26,7 @@ export async function getCached(key, ttlMs) {
  * @param {any} value
  */
 export async function setCached(key, value) {
+  if (await isCacheDisabled()) return;
   await browser.storage.local.set({ [PREFIX + key]: { value, timestamp: Date.now() } });
 }
 
