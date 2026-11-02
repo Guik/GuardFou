@@ -43,12 +43,49 @@
     return hasEuroPrice && hasCartWording;
   }
 
-  function getAllLinks() {
+  function getRealLinks() {
     // `a.href` (the DOM property, not getAttribute) resolves relative URLs
     // against the page's base URI, so these are always absolute. The actual
     // tech/social/legal-link detection logic lives in core/identity.js and
     // runs in the background script, which can use ES modules.
     return [...document.querySelectorAll('a[href]')].map((a) => ({ text: a.textContent.trim(), href: a.href }));
+  }
+
+  function decodeUrlCandidate(value) {
+    if (!value) return null;
+    if (/^https?:\/\//i.test(value)) return value;
+    try {
+      const decoded = atob(value);
+      return /^https?:\/\//i.test(decoded) ? decoded : null;
+    } catch {
+      return null; // not valid base64: not a URL candidate
+    }
+  }
+
+  function getObfuscatedLinks() {
+    // Some sites use a clickable element (not a real <a href>) whose
+    // destination is tucked into a data-* attribute, plain or base64-
+    // encoded, and dispatched via JS on click — e.g.
+    // `<span class="olink" data-olink="aHR0cHM6Ly8..." onclick="goLink(...)">`.
+    // Confirmed on a real site whose own mentions-légales/CGV links use
+    // exactly this pattern, invisible to a plain a[href] scan.
+    const results = [];
+    const candidates = document.querySelectorAll('[onclick], [role="button"], .olink');
+    for (const el of candidates) {
+      for (const attr of el.attributes) {
+        if (!attr.name.startsWith('data-')) continue;
+        const decoded = decodeUrlCandidate(attr.value);
+        if (decoded) {
+          results.push({ text: el.textContent.trim(), href: decoded });
+          break;
+        }
+      }
+    }
+    return results;
+  }
+
+  function getAllLinks() {
+    return [...getRealLinks(), ...getObfuscatedLinks()];
   }
 
   function getTechHints() {
