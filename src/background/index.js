@@ -46,6 +46,13 @@ function sessionTabStore(prefix) {
   };
 }
 
+// Which page load each tab's in-flight analysis belongs to. The network
+// checks take seconds; if the tab navigates in the meantime, the old page's
+// result must not land on the new one (wrong score and domain in the popup,
+// or a red banner injected into an unrelated page). In-memory is enough: if
+// Firefox unloads this script, the in-flight work it guards dies with it.
+const currentPageByTab = new Map();
+
 const BADGE_COLORS = { green: '#2e7d32', orange: '#ed6c02', red: '#c62828' };
 
 browser.runtime.onMessage.addListener((message, sender) => {
@@ -62,11 +69,13 @@ browser.runtime.onMessage.addListener((message, sender) => {
 });
 
 browser.tabs.onRemoved.addListener((tabId) => {
+  currentPageByTab.delete(tabId);
   verdictsByTab.delete(tabId).catch(() => {});
   pageContextByTab.delete(tabId).catch(() => {});
 });
 browser.tabs.onUpdated.addListener((tabId, changeInfo) => {
   if (changeInfo.status === 'loading' && changeInfo.url) {
+    currentPageByTab.delete(tabId);
     verdictsByTab.delete(tabId).catch(() => {});
     pageContextByTab.delete(tabId).catch(() => {});
     clearBadge(tabId);
@@ -80,6 +89,10 @@ async function handlePageSignals(tabId, url, payload) {
   // analyzing (it's one of the strongest signals we have) — only bail out
   // when there's truly nothing to key off, e.g. about:/file: pages.
   if (!domain && !isIpHostname) return;
+
+  const page = {};
+  currentPageByTab.set(tabId, page);
+  const isCurrentPage = () => currentPageByTab.get(tabId) === page;
 
   const displayId = domain ?? getHostname(url) ?? url;
 
@@ -109,6 +122,7 @@ async function handlePageSignals(tabId, url, payload) {
   // Stashed so buildIdentityCard can later run the same network-dependent
   // checks (RDAP/DNSSEC/legal+SIRET) without redoing brand-matching, and so
   // it can fold the result back into the real score — see there for why.
+  if (!isCurrentPage()) return;
   await pageContextByTab.set(tabId, { domain, displayId, payload, baseSignals, claimedText, watchedRegistrars, isAllowlisted, url });
 
   // The network-dependent checks (RDAP, DNSSEC, legal page, SIRET registry)
@@ -124,6 +138,7 @@ async function handlePageSignals(tabId, url, payload) {
     ? { ...baseSignals, ...(await computeNetworkSignals(domain, payload, watchedRegistrars, claimedText, url)).signals }
     : baseSignals;
 
+  if (!isCurrentPage()) return;
   await publishVerdict(tabId, displayId, signals);
 }
 
@@ -218,6 +233,7 @@ async function publishVerdict(tabId, displayId, signals) {
  * automatic pass decided was "worth checking".
  */
 async function buildIdentityCard(tabId) {
+  const page = currentPageByTab.get(tabId);
   const ctx = await pageContextByTab.get(tabId);
   if (!ctx) return null;
   const { domain, displayId, payload, baseSignals, claimedText, watchedRegistrars, isAllowlisted, url } = ctx;
@@ -230,6 +246,7 @@ async function buildIdentityCard(tabId) {
 
   if (!isAllowlisted && domain) {
     const network = await computeNetworkSignals(domain, payload, watchedRegistrars, claimedText, url);
+    if (currentPageByTab.get(tabId) !== page) return null; // navigated away meanwhile
     rdapInfo = network.rdapInfo;
     legalAnalysis = network.legalAnalysis;
     legalUrls = network.legalUrls;
