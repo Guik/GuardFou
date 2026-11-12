@@ -4,6 +4,8 @@
 
 GuardFou is a Firefox extension that warns you when an online shop looks fake: a site impersonating a known brand, a domain registered a few weeks ago, missing or fabricated company information.
 
+![GuardFou warning on a suspicious shop: red banner on the page and the popup listing the reasons](store/screenshot-popup.png)
+
 It currently targets **France**. Some checks work on any website; others rely on French law, the French company registry and a list of French retailers (see [Scope](#scope)).
 
 ## How it works
@@ -106,6 +108,8 @@ The store listing (summary, description, categories, licence) comes from `amo-me
 - Support for other countries: brand lists, company registries and legal requirements.
 - English user interface.
 - Site popularity and backlinks in the identity card.
+
+Store listing material lives next to the code: `amo-metadata.json` (listing text, sent with every release), `PRIVACY.md` (privacy policy) and `store/` (screenshots).
 
 ## License
 

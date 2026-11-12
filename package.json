@@ -23,6 +23,8 @@
       "package.json",
       "package-lock.json",
       "amo-metadata.json",
+      "store",
+      "icons/icon.svg",
       "*.md"
     ],
     "build": {
