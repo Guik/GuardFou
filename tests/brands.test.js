@@ -6,6 +6,7 @@ import {
   looksLikeBrandPlusGenericWord,
   isNearMissSpelling,
   levenshtein,
+  findLookalikeBrand,
 } from '../src/core/brands.js';
 import { BRANDS_FR } from '../src/data/brands-fr.js';
 
@@ -47,4 +48,29 @@ test('isNearMissSpelling catches a one-letter-off domain but not the real one', 
   const chausson = BRANDS_FR.find((b) => b.name === 'Chausson Matériaux');
   assert.equal(isNearMissSpelling('chaussson', chausson), true);
   assert.equal(isNearMissSpelling('chausson', chausson), false);
+});
+
+test('isNearMissSpelling does not flag an official domain whose label has a hyphen', () => {
+  const mrBricolage = BRANDS_FR.find((b) => b.name === 'Mr Bricolage');
+  assert.equal(isNearMissSpelling('mr-bricolage', mrBricolage), false);
+});
+
+test('isNearMissSpelling ignores ordinary words one edit away from a short brand', () => {
+  const darty = BRANDS_FR.find((b) => b.name === 'Darty');
+  const fnac = BRANDS_FR.find((b) => b.name === 'Fnac');
+  assert.equal(isNearMissSpelling('party', darty), false); // different first letter
+  assert.equal(isNearMissSpelling('frac', fnac), false); // 4 letters: no typo tolerance
+  assert.equal(isNearMissSpelling('dartty', darty), true);
+});
+
+test('findLookalikeBrand catches a clone domain even when the page never names the brand', () => {
+  assert.equal(findLookalikeBrand('chaussonconstruction.com', 'chaussonconstruction', BRANDS_FR)?.name, 'Chausson Matériaux');
+  assert.equal(findLookalikeBrand('chaussson.fr', 'chaussson', BRANDS_FR)?.name, 'Chausson Matériaux');
+});
+
+test('findLookalikeBrand returns null for official and unrelated domains', () => {
+  assert.equal(findLookalikeBrand('chausson.fr', 'chausson', BRANDS_FR), null);
+  assert.equal(findLookalikeBrand('mr-bricolage.fr', 'mr-bricolage', BRANDS_FR), null);
+  assert.equal(findLookalikeBrand('lemonde.fr', 'lemonde', BRANDS_FR), null);
+  assert.equal(findLookalikeBrand('party.fr', 'party', BRANDS_FR), null);
 });

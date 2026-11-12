@@ -8,7 +8,7 @@ import {
   hasRedirectionInPath,
   isInsecureHttp,
 } from '../core/domain.js';
-import { findBrandByAlias, isOfficialDomain, looksLikeBrandPlusGenericWord, isNearMissSpelling } from '../core/brands.js';
+import { findBrandByAlias, isOfficialDomain, findLookalikeBrand } from '../core/brands.js';
 import { isWatchedRegistrar } from '../core/registrar.js';
 import { companyNameMatchesClaim } from '../core/siret.js';
 import { computeScore } from '../core/scoring.js';
@@ -97,8 +97,7 @@ async function handlePageSignals(tabId, url, payload) {
     isAllowlisted,
     matchedBrand,
     isOfficialDomain: matchedBrand && domain ? isOfficialDomain(domain, matchedBrand) : false,
-    looksLikeBrandPlusGenericWord: matchedBrand && domainLabel ? looksLikeBrandPlusGenericWord(domainLabel, matchedBrand) : false,
-    isNearMissSpelling: matchedBrand && domainLabel ? isNearMissSpelling(domainLabel, matchedBrand) : false,
+    lookalikeBrand: !isAllowlisted && domain && domainLabel ? findLookalikeBrand(domain, domainLabel, BRANDS_FR) : null,
     // Cheap, synchronous, URL-structural checks — always computed, no network.
     isIpHostname,
     hasUserinfoAtSymbol: hasUserinfoAtSymbol(url),

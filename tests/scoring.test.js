@@ -240,3 +240,18 @@ test('none of the new structural signals fire when false/absent', () => {
   const verdict = computeScore({});
   assert.equal(verdict.reasons.length, 0);
 });
+
+test('a lookalike domain is flagged even when the page claims no brand', () => {
+  const verdict = computeScore({ lookalikeBrand: { name: 'Chausson Matériaux', officialDomains: ['chausson.fr'] } });
+  const reason = verdict.reasons.find((r) => r.id === 'brand-lookalike-domain');
+  assert.ok(reason);
+  assert.equal(reason.weight, 15);
+  assert.ok(reason.message.includes('Chausson Matériaux'));
+});
+
+test('a page claiming a brand on a lookalike domain counts the mismatch once, not twice', () => {
+  const brand = { name: 'Chausson Matériaux', officialDomains: ['chausson.fr'] };
+  const verdict = computeScore({ matchedBrand: brand, isOfficialDomain: false, lookalikeBrand: brand });
+  assert.ok(verdict.reasons.some((r) => r.id === 'brand-domain-mismatch'));
+  assert.ok(!verdict.reasons.some((r) => r.id === 'brand-lookalike-domain'));
+});

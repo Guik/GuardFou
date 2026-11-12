@@ -82,18 +82,48 @@ export function levenshtein(a, b) {
 }
 
 /**
- * True when domainLabel is a near-miss spelling (edit distance <= 2) of one
- * of the brand's official domain labels, e.g. "chaussson" vs "chausson".
+ * How many typos still count as "the same name": none for very short
+ * labels, where one edit turns a brand into an ordinary word ("darty" →
+ * "party", "fnac" → "frac"), and two only for long ones.
+ * @param {number} length
+ */
+function maxTypoDistance(length) {
+  if (length >= 10) return 2;
+  if (length >= 5) return 1;
+  return 0;
+}
+
+/**
+ * True when domainLabel is a near-miss spelling of one of the brand's
+ * official domain labels, e.g. "chaussson" vs "chausson". Both sides are
+ * normalized the same way (hyphens dropped) — otherwise "mr-bricolage"
+ * would count as one edit away from itself. The first letter must match:
+ * typosquats keep it so the name still reads right at a glance, and it
+ * rules out most real words that happen to be one edit away.
  * @param {string} domainLabel
  * @param {{officialDomains:string[]}} brand
  */
 export function isNearMissSpelling(domainLabel, brand) {
   const label = normalize(domainLabel).replace(/\s/g, '');
   return brand.officialDomains.some((officialDomain) => {
-    const officialLabel = officialDomain.split('.')[0];
-    if (label === officialLabel) return false; // exact match, not a near-miss
-    return levenshtein(label, officialLabel) <= 2;
+    const officialLabel = normalize(officialDomain.split('.')[0]).replace(/\s/g, '');
+    if (label === officialLabel || label[0] !== officialLabel[0]) return false;
+    return levenshtein(label, officialLabel) <= maxTypoDistance(officialLabel.length);
   });
+}
+
+/**
+ * The brand this domain imitates — "<brand><generic word>" or a near-miss
+ * spelling of an official domain — or null. Checked against every brand,
+ * independently of what the page itself claims to be: a clone that never
+ * names the brand in its title is still given away by its domain.
+ * @param {string} domain registrable domain, e.g. "chaussonconstruction.com"
+ * @param {string} domainLabel the domain without its public suffix
+ * @param {Array<{name:string, aliases:string[], officialDomains:string[]}>} brands
+ */
+export function findLookalikeBrand(domain, domainLabel, brands) {
+  return brands.find((brand) => !isOfficialDomain(domain, brand)
+    && (looksLikeBrandPlusGenericWord(domainLabel, brand) || isNearMissSpelling(domainLabel, brand))) ?? null;
 }
 
 function escapeRegExp(str) {

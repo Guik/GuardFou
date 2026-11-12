@@ -14,8 +14,8 @@ export const THRESHOLDS = { orange: 30, red: 60 };
  *  - claimedBrandName: string | null   (the brand name the page claims to be)
  *  - matchedBrand: { name, officialDomains } | null (from core/brands.js)
  *  - isOfficialDomain: boolean
- *  - looksLikeBrandPlusGenericWord: boolean
- *  - isNearMissSpelling: boolean
+ *  - lookalikeBrand: { name, officialDomains } | null (the brand whose
+ *    domain this one imitates, from core/brands.js's findLookalikeBrand)
  *  - isAllowlisted: boolean
  *  - dnssec: { signed: boolean, validated: boolean, bogus: boolean } | null
  *  - registrarName: string | null
@@ -202,11 +202,11 @@ export function computeScore(signals) {
       weight: 40,
       message: `Le site se présente comme « ${signals.matchedBrand.name} » mais son domaine n'est pas ${signals.matchedBrand.officialDomains.join(' ni ')}.`,
     });
-  } else if (signals.looksLikeBrandPlusGenericWord || signals.isNearMissSpelling) {
+  } else if (signals.lookalikeBrand) {
     reasons.push({
       id: 'brand-lookalike-domain',
       weight: 15,
-      message: 'Le nom de domaine ressemble à celui d\'une marque connue, avec un mot ajouté ou une orthographe proche.',
+      message: `Le nom de domaine ressemble à celui de « ${signals.lookalikeBrand.name} » (${signals.lookalikeBrand.officialDomains.join(', ')}), avec un mot ajouté ou une orthographe proche.`,
     });
   }
 
