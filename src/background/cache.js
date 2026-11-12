@@ -1,4 +1,4 @@
-export const CACHE_PREFIX = 'fakeshield:cache:';
+export const CACHE_PREFIX = 'guardfou:cache:';
 const PREFIX = CACHE_PREFIX;
 
 /** @returns {Promise<boolean>} */

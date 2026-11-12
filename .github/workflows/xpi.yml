@@ -32,7 +32,7 @@ jobs:
       - run: npm run build
       - uses: actions/upload-artifact@v4
         with:
-          name: fakeshield-unsigned
+          name: guardfou-unsigned
           path: web-ext-artifacts/*.xpi
 
   release:

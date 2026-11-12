@@ -28,8 +28,8 @@ import { getLegalPageAnalysis } from './legal.js';
 // natively per tab — keeps showing the old result. browser.storage.session
 // is backed by the browser itself rather than this script's lifetime, so it
 // survives that restart; it's still cleared when the browser session ends.
-const verdictsByTab = sessionTabStore('fakeshield:verdict:');
-const pageContextByTab = sessionTabStore('fakeshield:pagecontext:');
+const verdictsByTab = sessionTabStore('guardfou:verdict:');
+const pageContextByTab = sessionTabStore('guardfou:pagecontext:');
 
 function sessionTabStore(prefix) {
   return {
@@ -57,7 +57,7 @@ const currentPageByTab = new Map();
 const BADGE_COLORS = { green: '#2e7d32', orange: '#ed6c02', red: '#c62828' };
 
 browser.runtime.onMessage.addListener((message, sender) => {
-  if (message?.type === 'FAKESHIELD_SIGNALS' && sender.tab?.id != null) {
+  if (message?.type === 'GUARDFOU_SIGNALS' && sender.tab?.id != null) {
     return handlePageSignals(sender.tab.id, sender.tab.url, message.payload);
   }
   if (message?.type === 'GET_VERDICT') {

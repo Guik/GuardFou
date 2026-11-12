@@ -5,7 +5,7 @@ async function refreshPermissionStatus() {
   const hasAccess = await browser.permissions.contains({ origins: ['<all_urls>'] });
   document.getElementById('permission-status').textContent = hasAccess
     ? 'Accès accordé.'
-    : 'Accès non accordé : FakeShield ne peut analyser aucune page.';
+    : 'Accès non accordé : GuardFou ne peut analyser aucune page.';
   document.getElementById('permission-dot').className = `status-dot ${hasAccess ? 'ok' : 'missing'}`;
   document.getElementById('activate-btn').hidden = hasAccess;
 }

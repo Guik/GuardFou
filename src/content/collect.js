@@ -157,7 +157,7 @@
     seoMeta: getSeoMeta(),
   };
 
-  browser.runtime.sendMessage({ type: 'FAKESHIELD_SIGNALS', payload }).catch(() => {});
+  browser.runtime.sendMessage({ type: 'GUARDFOU_SIGNALS', payload }).catch(() => {});
 
   browser.runtime.onMessage.addListener((message) => {
     if (message?.type === 'SHOW_BANNER') {
@@ -173,9 +173,9 @@
       all: initial;
       position: fixed; top: 0; left: 0; right: 0; z-index: 2147483647;
       display: block;
-      animation: fakeshield-drop 0.45s cubic-bezier(0.22, 1, 0.36, 1);
+      animation: guardfou-drop 0.45s cubic-bezier(0.22, 1, 0.36, 1);
     }
-    @keyframes fakeshield-drop {
+    @keyframes guardfou-drop {
       from { transform: translateY(-100%); opacity: 0; }
       to { transform: translateY(0); opacity: 1; }
     }
@@ -229,10 +229,10 @@
   }
 
   function showBanner(verdict) {
-    if (document.getElementById('fakeshield-banner-host')) return;
+    if (document.getElementById('guardfou-banner-host')) return;
 
     const host = document.createElement('div');
-    host.id = 'fakeshield-banner-host';
+    host.id = 'guardfou-banner-host';
     const shadow = host.attachShadow({ mode: 'closed' });
 
     const style = document.createElement('style');
@@ -248,7 +248,7 @@
     const msg = document.createElement('div');
     msg.className = 'msg';
     const title = document.createElement('b');
-    title.textContent = `FakeShield : ce site est suspect (score ${verdict.score}/100)`;
+    title.textContent = `GuardFou : ce site est suspect (score ${verdict.score}/100)`;
     const detail = document.createElement('span');
     detail.textContent = verdict.reasons[0]?.message || '';
     msg.append(title, detail);
