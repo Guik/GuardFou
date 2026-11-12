@@ -9,7 +9,7 @@
   },
   "browser_specific_settings": {
     "gecko": {
-      "id": "guardfou@guik.fr",
+      "id": "guardfou-addon@guik.fr",
       "strict_min_version": "140.0",
       "data_collection_permissions": {
         "required": ["browsingActivity", "websiteContent"]
