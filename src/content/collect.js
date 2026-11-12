@@ -10,37 +10,71 @@
     return el?.getAttribute('content')?.trim() || null;
   }
 
-  function getJsonLdOrgName() {
-    const scripts = document.querySelectorAll('script[type="application/ld+json"]');
-    for (const script of scripts) {
+  // Every top-level JSON-LD item on the page, with arrays and "@graph"
+  // containers flattened — Yoast/WooCommerce and many Shopify themes wrap
+  // everything in a single {"@graph": [...]}, which a top-level-only scan
+  // misses entirely.
+  function getJsonLdItems() {
+    const items = [];
+    for (const script of document.querySelectorAll('script[type="application/ld+json"]')) {
       try {
         const data = JSON.parse(script.textContent);
-        const items = Array.isArray(data) ? data : [data];
-        for (const item of items) {
-          const type = item?.['@type'];
-          if (type === 'Organization' || type === 'Store' || (Array.isArray(type) && type.includes('Organization'))) {
-            if (typeof item.name === 'string') return item.name;
-          }
+        for (const item of Array.isArray(data) ? data : [data]) {
+          items.push(item, ...(Array.isArray(item?.['@graph']) ? item['@graph'] : []));
         }
       } catch {
         // malformed JSON-LD on the page: ignore and keep looking
       }
     }
-    return null;
+    return items;
+  }
+
+  function jsonLdHasType(item, ...types) {
+    const type = item?.['@type'];
+    return Array.isArray(type) ? type.some((t) => types.includes(t)) : types.includes(type);
+  }
+
+  function getJsonLdOrgName() {
+    const org = getJsonLdItems().find((item) => jsonLdHasType(item, 'Organization', 'Store') && typeof item.name === 'string');
+    return org?.name ?? null;
   }
 
   function getFooterCopyright() {
     const footer = document.querySelector('footer');
-    const text = (footer || document.body).innerText || '';
+    const text = (footer || document.body)?.innerText || '';
     const match = text.match(/©\s*[^\n]{0,80}/) || text.match(/copyright\s*[^\n]{0,80}/i);
     return match ? match[0].slice(0, 120) : null;
   }
 
+  // Structured product data is an unambiguous "this is a shop" on its own,
+  // no visible-text heuristics needed.
+  function hasProductMarkup() {
+    if (getMetaContent('og:type') === 'product' || getMetaContent('product:price:amount')) return true;
+    return getJsonLdItems().some((item) => jsonLdHasType(item, 'Product', 'Offer', 'AggregateOffer', 'ProductGroup'));
+  }
+
+  // Most shop headers show the cart as an icon only — the word "panier"
+  // lives in an aria-label/title or the link's URL, never in innerText.
+  // Confirmed on a real Shopify shop (respire.co) that the text-only check
+  // missed despite prices and a cart on every page. Whole words/path
+  // segments only: a plain substring "cart" would also match "carte" (a
+  // restaurant menu, a map), which sits right next to prices on plenty of
+  // non-shop pages.
+  const CART_LABEL = /\b(panier|cart|basket)\b/i;
+  const CART_PATH = /\/(cart|panier|basket|checkout)(?:[/?#.]|$)/i;
+  function hasCartControl() {
+    const links = document.querySelectorAll('a[href], form[action]');
+    if ([...links].some((el) => CART_PATH.test(el.href || el.action || ''))) return true;
+    const labelled = document.querySelectorAll('[aria-label], [title]');
+    return [...labelled].some((el) => CART_LABEL.test(el.getAttribute('aria-label') || el.getAttribute('title') || ''));
+  }
+
   function looksLikeShop() {
-    const text = (document.body.innerText || '').toLowerCase();
-    const hasEuroPrice = /\d[\d\s]*[.,]?\d{0,2}\s*(€|eur\b)/.test(text);
-    const hasCartWording = /panier|ajouter au panier|add to cart|commander|passer commande/.test(text);
-    return hasEuroPrice && hasCartWording;
+    if (hasProductMarkup()) return true;
+    const text = (document.body?.innerText || '').toLowerCase();
+    const hasEuroPrice = /\d[\d\s]*[.,]?\d{0,2}\s*(€|eur\b)|€\s*\d/.test(text);
+    const hasCartWording = /panier|add to cart|add to bag|commander|passer commande/.test(text);
+    return hasEuroPrice && (hasCartWording || hasCartControl());
   }
 
   function getRealLinks() {
@@ -94,7 +128,7 @@
     // CMS/platform fingerprinting without the cost of a multi-MB payload.
     const scriptSrcs = [...document.querySelectorAll('script[src]')].map((s) => s.src);
     const linkHrefs = [...document.querySelectorAll('link[href]')].map((l) => l.href);
-    return [...scriptSrcs, ...linkHrefs, document.body.className || ''].join(' ');
+    return [...scriptSrcs, ...linkHrefs, document.body?.className || ''].join(' ');
   }
 
   function getSeoMeta() {
