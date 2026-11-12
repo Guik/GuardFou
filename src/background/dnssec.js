@@ -1,3 +1,4 @@
+import { fetchWithTimeout } from './http.js';
 import { getCached, setCached } from './cache.js';
 import { interpretDnssecResponse } from '../core/dnssec.js';
 
@@ -23,7 +24,7 @@ export async function getDnssecStatus(domain) {
 
 async function fetchDnssecStatus(domain) {
   try {
-    const res = await fetch(
+    const res = await fetchWithTimeout(
       `https://cloudflare-dns.com/dns-query?name=${encodeURIComponent(domain)}&type=DNSKEY&do=true`,
       { headers: { Accept: 'application/dns-json' } },
     );

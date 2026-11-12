@@ -1,3 +1,4 @@
+import { fetchWithTimeout } from './http.js';
 import { getCached, setCached } from './cache.js';
 import { stripHtmlToText, extractContactLinks, extractPhysicalAddress, analyzeLegalText, checkMandatoryLegalMentions } from '../core/identity.js';
 import { extractSirenOrSiret, isValidSirenOrSiret } from '../core/siret.js';
@@ -66,7 +67,7 @@ async function getLegalPageText(url) {
 
 async function fetchPageText(url) {
   try {
-    const res = await fetch(url);
+    const res = await fetchWithTimeout(url);
     if (!res.ok) return { ok: false, text: '' };
     const html = await res.text();
     // Append mailto:/tel: href targets so contact info shown only as a

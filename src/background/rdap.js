@@ -1,3 +1,4 @@
+import { fetchWithTimeout } from './http.js';
 import { getCached, setCached } from './cache.js';
 import { extractDomainAgeDays, extractRegistrarName, extractDomainDates } from '../core/rdap.js';
 
@@ -25,7 +26,7 @@ export async function getDomainRdapInfo(domain) {
 
 async function fetchDomainRdapInfo(domain) {
   try {
-    const res = await fetch(`https://rdap.org/domain/${encodeURIComponent(domain)}`, {
+    const res = await fetchWithTimeout(`https://rdap.org/domain/${encodeURIComponent(domain)}`, {
       headers: { Accept: 'application/rdap+json' },
     });
     if (!res.ok) return { ok: false, info: EMPTY_RDAP_INFO };

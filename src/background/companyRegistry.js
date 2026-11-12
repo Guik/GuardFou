@@ -1,3 +1,4 @@
+import { fetchWithTimeout } from './http.js';
 import { getCached, setCached } from './cache.js';
 
 const TTL_MS = 7 * 24 * 60 * 60 * 1000;
@@ -25,7 +26,7 @@ export async function getCompanyInfo(sirenOrSiret) {
 
 async function fetchCompanyInfo(sirenOrSiret) {
   try {
-    const res = await fetch(`https://recherche-entreprises.api.gouv.fr/search?q=${encodeURIComponent(sirenOrSiret)}&per_page=1`);
+    const res = await fetchWithTimeout(`https://recherche-entreprises.api.gouv.fr/search?q=${encodeURIComponent(sirenOrSiret)}&per_page=1`);
     if (!res.ok) return { ok: false, info: null };
     const data = await res.json();
     const company = data.results?.[0];
