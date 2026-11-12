@@ -3,6 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "description": "Extension Firefox qui détecte les faux sites marchands (usurpation de marque, domaine trop récent).",
+  "license": "Apache-2.0",
   "type": "module",
   "scripts": {
     "test": "node --test",

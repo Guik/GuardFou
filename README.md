@@ -105,3 +105,7 @@ The workflow checks that the tag matches the manifest version, has Mozilla sign 
 - Support for other countries: brand lists, company registries and legal requirements.
 - English user interface.
 - Site popularity and backlinks in the identity card.
+
+## License
+
+Copyright (c) 2026 Guillaume Drevet. Licensed under the [Apache License 2.0](LICENSE); see [NOTICE](NOTICE) for attributions.
