@@ -56,7 +56,7 @@ These lookups only run on pages that look like shops, or when you open the ident
 ## Install
 
 1. Download the latest `guardfou-x.y.z.xpi` from [Releases](../../releases).
-2. Open it in Firefox (version 128 or later) and confirm the installation.
+2. Open it in Firefox (version 140 or later; 142 on Android) and confirm the installation.
 3. Click the GuardFou icon and press the activation button to let it read the pages you visit.
 
 ## Development
