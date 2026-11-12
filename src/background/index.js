@@ -57,7 +57,7 @@ const currentPageByTab = new Map();
 
 pruneExpiredCache().catch(() => {});
 
-// Far more than computeNetworkSignals ever fetches (3), so the ranking
+// Far more than computeDeepSignals ever fetches (3), so the ranking
 // still has room after duplicates, but bounded on a page that labels
 // hundreds of links "CGV".
 const MAX_STORED_LEGAL_LINKS = 20;
@@ -134,7 +134,7 @@ async function handlePageSignals(tabId, url, payload) {
   // it can fold the result back into the real score — see there for why.
   // Only what it needs is kept, not the raw page scrape: every link on a
   // big shop page plus every script/stylesheet URL can weigh megabytes per
-  // open tab. Legal-page candidates stay as links (computeNetworkSignals
+  // open tab. Legal-page candidates stay as links (computeDeepSignals
   // ranks them again); technologies and social profiles are reduced to
   // their results right away.
   const { allLinks = [], techHints = '', ...pageFields } = payload ?? {};
@@ -146,36 +146,60 @@ async function handlePageSignals(tabId, url, payload) {
     domain, displayId, payload: storedPayload, technologies, socialLinks, baseSignals, claimedText, watchedRegistrars, isAllowlisted, url,
   });
 
-  // The network-dependent checks (RDAP, DNSSEC, legal page, SIRET registry)
-  // only run automatically when the page looks like a shop or matches a
-  // known brand, to avoid firing them on every random page you browse.
-  // Pages that don't meet that bar (a non-commerce site, an association...)
-  // simply won't get those checks until you explicitly open the identity
-  // card — see buildIdentityCard, which runs them unconditionally and
-  // updates the stored verdict so the headline score stays consistent with
-  // whatever the card ends up showing.
-  const worthCheckingAge = !isAllowlisted && domain && (payload?.isLikelyShop || matchedBrand);
-  const signals = worthCheckingAge
-    ? { ...baseSignals, ...(await computeNetworkSignals(domain, payload, watchedRegistrars, claimedText, url)).signals }
-    : baseSignals;
+  // Domain age is one of the strongest signals we have and costs a single
+  // cached RDAP lookup, so it runs on every site. The deeper checks (DNSSEC, legal
+  // pages, SIRET registry) fetch several pages, so they only run
+  // automatically when the page looks like a shop or claims a known brand;
+  // other pages get them when you open the identity card — see
+  // buildIdentityCard, which runs them unconditionally and updates the
+  // stored verdict so the headline score stays consistent with whatever the
+  // card ends up showing.
+  const signals = { ...baseSignals };
+  if (!isAllowlisted && domain) {
+    const wantsDeepChecks = payload?.isLikelyShop || matchedBrand;
+    const [registration, deep] = await Promise.all([
+      computeRegistrationSignals(domain, watchedRegistrars),
+      wantsDeepChecks ? computeDeepSignals(domain, payload, claimedText, url) : null,
+    ]);
+    Object.assign(signals, registration.signals, deep?.signals);
+  }
 
   if (!isCurrentPage()) return;
   await publishVerdict(tabId, displayId, signals);
 }
 
 /**
- * Runs every network-dependent check (RDAP age/registrar/dates, DNSSEC,
- * legal-page fetch + mandatory-mentions + SIRET registry cross-check) and
- * turns the results into both scoring signals and the raw data the identity
- * card displays. Each underlying fetch has its own cache, so calling this
- * twice for the same domain/legal pages (once from the automatic pass, once
- * from the identity card) is cheap after the first real fetch.
+ * Domain age, registrar and registration span, from RDAP. Cached per domain,
+ * so it's one lookup per site rather than per page.
+ */
+async function computeRegistrationSignals(domain, watchedRegistrars) {
+  // A subdomain of a shared hosting platform has no registration of its
+  // own: RDAP would only describe the platform's domain.
+  const rdapInfo = getSharedHostingSuffix(domain) !== null ? EMPTY_RDAP_INFO : await getDomainRdapInfo(domain);
+  return {
+    signals: {
+      domainAgeDays: rdapInfo.ageDays,
+      registrarName: rdapInfo.registrarName,
+      isWatchedRegistrar: isWatchedRegistrar(rdapInfo.registrarName, watchedRegistrars),
+      isShortRegistrationSpan: isShortRegistrationSpan(rdapInfo.registeredAt, rdapInfo.expiresAt),
+    },
+    rdapInfo,
+  };
+}
+
+/**
+ * Runs the heavier network-dependent checks (DNSSEC, legal-page fetch +
+ * mandatory-mentions + SIRET registry cross-check) and turns the results
+ * into both scoring signals and the raw data the identity card displays.
+ * Each underlying fetch has its own cache, so calling this twice for the
+ * same domain/legal pages (once from the automatic pass, once from the
+ * identity card) is cheap after the first real fetch.
  * @param {string} [currentUrl] the tab's own URL — used as a fallback legal
  *   page when no link on the page points to one (many sites don't
  *   hyperlink the nav item for the page you're already on, so visiting a
  *   legal page directly would otherwise find nothing to check)
  */
-async function computeNetworkSignals(domain, payload, watchedRegistrars, claimedText, currentUrl) {
+async function computeDeepSignals(domain, payload, claimedText, currentUrl) {
   const legalLinks = findLegalLinks(payload?.allLinks ?? [], domain);
   // Real sites routinely split legal info across separate documents
   // (mentions légales for company identity, CGV for commercial terms
@@ -194,22 +218,15 @@ async function computeNetworkSignals(domain, payload, watchedRegistrars, claimed
   if (currentUrl && pageLooksLikeOwnLegalDocument(payload?.title, currentUrl)) candidateUrls.push(currentUrl);
   candidateUrls.push(...legalLinks.map((l) => l.href));
   const legalUrls = [...new Set(candidateUrls)].slice(0, 3);
-  // A subdomain of a shared hosting platform has no registration or zone of
-  // its own: RDAP and DNSSEC would only describe the platform's domain.
+  // A subdomain of a shared hosting platform has no DNS zone of its own:
+  // DNSSEC would only describe the platform's domain.
   const onSharedHosting = getSharedHostingSuffix(domain) !== null;
-  const [rdapInfo, dnssec, legalAnalysis] = await Promise.all([
-    onSharedHosting ? EMPTY_RDAP_INFO : getDomainRdapInfo(domain),
+  const [dnssec, legalAnalysis] = await Promise.all([
     onSharedHosting ? null : getDnssecStatus(domain),
     getLegalPageAnalysis(legalUrls, payload?.htmlLang ?? null),
   ]);
 
-  const signals = {
-    domainAgeDays: rdapInfo.ageDays,
-    registrarName: rdapInfo.registrarName,
-    isWatchedRegistrar: isWatchedRegistrar(rdapInfo.registrarName, watchedRegistrars),
-    isShortRegistrationSpan: isShortRegistrationSpan(rdapInfo.registeredAt, rdapInfo.expiresAt),
-    dnssec,
-  };
+  const signals = { dnssec };
 
   if (legalAnalysis.legal.present) {
     signals.legalMentions = legalAnalysis.mandatoryMentions;
@@ -232,7 +249,7 @@ async function computeNetworkSignals(domain, payload, watchedRegistrars, claimed
     }
   }
 
-  return { signals, rdapInfo, legalAnalysis, legalUrls };
+  return { signals, legalAnalysis, legalUrls };
 }
 
 async function publishVerdict(tabId, displayId, signals) {
@@ -267,12 +284,15 @@ async function buildIdentityCard(tabId) {
   let legalUrls = [];
 
   if (!isAllowlisted && domain) {
-    const network = await computeNetworkSignals(domain, payload, watchedRegistrars, claimedText, url);
+    const [registration, deep] = await Promise.all([
+      computeRegistrationSignals(domain, watchedRegistrars),
+      computeDeepSignals(domain, payload, claimedText, url),
+    ]);
     if (currentPageByTab.get(tabId) !== page) return null; // navigated away meanwhile
-    rdapInfo = network.rdapInfo;
-    legalAnalysis = network.legalAnalysis;
-    legalUrls = network.legalUrls;
-    await publishVerdict(tabId, displayId, { ...baseSignals, ...network.signals });
+    rdapInfo = registration.rdapInfo;
+    legalAnalysis = deep.legalAnalysis;
+    legalUrls = deep.legalUrls;
+    await publishVerdict(tabId, displayId, { ...baseSignals, ...registration.signals, ...deep.signals });
   }
 
   return {

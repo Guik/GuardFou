@@ -8,7 +8,7 @@ It currently targets **France**. Some checks work on any website; others rely on
 
 ## How it works
 
-On every page that looks like a shop, GuardFou computes a risk score from 0 to 100:
+On every page you visit, GuardFou computes a risk score from 0 to 100:
 
 | Score | Badge | Meaning |
 |---|---|---|
@@ -46,12 +46,12 @@ GuardFou has no server and no analytics. To run its checks it contacts:
 
 | Service | What is sent | Why |
 |---|---|---|
-| [rdap.org](https://rdap.org) | The site's domain name | Registration date and registrar |
+| [rdap.org](https://rdap.org), which forwards to the registry of the domain's extension | The site's domain name | Registration date and registrar |
 | [Cloudflare DNS](https://developers.cloudflare.com/1.1.1.1/encryption/dns-over-https/) | The site's domain name | DNSSEC status |
 | [recherche-entreprises.api.gouv.fr](https://recherche-entreprises.api.gouv.fr) | The company number shown on the site | French company registry lookup |
 | The site itself | A normal page request, without your cookies | Reading its legal pages |
 
-These lookups only run on pages that look like shops, or when you open the identity card yourself. Results are cached on your computer for 7 days; you can clear the cache or turn it off in the settings.
+The domain-age lookup runs for every site you visit, except sites on your trusted list. The other lookups only run on pages that look like shops or name a known brand, or when you open the identity card yourself. Results are cached on your computer for 7 days, so each domain is looked up at most once a week; you can clear the cache or turn it off in the settings.
 
 ## Install
 
