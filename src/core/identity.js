@@ -158,15 +158,30 @@ export function pageLooksLikeOwnLegalDocument(title, url) {
  * @param {string} text
  */
 export function extractPhysicalAddress(text) {
-  const match = text.match(
-    // The city-name tail deliberately excludes whitespace (just one word,
-    // not \s) — with it, a greedy/backtracking match on text with no comma
-    // after the street (common: "104 rue de Maubeuge 75010 PARIS Immatriculation:...")
-    // would bleed straight into the next field's label.
-    /\b\d{1,4}[a-zA-Z]?\s*(?:,|\s)\s*(?:rue|avenue|boulevard|impasse|chemin|all[ée]e|route|place|quai|cours)\s+[^\n,;:]{3,60},?\s*\d{5}\s+[A-ZÀ-Ÿ][\wÀ-ÿ'\-]{1,30}\b/,
-  );
+  const match = text.match(ADDRESS_PATTERN);
   return match ? match[0].replace(/\s+/g, ' ').trim() : null;
 }
+
+const STREET_TYPES = ['rue', 'avenue', 'boulevard', 'impasse', 'chemin', 'allée', 'allee', 'route', 'place', 'quai', 'cours'];
+
+// Street types are matched as written in lowercase, Capitalized or UPPERCASE
+// ("12 Rue des Lilas", "12 RUE DES LILAS" are at least as common as "12
+// rue") — spelled out rather than via the `i` flag, which would also make
+// the capitalized-city check below accept any lowercase word.
+const STREET_TYPE_PATTERN = STREET_TYPES
+  .flatMap((type) => [type, type[0].toUpperCase() + type.slice(1), type.toUpperCase()])
+  .join('|');
+
+const ADDRESS_PATTERN = new RegExp(
+  // House number with an optional suffix: "12b", "12 bis", "12 TER".
+  String.raw`\b\d{1,4}(?:\s?(?:bis|ter|quater|BIS|TER|QUATER|[a-zA-Z])\b)?\s*(?:,|\s)\s*`
+  + `(?:${STREET_TYPE_PATTERN})`
+  // The city-name tail deliberately excludes whitespace (just one word,
+  // not \s) — with it, a greedy/backtracking match on text with no comma
+  // after the street (common: "104 rue de Maubeuge 75010 PARIS Immatriculation:...")
+  // would bleed straight into the next field's label.
+  + String.raw`\s+[^\n,;:]{3,60},?\s*\d{5}\s+[A-ZÀ-Ÿ][\wÀ-ÿ'\-]{1,30}\b`,
+);
 
 const STOPWORDS = {
   fr: ['le', 'la', 'les', 'de', 'des', 'et', 'un', 'une', 'est', 'dans', 'pour', 'avec', 'vous', 'nous', 'ce', 'cette', 'sont', 'par', 'sur', 'qui', 'que'],

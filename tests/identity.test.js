@@ -343,3 +343,18 @@ test('summarizeSeoMeta flags missing description and multiple H1s', () => {
   assert.equal(byLabel['Balise meta description présente'], false);
   assert.equal(byLabel['Lien canonical présent'], true);
 });
+
+test('extractPhysicalAddress accepts capitalized and uppercase street types', () => {
+  assert.equal(extractPhysicalAddress('Siège : 12 Rue des Lilas, 75001 Paris.'), '12 Rue des Lilas, 75001 Paris');
+  assert.equal(extractPhysicalAddress('SIÈGE : 12 RUE DES LILAS 75001 PARIS'), '12 RUE DES LILAS 75001 PARIS');
+  assert.equal(extractPhysicalAddress('Siège : 3 Allée des Pins, 33000 Bordeaux'), '3 Allée des Pins, 33000 Bordeaux');
+});
+
+test('extractPhysicalAddress accepts bis/ter house numbers', () => {
+  assert.equal(extractPhysicalAddress('Siège : 12 bis rue des Lilas, 75001 Paris'), '12 bis rue des Lilas, 75001 Paris');
+  assert.equal(extractPhysicalAddress('Siège : 12b avenue Foch, 75016 Paris'), '12b avenue Foch, 75016 Paris');
+});
+
+test('extractPhysicalAddress still requires a capitalized city after the postal code', () => {
+  assert.equal(extractPhysicalAddress('12 rue des Lilas 75001 immatriculée au RCS'), null);
+});
