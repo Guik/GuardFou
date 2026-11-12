@@ -4,7 +4,6 @@ const RING_RADIUS = 52;
 const RING_CIRCUMFERENCE = 2 * Math.PI * RING_RADIUS;
 
 let currentTabId = null;
-let currentVerdict = null;
 
 async function main() {
   const hasAccess = await browser.permissions.contains({ origins: ['<all_urls>'] });
@@ -36,7 +35,6 @@ async function main() {
 }
 
 function renderScore(verdict) {
-  currentVerdict = verdict;
   const ring = document.getElementById('score-ring');
   ring.className = `score-ring ${verdict.band}`;
 
@@ -71,16 +69,6 @@ function renderScore(verdict) {
   }
 
 }
-
-document.getElementById('trust-btn').addEventListener('click', async () => {
-  if (!currentVerdict) return;
-  const { allowlist = [] } = await browser.storage.local.get('allowlist');
-  if (!allowlist.includes(currentVerdict.domain)) {
-    allowlist.push(currentVerdict.domain);
-    await browser.storage.local.set({ allowlist });
-  }
-  window.location.reload();
-});
 
 function show(sectionId) {
   for (const id of ['activate', 'result', 'empty']) {
