@@ -40,7 +40,7 @@ No single check proves a site is a scam. The score combines them, and every reas
 
 ### Language
 
-The user interface (popup, settings, warning banner) is currently in French only.
+The interface (popup, settings, warning banner) is available in English and French, and follows Firefox's language, falling back to English. To add a language, copy `_locales/en/messages.json` to `_locales/<code>/messages.json` and translate the messages; the tests check that every locale has the same keys and substitutions.
 
 ## Privacy
 
@@ -83,6 +83,8 @@ src/core/         pure logic: scoring, brand matching, legal-information and SIR
 src/data/         known brands and their official domains, watched registrars
 src/popup/        toolbar popup and identity card
 src/options/      settings page
+src/shared/       styles and the page translation helper
+_locales/         interface text, one messages.json per language
 tests/            unit tests for src/core (node --test)
 ```
 
@@ -106,7 +108,6 @@ The store listing (summary, description, categories, licence) comes from `amo-me
 - Community reports: let users flag scam sites and vouch for trusted ones.
 - More brands in `src/data/brands-fr.js`; contributions welcome.
 - Support for other countries: brand lists, company registries and legal requirements.
-- English user interface.
 - Site popularity and backlinks in the identity card.
 
 Store listing material lives next to the code: `amo-metadata.json` (listing text, sent with every release), `PRIVACY.md` (privacy policy) and `store/` (screenshots).
