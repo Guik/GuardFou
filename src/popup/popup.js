@@ -277,9 +277,11 @@ document.getElementById('identity-btn').addEventListener('click', async () => {
 
   const card = await browser.runtime.sendMessage({ type: 'GET_IDENTITY_CARD', tabId: currentTabId });
   document.getElementById('identity-loading').hidden = true;
-  if (!card) {
+  if (!card || card.needsReload) {
     document.getElementById('identity-loading').hidden = false;
-    document.getElementById('identity-loading').textContent = 'Fiche indisponible pour cette page.';
+    document.getElementById('identity-loading').textContent = card?.needsReload
+      ? 'Rechargez la page pour afficher sa fiche.'
+      : 'Fiche indisponible pour cette page.';
     return;
   }
   renderIdentityCard(card);

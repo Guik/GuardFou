@@ -144,25 +144,33 @@
     };
   }
 
-  const payload = {
-    title: document.title || null,
-    ogSiteName: getMetaContent('og:site_name'),
-    jsonLdOrgName: getJsonLdOrgName(),
-    footerCopyright: getFooterCopyright(),
-    isLikelyShop: looksLikeShop(),
-    htmlLang: document.documentElement.getAttribute('lang'),
-    generatorMeta: getMetaContent('generator'),
-    techHints: getTechHints(),
-    allLinks: getAllLinks(),
-    seoMeta: getSeoMeta(),
-  };
+  function collectPayload() {
+    return {
+      title: document.title || null,
+      ogSiteName: getMetaContent('og:site_name'),
+      jsonLdOrgName: getJsonLdOrgName(),
+      footerCopyright: getFooterCopyright(),
+      isLikelyShop: looksLikeShop(),
+      htmlLang: document.documentElement.getAttribute('lang'),
+      generatorMeta: getMetaContent('generator'),
+      techHints: getTechHints(),
+      allLinks: getAllLinks(),
+      seoMeta: getSeoMeta(),
+    };
+  }
 
-  browser.runtime.sendMessage({ type: 'GUARDFOU_SIGNALS', payload }).catch(() => {});
+  browser.runtime.sendMessage({ type: 'GUARDFOU_SIGNALS', payload: collectPayload() }).catch(() => {});
 
   browser.runtime.onMessage.addListener((message) => {
     if (message?.type === 'SHOW_BANNER') {
       showBanner(message.verdict);
     }
+    // The identity card reads the page again when it's opened rather than
+    // relying on a copy kept since load — see buildIdentityCard.
+    if (message?.type === 'GUARDFOU_COLLECT') {
+      return Promise.resolve(collectPayload());
+    }
+    return undefined;
   });
 
   // Static markup only (no interpolation); all dynamic text below is set via

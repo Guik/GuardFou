@@ -24,13 +24,11 @@ import { pruneExpiredCache } from './cache.js';
 
 // Firefox can unload this background script after a few minutes of
 // inactivity (it's an event page, not a persistent one). A plain in-memory
-// Map would lose every tab's verdict and scraped page data the moment that
-// happens, even though the toolbar badge — which the browser manages
+// Map would lose every tab's verdict the moment that happens, even though the toolbar badge — which the browser manages
 // natively per tab — keeps showing the old result. browser.storage.session
 // is backed by the browser itself rather than this script's lifetime, so it
 // survives that restart; it's still cleared when the browser session ends.
 const verdictsByTab = sessionTabStore('guardfou:verdict:');
-const pageContextByTab = sessionTabStore('guardfou:pagecontext:');
 
 function sessionTabStore(prefix) {
   return {
@@ -57,11 +55,6 @@ const currentPageByTab = new Map();
 
 pruneExpiredCache().catch(() => {});
 
-// Far more than computeDeepSignals ever fetches (3), so the ranking
-// still has room after duplicates, but bounded on a page that labels
-// hundreds of links "CGV".
-const MAX_STORED_LEGAL_LINKS = 20;
-
 const BADGE_COLORS = { green: '#2e7d32', orange: '#ed6c02', red: '#c62828' };
 
 browser.runtime.onMessage.addListener((message, sender) => {
@@ -80,29 +73,37 @@ browser.runtime.onMessage.addListener((message, sender) => {
 browser.tabs.onRemoved.addListener((tabId) => {
   currentPageByTab.delete(tabId);
   verdictsByTab.delete(tabId).catch(() => {});
-  pageContextByTab.delete(tabId).catch(() => {});
 });
 browser.tabs.onUpdated.addListener((tabId, changeInfo) => {
   if (changeInfo.status === 'loading' && changeInfo.url) {
     currentPageByTab.delete(tabId);
     verdictsByTab.delete(tabId).catch(() => {});
-    pageContextByTab.delete(tabId).catch(() => {});
     clearBadge(tabId);
   }
 });
 
-async function handlePageSignals(tabId, url, payload) {
-  const domain = getRegistrableDomain(url);
-  const isIpHostname = isIpAddress(url);
-  // A bare IP has no registrable domain but is still very much worth
-  // analyzing (it's one of the strongest signals we have) — only bail out
-  // when there's truly nothing to key off, e.g. about:/file: pages.
-  if (!domain && !isIpHostname) return;
+// A bare IP has no registrable domain but is still very much worth
+// analyzing (it's one of the strongest signals we have) — only skip pages
+// with truly nothing to key off, e.g. about:/file: pages.
+function isAnalyzable(url) {
+  return Boolean(getRegistrableDomain(url)) || isIpAddress(url);
+}
 
+// Marks a new analysis as the tab's current one, and returns a check that
+// stays true only until the tab navigates or another analysis starts.
+function startPageAnalysis(tabId) {
   const page = {};
   currentPageByTab.set(tabId, page);
-  const isCurrentPage = () => currentPageByTab.get(tabId) === page;
+  return () => currentPageByTab.get(tabId) === page;
+}
 
+/**
+ * Everything both passes need that doesn't require the network: the
+ * allowlist and watched registrars, the brand the page claims, and the
+ * cheap URL-structural signals.
+ */
+async function analyzePage(url, payload) {
+  const domain = getRegistrableDomain(url);
   const displayId = domain ?? getHostname(url) ?? url;
 
   const { allowlist = [], customWatchedRegistrars = [] } = await browser.storage.local.get(['allowlist', 'customWatchedRegistrars']);
@@ -121,7 +122,7 @@ async function handlePageSignals(tabId, url, payload) {
     isOfficialDomain: matchedBrand && domain ? isOfficialDomain(domain, matchedBrand) : false,
     lookalikeBrand: !isAllowlisted && domain && domainLabel ? findLookalikeBrand(domain, domainLabel, BRANDS_FR) : null,
     // Cheap, synchronous, URL-structural checks — always computed, no network.
-    isIpHostname,
+    isIpHostname: isIpAddress(url),
     sharedHostingSuffix: domain ? getSharedHostingSuffix(domain) : null,
     hasUserinfoAtSymbol: hasUserinfoAtSymbol(url),
     hasFakeHttpsToken: hasFakeHttpsToken(url),
@@ -129,26 +130,17 @@ async function handlePageSignals(tabId, url, payload) {
     isInsecureHttp: isInsecureHttp(url),
   };
 
-  // Stashed so buildIdentityCard can later run the same network-dependent
-  // checks (RDAP/DNSSEC/legal+SIRET) without redoing brand-matching, and so
-  // it can fold the result back into the real score — see there for why.
-  // Only what it needs is kept, not the raw page scrape: every link on a
-  // big shop page plus every script/stylesheet URL can weigh megabytes per
-  // open tab. Legal-page candidates stay as links (computeDeepSignals
-  // ranks them again); technologies and social profiles are reduced to
-  // their results right away.
-  const { allLinks = [], techHints = '', ...pageFields } = payload ?? {};
-  const storedPayload = { ...pageFields, allLinks: findLegalLinks(allLinks, domain).slice(0, MAX_STORED_LEGAL_LINKS) };
-  const technologies = detectTechnologies(techHints, payload?.generatorMeta ?? null);
-  const socialLinks = detectSocialLinks(allLinks.map((l) => l.href));
-  if (!isCurrentPage()) return;
-  await pageContextByTab.set(tabId, {
-    domain, displayId, payload: storedPayload, technologies, socialLinks, baseSignals, claimedText, watchedRegistrars, isAllowlisted, url,
-  });
+  return { domain, displayId, isAllowlisted, watchedRegistrars, claimedText, matchedBrand, baseSignals };
+}
+
+async function handlePageSignals(tabId, url, payload) {
+  if (!isAnalyzable(url)) return;
+  const isCurrentPage = startPageAnalysis(tabId);
+  const { domain, displayId, isAllowlisted, watchedRegistrars, claimedText, matchedBrand, baseSignals } = await analyzePage(url, payload);
 
   // Domain age is one of the strongest signals we have and costs a single
-  // cached RDAP lookup, so it runs on every site. The deeper checks (DNSSEC, legal
-  // pages, SIRET registry) fetch several pages, so they only run
+  // cached RDAP lookup, so it runs on every site. The deeper checks (DNSSEC,
+  // legal pages, SIRET registry) fetch several pages, so they only run
   // automatically when the page looks like a shop or claims a known brand;
   // other pages get them when you open the identity card — see
   // buildIdentityCard, which runs them unconditionally and updates the
@@ -274,10 +266,24 @@ async function publishVerdict(tabId, displayId, signals) {
  * automatic pass decided was "worth checking".
  */
 async function buildIdentityCard(tabId) {
-  const page = currentPageByTab.get(tabId);
-  const ctx = await pageContextByTab.get(tabId);
-  if (!ctx) return null;
-  const { domain, displayId, payload, technologies, socialLinks, baseSignals, claimedText, watchedRegistrars, isAllowlisted, url } = ctx;
+  // Reuse the automatic pass's token if it's still alive, so a navigation
+  // that already started a new analysis invalidates this one too.
+  const page = currentPageByTab.get(tabId) ?? {};
+  currentPageByTab.set(tabId, page);
+  const isCurrentPage = () => currentPageByTab.get(tabId) === page;
+
+  const { url } = await browser.tabs.get(tabId);
+  if (!isAnalyzable(url)) return null;
+  // The page is read again rather than kept from when it loaded: nothing
+  // but the verdict is stored per tab, and the card reflects the page as it
+  // is now (prices or links rendered late, a shop that changes page without
+  // reloading). The content script isn't there in a tab opened before the
+  // extension was installed or updated; reloading the page brings it back.
+  const payload = await browser.tabs.sendMessage(tabId, { type: 'GUARDFOU_COLLECT' }).catch(() => null);
+  if (!payload) return { needsReload: true };
+  if (!isCurrentPage()) return null;
+
+  const { domain, displayId, isAllowlisted, watchedRegistrars, claimedText, baseSignals } = await analyzePage(url, payload);
 
   let rdapInfo = EMPTY_RDAP_INFO;
   let legalAnalysis = { address: null, legal: { present: false, length: 0, detectedLang: 'unknown', languageMismatch: false, tooShort: false }, mandatoryMentions: null, companyCheck: { candidate: null, checksumValid: null, registry: null } };
@@ -288,7 +294,7 @@ async function buildIdentityCard(tabId) {
       computeRegistrationSignals(domain, watchedRegistrars),
       computeDeepSignals(domain, payload, claimedText, url),
     ]);
-    if (currentPageByTab.get(tabId) !== page) return null; // navigated away meanwhile
+    if (!isCurrentPage()) return null; // navigated away meanwhile
     rdapInfo = registration.rdapInfo;
     legalAnalysis = deep.legalAnalysis;
     legalUrls = deep.legalUrls;
@@ -301,9 +307,9 @@ async function buildIdentityCard(tabId) {
     lastChangedDate: rdapInfo.lastChangedAt,
     expirationDate: rdapInfo.expiresAt,
     registrarName: rdapInfo.registrarName,
-    technologies,
-    socialLinks,
-    seoMetaSummary: payload?.seoMeta ? summarizeSeoMeta(payload.seoMeta) : [],
+    technologies: detectTechnologies(payload.techHints ?? '', payload.generatorMeta ?? null),
+    socialLinks: detectSocialLinks((payload.allLinks ?? []).map((l) => l.href)),
+    seoMetaSummary: payload.seoMeta ? summarizeSeoMeta(payload.seoMeta) : [],
     address: legalAnalysis.address,
     legalText: legalAnalysis.legal,
     legalUrls,
