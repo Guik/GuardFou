@@ -57,6 +57,11 @@ const currentPageByTab = new Map();
 
 pruneExpiredCache().catch(() => {});
 
+// Far more than computeNetworkSignals ever fetches (3), so the ranking
+// still has room after duplicates, but bounded on a page that labels
+// hundreds of links "CGV".
+const MAX_STORED_LEGAL_LINKS = 20;
+
 const BADGE_COLORS = { green: '#2e7d32', orange: '#ed6c02', red: '#c62828' };
 
 browser.runtime.onMessage.addListener((message, sender) => {
@@ -127,8 +132,19 @@ async function handlePageSignals(tabId, url, payload) {
   // Stashed so buildIdentityCard can later run the same network-dependent
   // checks (RDAP/DNSSEC/legal+SIRET) without redoing brand-matching, and so
   // it can fold the result back into the real score — see there for why.
+  // Only what it needs is kept, not the raw page scrape: every link on a
+  // big shop page plus every script/stylesheet URL can weigh megabytes per
+  // open tab. Legal-page candidates stay as links (computeNetworkSignals
+  // ranks them again); technologies and social profiles are reduced to
+  // their results right away.
+  const { allLinks = [], techHints = '', ...pageFields } = payload ?? {};
+  const storedPayload = { ...pageFields, allLinks: findLegalLinks(allLinks, domain).slice(0, MAX_STORED_LEGAL_LINKS) };
+  const technologies = detectTechnologies(techHints, payload?.generatorMeta ?? null);
+  const socialLinks = detectSocialLinks(allLinks.map((l) => l.href));
   if (!isCurrentPage()) return;
-  await pageContextByTab.set(tabId, { domain, displayId, payload, baseSignals, claimedText, watchedRegistrars, isAllowlisted, url });
+  await pageContextByTab.set(tabId, {
+    domain, displayId, payload: storedPayload, technologies, socialLinks, baseSignals, claimedText, watchedRegistrars, isAllowlisted, url,
+  });
 
   // The network-dependent checks (RDAP, DNSSEC, legal page, SIRET registry)
   // only run automatically when the page looks like a shop or matches a
@@ -244,9 +260,7 @@ async function buildIdentityCard(tabId) {
   const page = currentPageByTab.get(tabId);
   const ctx = await pageContextByTab.get(tabId);
   if (!ctx) return null;
-  const { domain, displayId, payload, baseSignals, claimedText, watchedRegistrars, isAllowlisted, url } = ctx;
-
-  const allLinks = payload?.allLinks ?? [];
+  const { domain, displayId, payload, technologies, socialLinks, baseSignals, claimedText, watchedRegistrars, isAllowlisted, url } = ctx;
 
   let rdapInfo = EMPTY_RDAP_INFO;
   let legalAnalysis = { address: null, legal: { present: false, length: 0, detectedLang: 'unknown', languageMismatch: false, tooShort: false }, mandatoryMentions: null, companyCheck: { candidate: null, checksumValid: null, registry: null } };
@@ -267,8 +281,8 @@ async function buildIdentityCard(tabId) {
     lastChangedDate: rdapInfo.lastChangedAt,
     expirationDate: rdapInfo.expiresAt,
     registrarName: rdapInfo.registrarName,
-    technologies: detectTechnologies(payload?.techHints ?? '', payload?.generatorMeta ?? null),
-    socialLinks: detectSocialLinks(allLinks.map((l) => l.href)),
+    technologies,
+    socialLinks,
     seoMetaSummary: payload?.seoMeta ? summarizeSeoMeta(payload.seoMeta) : [],
     address: legalAnalysis.address,
     legalText: legalAnalysis.legal,
