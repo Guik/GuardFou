@@ -8,7 +8,7 @@ import {
   hasRedirectionInPath,
   isInsecureHttp,
 } from '../core/domain.js';
-import { findBrandByAlias, isOfficialDomain, findLookalikeBrand } from '../core/brands.js';
+import { findBrandByAlias, getBrandClaimText, isOfficialDomain, findLookalikeBrand } from '../core/brands.js';
 import { isWatchedRegistrar } from '../core/registrar.js';
 import { companyNameMatchesClaim } from '../core/siret.js';
 import { computeScore } from '../core/scoring.js';
@@ -90,7 +90,7 @@ async function handlePageSignals(tabId, url, payload) {
   const claimedText = [payload?.title, payload?.ogSiteName, payload?.jsonLdOrgName, payload?.footerCopyright]
     .filter(Boolean)
     .join(' • ');
-  const matchedBrand = !isAllowlisted ? findBrandByAlias(claimedText, BRANDS_FR) : null;
+  const matchedBrand = !isAllowlisted ? findBrandByAlias(getBrandClaimText(payload), BRANDS_FR) : null;
   const domainLabel = domain ? (getDomainLabel(domain) ?? domain) : null;
 
   const baseSignals = {

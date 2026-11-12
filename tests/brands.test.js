@@ -7,6 +7,7 @@ import {
   isNearMissSpelling,
   levenshtein,
   findLookalikeBrand,
+  getBrandClaimText,
 } from '../src/core/brands.js';
 import { BRANDS_FR } from '../src/data/brands-fr.js';
 
@@ -73,4 +74,18 @@ test('findLookalikeBrand returns null for official and unrelated domains', () =>
   assert.equal(findLookalikeBrand('mr-bricolage.fr', 'mr-bricolage', BRANDS_FR), null);
   assert.equal(findLookalikeBrand('lemonde.fr', 'lemonde', BRANDS_FR), null);
   assert.equal(findLookalikeBrand('party.fr', 'party', BRANDS_FR), null);
+});
+
+test('getBrandClaimText ignores the title of a page that is not a shop', () => {
+  const bakery = { title: 'Boulanger artisan à Lyon - pain au levain', isLikelyShop: false };
+  const news = { title: 'Fnac Darty publie ses résultats', ogSiteName: 'Le Monde.fr', isLikelyShop: false };
+  assert.equal(findBrandByAlias(getBrandClaimText(bakery), BRANDS_FR), null);
+  assert.equal(findBrandByAlias(getBrandClaimText(news), BRANDS_FR), null);
+});
+
+test('getBrandClaimText keeps the title on a shop and the site name everywhere', () => {
+  const cloneShop = { title: 'Arrêt parquet stratifié - Chausson Matériaux', isLikelyShop: true };
+  const namedSite = { title: 'Accueil', ogSiteName: 'Castorama', isLikelyShop: false };
+  assert.equal(findBrandByAlias(getBrandClaimText(cloneShop), BRANDS_FR)?.name, 'Chausson Matériaux');
+  assert.equal(findBrandByAlias(getBrandClaimText(namedSite), BRANDS_FR)?.name, 'Castorama');
 });
