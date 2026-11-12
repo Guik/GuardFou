@@ -59,6 +59,19 @@
     </section>
 
     <section class="card">
+      <h2 data-i18n="optionsLanguageHeading">Language</h2>
+      <p class="hint" data-i18n="optionsLanguageHint">
+        Language of the popup, this page and the warning banner. Pages already
+        checked switch on their next load.
+      </p>
+      <select id="language-select" data-i18n-aria-label="optionsLanguageHeading">
+        <option value="" data-i18n="optionsLanguageAuto">Firefox's language</option>
+        <option value="en" lang="en">English</option>
+        <option value="fr" lang="fr">Français</option>
+      </select>
+    </section>
+
+    <section class="card">
       <h2 data-i18n="optionsCacheHeading">Lookup cache</h2>
       <p class="hint" data-i18n="optionsCacheHint">
         Domain, DNSSEC and legal-notice results are kept for 7 days.
@@ -72,7 +85,6 @@
     </section>
   </main>
 
-  <script src="../shared/i18n.js"></script>
   <script src="options.js" type="module"></script>
 </body>
 </html>

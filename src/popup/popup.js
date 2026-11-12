@@ -1,5 +1,7 @@
+import { t, uiLanguage } from '../shared/i18n.js';
+
 const BAND_LABELS = { green: t('bandGreen'), orange: t('bandOrange'), red: t('bandRed') };
-const DATE_FORMAT = new Intl.DateTimeFormat(browser.i18n.getUILanguage(), { year: 'numeric', month: 'long', day: 'numeric' });
+const DATE_FORMAT = new Intl.DateTimeFormat(uiLanguage(), { year: 'numeric', month: 'long', day: 'numeric' });
 const RING_RADIUS = 52;
 const RING_CIRCUMFERENCE = 2 * Math.PI * RING_RADIUS;
 

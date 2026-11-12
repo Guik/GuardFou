@@ -1,3 +1,5 @@
+import { t } from '../shared/i18n.js';
+import { LANGUAGE_KEY, LANGUAGES } from '../core/i18n.js';
 import { WATCHED_REGISTRARS } from '../data/watched-registrars.js';
 import { clearCache, isCacheDisabled } from '../background/cache.js';
 
@@ -103,6 +105,18 @@ async function refreshCheckAgeToggle() {
   checkAgeEverywhereCheckbox.checked = checkAgeOnEverySite;
 }
 
+const languageSelect = document.getElementById('language-select');
+languageSelect.addEventListener('change', async () => {
+  if (languageSelect.value) await browser.storage.local.set({ [LANGUAGE_KEY]: languageSelect.value });
+  else await browser.storage.local.remove(LANGUAGE_KEY);
+  window.location.reload();
+});
+
+async function refreshLanguage() {
+  const { [LANGUAGE_KEY]: language } = await browser.storage.local.get(LANGUAGE_KEY);
+  languageSelect.value = LANGUAGES.includes(language) ? language : '';
+}
+
 async function refreshCacheToggle() {
   disableCacheCheckbox.checked = await isCacheDisabled();
 }
@@ -111,4 +125,5 @@ refreshPermissionStatus();
 refreshAllowlist();
 refreshRegistrarList();
 refreshCheckAgeToggle();
+refreshLanguage();
 refreshCacheToggle();

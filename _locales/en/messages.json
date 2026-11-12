@@ -341,6 +341,15 @@
   "optionsCheckAgeEverywhere": {
     "message": "Check domain age on every site"
   },
+  "optionsLanguageHeading": {
+    "message": "Language"
+  },
+  "optionsLanguageHint": {
+    "message": "Language of the popup, this page and the warning banner. Pages already checked switch on their next load."
+  },
+  "optionsLanguageAuto": {
+    "message": "Firefox's language"
+  },
   "optionsCacheHeading": {
     "message": "Lookup cache"
   },

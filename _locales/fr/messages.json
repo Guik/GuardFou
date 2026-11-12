@@ -341,6 +341,15 @@
   "optionsCheckAgeEverywhere": {
     "message": "Vérifier l'âge du domaine sur tous les sites"
   },
+  "optionsLanguageHeading": {
+    "message": "Langue"
+  },
+  "optionsLanguageHint": {
+    "message": "Langue de la fenêtre GuardFou, de cette page et du bandeau d'alerte. Les pages déjà vérifiées changent au prochain chargement."
+  },
+  "optionsLanguageAuto": {
+    "message": "Langue de Firefox"
+  },
   "optionsCacheHeading": {
     "message": "Cache des recherches"
   },

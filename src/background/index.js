@@ -13,6 +13,7 @@ import { findBrandByAlias, getBrandClaimText, isOfficialDomain, findLookalikeBra
 import { isWatchedRegistrar } from '../core/registrar.js';
 import { companyNameMatchesClaim } from '../core/siret.js';
 import { computeScore } from '../core/scoring.js';
+import { t, i18nReady } from '../core/i18n.js';
 import { detectTechnologies, detectSocialLinks, findLegalLinks, pageLooksLikeOwnLegalDocument, summarizeSeoMeta } from '../core/identity.js';
 import { isShortRegistrationSpan } from '../core/rdap.js';
 import { BRANDS_FR } from '../data/brands-fr.js';
@@ -58,14 +59,15 @@ pruneExpiredCache().catch(() => {});
 const BADGE_COLORS = { green: '#2e7d32', orange: '#ed6c02', red: '#c62828' };
 
 browser.runtime.onMessage.addListener((message, sender) => {
+  // Reasons and labels are written in the chosen language, so wait for it.
   if (message?.type === 'GUARDFOU_SIGNALS' && sender.tab?.id != null) {
-    return handlePageSignals(sender.tab.id, sender.tab.url, message.payload);
+    return i18nReady.then(() => handlePageSignals(sender.tab.id, sender.tab.url, message.payload));
   }
   if (message?.type === 'GET_VERDICT') {
     return verdictsByTab.get(message.tabId);
   }
   if (message?.type === 'GET_IDENTITY_CARD') {
-    return buildIdentityCard(message.tabId);
+    return i18nReady.then(() => buildIdentityCard(message.tabId));
   }
   return undefined;
 });
@@ -252,7 +254,10 @@ async function publishVerdict(tabId, displayId, signals) {
   setBadge(tabId, verdict);
 
   if (verdict.band === 'red') {
-    browser.tabs.sendMessage(tabId, { type: 'SHOW_BANNER', verdict }).catch(() => {});
+    // The content script can't load the chosen language itself, so the
+    // banner's text travels with the verdict.
+    const text = { title: t('bannerTitle', verdict.score), details: t('bannerDetails'), dismiss: t('bannerDismiss') };
+    browser.tabs.sendMessage(tabId, { type: 'SHOW_BANNER', verdict, text }).catch(() => {});
   }
   return verdict;
 }

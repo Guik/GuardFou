@@ -40,7 +40,7 @@ No single check proves a site is a scam. The score combines them, and every reas
 
 ### Language
 
-The interface (popup, settings, warning banner) is available in English and French, and follows Firefox's language, falling back to English. To add a language, copy `_locales/en/messages.json` to `_locales/<code>/messages.json` and translate the messages; the tests check that every locale has the same keys and substitutions.
+The interface (popup, settings, warning banner) is available in English and French. It follows Firefox's language, falling back to English, unless you pick one under **Language** in the settings. The add-on's name and description in Firefox's menus always follow Firefox. To add a language, copy `_locales/en/messages.json` to `_locales/<code>/messages.json`, translate the messages, and add the code to `LANGUAGES` in `src/core/i18n.js` and to the list in `src/options/options.html`; the tests check that every locale has the same keys and substitutions and is in `LANGUAGES`.
 
 ## Privacy
 

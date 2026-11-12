@@ -163,7 +163,7 @@
 
   browser.runtime.onMessage.addListener((message) => {
     if (message?.type === 'SHOW_BANNER') {
-      showBanner(message.verdict);
+      showBanner(message.verdict, message.text);
     }
     // The identity card reads the page again when it's opened rather than
     // relying on a copy kept since load — see buildIdentityCard.
@@ -208,10 +208,6 @@
 
   const SVG_NS = 'http://www.w3.org/2000/svg';
 
-  function t(key, ...substitutions) {
-    return browser.i18n.getMessage(key, substitutions.map(String)) || key;
-  }
-
   function createWarningIcon() {
     const svg = document.createElementNS(SVG_NS, 'svg');
     svg.setAttribute('viewBox', '0 0 24 24');
@@ -240,7 +236,8 @@
     return svg;
   }
 
-  function showBanner(verdict) {
+  /** @param {{ title: string, details: string, dismiss: string }} text already translated by the background */
+  function showBanner(verdict, text) {
     if (document.getElementById('guardfou-banner-host')) return;
 
     const host = document.createElement('div');
@@ -260,7 +257,7 @@
     const msg = document.createElement('div');
     msg.className = 'msg';
     const title = document.createElement('b');
-    title.textContent = t('bannerTitle', verdict.score);
+    title.textContent = text.title;
     const detail = document.createElement('span');
     detail.textContent = verdict.reasons[0]?.message || '';
     msg.append(title, detail);
@@ -268,13 +265,13 @@
     const actions = document.createElement('div');
     actions.className = 'actions';
     const detailsBtn = document.createElement('button');
-    detailsBtn.textContent = t('bannerDetails');
+    detailsBtn.textContent = text.details;
     detailsBtn.addEventListener('click', () => {
       // eslint-disable-next-line no-alert
       alert(verdict.reasons.map((r) => `• ${r.message}`).join('\n'));
     });
     const dismissBtn = document.createElement('button');
-    dismissBtn.textContent = t('bannerDismiss');
+    dismissBtn.textContent = text.dismiss;
     dismissBtn.addEventListener('click', () => host.remove());
     actions.append(detailsBtn, dismissBtn);
 
