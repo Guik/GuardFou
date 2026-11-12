@@ -25,9 +25,17 @@ test('signed but not validated (DNSKEY present, AD false)', () => {
   assert.deepEqual(result, { signed: true, validated: false, bogus: false });
 });
 
-test('bogus signature (resolver SERVFAIL, RCODE 2)', () => {
-  const result = interpretDnssecResponse({ Status: 2, AD: false, Answer: [] });
-  assert.deepEqual(result, { signed: false, validated: false, bogus: true });
+test('bogus signature: SERVFAIL that answers fine with checking disabled', () => {
+  const result = interpretDnssecResponse(
+    { Status: 2, AD: false },
+    { Status: 0, AD: false, Answer: [{ name: 'dnssec-failed.org.', type: 48, data: 'x' }] },
+  );
+  assert.deepEqual(result, { signed: true, validated: false, bogus: true });
+});
+
+test('SERVFAIL that also fails with checking disabled is a broken nameserver, not bogus', () => {
+  assert.deepEqual(interpretDnssecResponse({ Status: 2 }, { Status: 2 }), { signed: false, validated: false, bogus: false });
+  assert.deepEqual(interpretDnssecResponse({ Status: 2 }), { signed: false, validated: false, bogus: false });
 });
 
 test('missing/malformed response does not throw', () => {

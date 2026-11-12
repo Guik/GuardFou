@@ -5,21 +5,26 @@
  *
  * - `signed`: the zone publishes DNSKEY records at all.
  * - `validated`: the resolver's chain-of-trust validation succeeded (AD flag).
- * - `bogus`: the resolver rejected an invalid signature (SERVFAIL, RCODE 2) —
- *   this is the actually alarming case: a signed zone whose signature does
- *   not check out, which can indicate a hijacked or spoofed DNS answer.
+ * - `bogus`: the zone is signed but its signatures don't check out, which can
+ *   indicate a hijacked or spoofed DNS answer — the actually alarming case.
+ *   The resolver reports that as SERVFAIL (RCODE 2), but so does a broken
+ *   or unreachable nameserver, so it only counts as bogus when the same
+ *   query with checking disabled (`cd=true`) then succeeds.
  *
  * Most legitimate sites simply don't sign their zone at all, so `signed:
  * false` on its own is not a useful fraud signal and the scoring should
  * treat it as neutral.
  *
  * @param {{Status?: number, AD?: boolean, Answer?: Array<unknown>}} dohResponse
+ * @param {{Status?: number, Answer?: Array<unknown>}|null} [uncheckedResponse]
+ *   the same query with `cd=true`, only needed when dohResponse is a SERVFAIL
  */
-export function interpretDnssecResponse(dohResponse) {
-  const hasDnskey = Array.isArray(dohResponse?.Answer) && dohResponse.Answer.length > 0;
+export function interpretDnssecResponse(dohResponse, uncheckedResponse = null) {
+  const hasDnskey = (response) => Array.isArray(response?.Answer) && response.Answer.length > 0;
+  const bogus = dohResponse?.Status === 2 && uncheckedResponse?.Status === 0 && hasDnskey(uncheckedResponse);
   return {
-    signed: hasDnskey,
-    validated: hasDnskey && dohResponse?.AD === true,
-    bogus: dohResponse?.Status === 2,
+    signed: hasDnskey(dohResponse) || bogus,
+    validated: hasDnskey(dohResponse) && dohResponse?.AD === true,
+    bogus,
   };
 }

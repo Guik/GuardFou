@@ -24,14 +24,24 @@ export async function getDnssecStatus(domain) {
 
 async function fetchDnssecStatus(domain) {
   try {
-    const res = await fetchWithTimeout(
-      `https://cloudflare-dns.com/dns-query?name=${encodeURIComponent(domain)}&type=DNSKEY&do=true`,
-      { headers: { Accept: 'application/dns-json' } },
-    );
-    if (!res.ok) return { ok: false, status: null };
-    const data = await res.json();
-    return { ok: true, status: interpretDnssecResponse(data) };
+    const data = await queryDnskey(domain, false);
+    // SERVFAIL alone doesn't say why — a broken or unreachable nameserver
+    // fails the same way as a bad signature. Asking again with validation
+    // disabled tells them apart: only a DNSSEC failure answers fine then.
+    const unchecked = data.Status === 2 ? await queryDnskey(domain, true) : null;
+    return { ok: true, status: interpretDnssecResponse(data, unchecked) };
   } catch {
     return { ok: false, status: null };
   }
+}
+
+/** @param {string} domain @param {boolean} checkingDisabled DoH `cd` flag */
+async function queryDnskey(domain, checkingDisabled) {
+  const cd = checkingDisabled ? '&cd=true' : '';
+  const res = await fetchWithTimeout(
+    `https://cloudflare-dns.com/dns-query?name=${encodeURIComponent(domain)}&type=DNSKEY&do=true${cd}`,
+    { headers: { Accept: 'application/dns-json' } },
+  );
+  if (!res.ok) throw new Error(`DoH HTTP ${res.status}`);
+  return res.json();
 }
