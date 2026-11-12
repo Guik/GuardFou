@@ -1,0 +1,359 @@
+{
+  "extensionName": {
+    "message": "GuardFou"
+  },
+  "extensionDescription": {
+    "message": "Spots fake online shops: brand impersonation, newly registered domains, suspicious legal notices."
+  },
+  "popupActivateLede": {
+    "message": "GuardFou needs access to the pages you visit to analyze them."
+  },
+  "popupActivateButton": {
+    "message": "Turn on GuardFou"
+  },
+  "popupEmpty": {
+    "message": "No analysis for this page: it wasn't detected as a shop, or it has only just loaded."
+  },
+  "popupIdentityButton": {
+    "message": "View the site identity card"
+  },
+  "popupIdentityTitle": {
+    "message": "Identity card"
+  },
+  "popupClose": {
+    "message": "Close"
+  },
+  "popupIdentityLoading": {
+    "message": "Analyzing…"
+  },
+  "popupIdentityNeedsReload": {
+    "message": "Reload the page to see its identity card."
+  },
+  "popupIdentityUnavailable": {
+    "message": "No identity card for this page."
+  },
+  "popupSettings": {
+    "message": "Settings"
+  },
+  "popupNoReasons": {
+    "message": "No particular signal detected."
+  },
+  "bandGreen": {
+    "message": "Looks fine"
+  },
+  "bandOrange": {
+    "message": "Be careful"
+  },
+  "bandRed": {
+    "message": "High risk"
+  },
+  "cardUnknownDate": {
+    "message": "Unknown"
+  },
+  "cardUnknownRegistrar": {
+    "message": "Unknown"
+  },
+  "cardRegistrationDate": {
+    "message": "Domain registered on"
+  },
+  "cardLastChangedDate": {
+    "message": "Domain last updated"
+  },
+  "cardExpirationDate": {
+    "message": "Domain expires on"
+  },
+  "cardRegistrar": {
+    "message": "Registrar"
+  },
+  "cardAddress": {
+    "message": "Physical address"
+  },
+  "cardAddressNotFound": {
+    "message": "Not found on the page"
+  },
+  "cardTechnologies": {
+    "message": "Technology"
+  },
+  "cardNotDetected": {
+    "message": "Not detected"
+  },
+  "cardSocialLinks": {
+    "message": "Social networks"
+  },
+  "cardNoSocialLinks": {
+    "message": "No links found"
+  },
+  "cardLegalPages": {
+    "message": "Page(s) checked for legal information"
+  },
+  "cardNoLegalLinks": {
+    "message": "No legal notice or terms of sale link found on the page."
+  },
+  "cardLegalText": {
+    "message": "Legal notice"
+  },
+  "cardLegalMissing": {
+    "message": "No legal notice page found"
+  },
+  "cardLegalPresent": {
+    "message": "Present (detected language: $1)"
+  },
+  "cardLanguageUnknown": {
+    "message": "undetermined"
+  },
+  "cardLanguageMismatch": {
+    "message": "Not in the language the site declares: possibly a poor translation."
+  },
+  "cardLegalTooShort": {
+    "message": "Very short text, possibly a generic template."
+  },
+  "cardLegalNothingToReport": {
+    "message": "Nothing in particular to report (a quick automatic check, not a proofread)."
+  },
+  "cardMandatoryMentions": {
+    "message": "Mandatory legal information"
+  },
+  "cardMandatoryUnchecked": {
+    "message": "Can't be checked (no legal notice page found)."
+  },
+  "cardDependsOnStatus": {
+    "message": "Depending on legal status:"
+  },
+  "cardCompanyCheck": {
+    "message": "SIRET/SIREN check"
+  },
+  "cardNoCompanyNumber": {
+    "message": "No SIRET/SIREN number found on the page."
+  },
+  "cardCompanyNumberFound": {
+    "message": "Number found: $1"
+  },
+  "cardCompanyNumberInvalid": {
+    "message": "Invalid format (checksum failed): probably mistyped or made up."
+  },
+  "cardCompanyNotFound": {
+    "message": "Not in the official French company registry."
+  },
+  "cardCompanyActive": {
+    "message": "Registered company: $1 (active)"
+  },
+  "cardCompanyClosed": {
+    "message": "Registered company: $1 (closed)"
+  },
+  "cardSeo": {
+    "message": "SEO (meta tags)"
+  },
+  "cardPopularity": {
+    "message": "Site popularity"
+  },
+  "cardBacklinks": {
+    "message": "Referring links (backlinks)"
+  },
+  "cardNotAvailableYet": {
+    "message": "Not available (needs a paid source or an API key); planned for a later version."
+  },
+  "legalField_legalForm": {
+    "message": "Company name / legal form"
+  },
+  "legalField_siren": {
+    "message": "SIRET/SIREN number"
+  },
+  "legalField_address": {
+    "message": "Registered office address"
+  },
+  "legalField_contact": {
+    "message": "Contact details (phone or email)"
+  },
+  "legalField_host": {
+    "message": "Hosting provider's identity"
+  },
+  "legalField_publicationDirector": {
+    "message": "Publication director"
+  },
+  "legalField_rcs": {
+    "message": "RCS registration"
+  },
+  "legalField_capital": {
+    "message": "Share capital"
+  },
+  "legalField_vat": {
+    "message": "EU VAT number"
+  },
+  "legalField_mediator": {
+    "message": "Consumer mediator"
+  },
+  "seoMetaDescription": {
+    "message": "Meta description tag present"
+  },
+  "seoCanonical": {
+    "message": "Canonical link present"
+  },
+  "seoOpenGraph": {
+    "message": "Open Graph tags present"
+  },
+  "seoTitleLength": {
+    "message": "Page title of reasonable length ($1 characters)"
+  },
+  "seoSingleH1": {
+    "message": "Exactly one H1 heading (found: $1)"
+  },
+  "seoImageAlt": {
+    "message": "Alt text on most images ($1/$2 without an alt attribute)"
+  },
+  "reasonAllowlisted": {
+    "message": "Site on your trusted list."
+  },
+  "reasonIpHostname": {
+    "message": "The site is reached through a raw IP address instead of a domain name, which is extremely rare for a legitimate site."
+  },
+  "reasonUserinfoAtSymbol": {
+    "message": "The address contains an “@” before the domain name, a trick used to disguise a fake address as a real one."
+  },
+  "reasonFakeHttpsToken": {
+    "message": "The word “https” appears in the domain name itself, a trick to look safer than it is."
+  },
+  "reasonRedirectionInPath": {
+    "message": "The address contains “//” in its path, which can hide a redirect to another site."
+  },
+  "reasonInsecureHttp": {
+    "message": "The site doesn't use HTTPS: the connection isn't encrypted."
+  },
+  "reasonSharedHosting": {
+    "message": "Site hosted on a subdomain of $1: it has no domain name of its own, so its age can't be checked."
+  },
+  "reasonDomainVeryNew": {
+    "message": "The domain name was registered only $1 days ago."
+  },
+  "reasonDomainNew": {
+    "message": "The domain name is less than a year old ($1 months)."
+  },
+  "reasonDomainOld": {
+    "message": "The domain name has existed for more than 5 years."
+  },
+  "reasonShortRegistrationSpan": {
+    "message": "The domain was registered for about a year only, the minimum, rather than several years ahead."
+  },
+  "reasonWatchedRegistrar": {
+    "message": "Recent domain registered through $1, a registrar already seen on short-lived shops."
+  },
+  "reasonDnssecBogus": {
+    "message": "The domain's DNSSEC validation fails (invalid signature): a possible sign of DNS hijacking or spoofing."
+  },
+  "reasonDnssecOk": {
+    "message": "The domain is protected by DNSSEC and its signature is valid."
+  },
+  "reasonLegalPageMissing": {
+    "message": "No legal notice page found on the site, although every site in France must have one."
+  },
+  "reasonIncompleteLegalMentionsOne": {
+    "message": "Incomplete legal notice: 1 required item missing ($1)."
+  },
+  "reasonIncompleteLegalMentionsOther": {
+    "message": "Incomplete legal notice: $1 required items missing ($2)."
+  },
+  "legalMoreOne": {
+    "message": "+1 other"
+  },
+  "legalMoreOther": {
+    "message": "+$1 others"
+  },
+  "reasonSiretInvalidChecksum": {
+    "message": "The SIRET/SIREN number in the legal notice is malformed (checksum failed)."
+  },
+  "reasonSiretNotFound": {
+    "message": "The SIRET/SIREN number shown doesn't exist in the official French company registry."
+  },
+  "reasonCompanyClosed": {
+    "message": "The company behind the SIRET (“$1”) is listed as closed in the official registry."
+  },
+  "reasonCompanyNameMismatch": {
+    "message": "The SIRET is valid and active, but belongs to “$1”, a different name from the one on the site: possibly a real SIRET reused."
+  },
+  "reasonBrandDomainMismatch": {
+    "message": "The site presents itself as “$1” but its domain isn't $2."
+  },
+  "reasonBrandLookalikeDomain": {
+    "message": "The domain name looks like that of “$1” ($2), with an added word or a close spelling."
+  },
+  "bannerTitle": {
+    "message": "GuardFou: this site looks suspicious (score $1/100)"
+  },
+  "bannerDetails": {
+    "message": "Details"
+  },
+  "bannerDismiss": {
+    "message": "Dismiss"
+  },
+  "optionsTitle": {
+    "message": "GuardFou settings"
+  },
+  "optionsAccessHeading": {
+    "message": "Page access"
+  },
+  "optionsAccessChecking": {
+    "message": "Checking…"
+  },
+  "optionsAccessButton": {
+    "message": "Allow access to the pages you visit"
+  },
+  "optionsAccessGranted": {
+    "message": "Access granted."
+  },
+  "optionsAccessMissing": {
+    "message": "Access not granted: GuardFou can't analyze any page."
+  },
+  "optionsTrustedHeading": {
+    "message": "Trusted sites"
+  },
+  "optionsTrustedHint": {
+    "message": "These domains will never be flagged."
+  },
+  "optionsTrustedPlaceholder": {
+    "message": "example.com"
+  },
+  "optionsAdd": {
+    "message": "Add"
+  },
+  "optionsRemove": {
+    "message": "Remove"
+  },
+  "optionsRegistrarsHeading": {
+    "message": "Watched registrars"
+  },
+  "optionsRegistrarsHint": {
+    "message": "Flagged lightly (+8) only when the domain is also recent (under 2 years): the registrar alone proves nothing."
+  },
+  "optionsRegistrarsBuiltin": {
+    "message": "Built-in list:"
+  },
+  "optionsRegistrarsAddHint": {
+    "message": "Add others you have seen yourself."
+  },
+  "optionsRegistrarPlaceholder": {
+    "message": "Registrar name"
+  },
+  "optionsAutoHeading": {
+    "message": "Automatic checks"
+  },
+  "optionsAutoHint": {
+    "message": "By default, domain age is only checked automatically on pages that look like a shop or name a known brand; other sites are checked when you open their identity card. On every site, a domain under 6 months old is flagged orange even if it sells nothing, and every domain you visit is sent to rdap.org (at most once a week)."
+  },
+  "optionsCheckAgeEverywhere": {
+    "message": "Check domain age on every site"
+  },
+  "optionsCacheHeading": {
+    "message": "Lookup cache"
+  },
+  "optionsCacheHint": {
+    "message": "Domain, DNSSEC and legal-notice results are kept for 7 days to limit network requests. Clear the cache if you think a result is out of date or a lookup failed temporarily."
+  },
+  "optionsClearCache": {
+    "message": "Clear cache"
+  },
+  "optionsCacheCleared": {
+    "message": "$1 entries removed."
+  },
+  "optionsDisableCache": {
+    "message": "Turn off the cache (re-checks everything every time: useful for testing, but more network requests)"
+  }
+}

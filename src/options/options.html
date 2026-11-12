@@ -1,8 +1,8 @@
 <!doctype html>
-<html lang="fr">
+<html lang="en" data-i18n-title="optionsTitle">
 <head>
   <meta charset="utf-8" />
-  <title>Réglages GuardFou</title>
+  <title>GuardFou settings</title>
   <link rel="stylesheet" href="../shared/tokens.css" />
   <link rel="stylesheet" href="options.css" />
 </head>
@@ -14,70 +14,65 @@
 
   <main>
     <section class="card">
-      <h2>Accès aux pages</h2>
+      <h2 data-i18n="optionsAccessHeading">Page access</h2>
       <div class="status-row">
         <span id="permission-dot" class="status-dot"></span>
-        <p id="permission-status">Vérification…</p>
+        <p id="permission-status" data-i18n="optionsAccessChecking">Checking…</p>
       </div>
-      <button id="activate-btn" class="btn btn-primary">Activer l'accès aux pages visitées</button>
+      <button id="activate-btn" class="btn btn-primary" data-i18n="optionsAccessButton">Allow access to the pages you visit</button>
     </section>
 
     <section class="card">
-      <h2>Sites de confiance</h2>
-      <p class="hint">Ces domaines ne seront jamais signalés.</p>
+      <h2 data-i18n="optionsTrustedHeading">Trusted sites</h2>
+      <p class="hint" data-i18n="optionsTrustedHint">These domains will never be flagged.</p>
       <ul id="allowlist" class="item-list"></ul>
       <form id="add-form" class="add-form">
-        <input id="add-input" type="text" placeholder="exemple.fr" />
-        <button type="submit" class="btn btn-ghost">Ajouter</button>
+        <input id="add-input" type="text" placeholder="example.com" data-i18n-placeholder="optionsTrustedPlaceholder" />
+        <button type="submit" class="btn btn-ghost" data-i18n="optionsAdd">Add</button>
       </form>
     </section>
 
     <section class="card">
-      <h2>Bureaux d'enregistrement surveillés</h2>
+      <h2 data-i18n="optionsRegistrarsHeading">Watched registrars</h2>
       <p class="hint">
-        Signalés légèrement (+8) uniquement si le domaine est aussi récent (&lt; 2 ans) —
-        le registrar seul ne prouve rien. Liste intégrée : <em id="builtin-registrars"></em>.
-        Ajoutez-en d'autres que vous avez vous-même constatés.
+        <span data-i18n="optionsRegistrarsHint">Flagged lightly (+8) only when the domain is also recent (under 2 years): the registrar alone proves nothing.</span>
+        <span data-i18n="optionsRegistrarsBuiltin">Built-in list:</span> <em id="builtin-registrars"></em>.
+        <span data-i18n="optionsRegistrarsAddHint">Add others you have seen yourself.</span>
       </p>
       <ul id="registrar-list" class="item-list"></ul>
       <form id="add-registrar-form" class="add-form">
-        <input id="add-registrar-input" type="text" placeholder="Nom du bureau d'enregistrement" />
-        <button type="submit" class="btn btn-ghost">Ajouter</button>
+        <input id="add-registrar-input" type="text" placeholder="Registrar name" data-i18n-placeholder="optionsRegistrarPlaceholder" />
+        <button type="submit" class="btn btn-ghost" data-i18n="optionsAdd">Add</button>
       </form>
     </section>
 
     <section class="card">
-      <h2>Vérifications automatiques</h2>
-      <p class="hint">
-        Par défaut, l'âge du domaine n'est vérifié automatiquement que sur les
-        pages qui ressemblent à une boutique ou citent une marque connue ; les
-        autres sites sont vérifiés quand vous ouvrez leur fiche. Sur tous les
-        sites, un domaine de moins de 6 mois est signalé en orange, même s'il ne
-        vend rien, et chaque domaine visité est envoyé à rdap.org (au plus une
-        fois par semaine).
+      <h2 data-i18n="optionsAutoHeading">Automatic checks</h2>
+      <p class="hint" data-i18n="optionsAutoHint">
+        By default, domain age is only checked automatically on pages that look
+        like a shop or name a known brand.
       </p>
       <label class="toggle-row">
         <input type="checkbox" id="check-age-everywhere-checkbox" />
-        Vérifier l'âge du domaine sur tous les sites
+        <span data-i18n="optionsCheckAgeEverywhere">Check domain age on every site</span>
       </label>
     </section>
 
     <section class="card">
-      <h2>Cache des recherches</h2>
-      <p class="hint">
-        RDAP, DNSSEC et mentions légales sont gardés 7 jours pour limiter les
-        requêtes réseau. Videz le cache si vous pensez qu'un résultat est
-        obsolète ou qu'une recherche a échoué temporairement.
+      <h2 data-i18n="optionsCacheHeading">Lookup cache</h2>
+      <p class="hint" data-i18n="optionsCacheHint">
+        Domain, DNSSEC and legal-notice results are kept for 7 days.
       </p>
-      <button id="clear-cache-btn" class="btn btn-ghost">Vider le cache</button>
+      <button id="clear-cache-btn" class="btn btn-ghost" data-i18n="optionsClearCache">Clear cache</button>
       <p id="clear-cache-status" class="hint"></p>
       <label class="toggle-row">
         <input type="checkbox" id="disable-cache-checkbox" />
-        Désactiver le cache (re-vérifie tout à chaque fois — utile pour tester, mais plus de requêtes réseau)
+        <span data-i18n="optionsDisableCache">Turn off the cache</span>
       </label>
     </section>
   </main>
 
+  <script src="../shared/i18n.js"></script>
   <script src="options.js" type="module"></script>
 </body>
 </html>

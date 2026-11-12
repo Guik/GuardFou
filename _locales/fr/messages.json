@@ -1,0 +1,359 @@
+{
+  "extensionName": {
+    "message": "GuardFou"
+  },
+  "extensionDescription": {
+    "message": "Détecte les faux sites marchands : usurpation de marque, domaine trop récent, mentions légales suspectes."
+  },
+  "popupActivateLede": {
+    "message": "GuardFou a besoin d'accéder aux pages que vous visitez pour les analyser."
+  },
+  "popupActivateButton": {
+    "message": "Activer GuardFou"
+  },
+  "popupEmpty": {
+    "message": "Aucune analyse pour cette page — ce n'est pas une page de boutique détectée, ou la page vient juste de charger."
+  },
+  "popupIdentityButton": {
+    "message": "Voir la fiche d'identité du site"
+  },
+  "popupIdentityTitle": {
+    "message": "Fiche d'identité"
+  },
+  "popupClose": {
+    "message": "Fermer"
+  },
+  "popupIdentityLoading": {
+    "message": "Analyse en cours…"
+  },
+  "popupIdentityNeedsReload": {
+    "message": "Rechargez la page pour afficher sa fiche."
+  },
+  "popupIdentityUnavailable": {
+    "message": "Fiche indisponible pour cette page."
+  },
+  "popupSettings": {
+    "message": "Réglages"
+  },
+  "popupNoReasons": {
+    "message": "Aucun signal particulier détecté."
+  },
+  "bandGreen": {
+    "message": "Semble fiable"
+  },
+  "bandOrange": {
+    "message": "Prudence"
+  },
+  "bandRed": {
+    "message": "Risque élevé"
+  },
+  "cardUnknownDate": {
+    "message": "Inconnue"
+  },
+  "cardUnknownRegistrar": {
+    "message": "Inconnu"
+  },
+  "cardRegistrationDate": {
+    "message": "Date de création du nom de domaine"
+  },
+  "cardLastChangedDate": {
+    "message": "Dernière mise à jour du nom de domaine"
+  },
+  "cardExpirationDate": {
+    "message": "Date d'expiration du nom de domaine"
+  },
+  "cardRegistrar": {
+    "message": "Bureau d'enregistrement"
+  },
+  "cardAddress": {
+    "message": "Adresse physique"
+  },
+  "cardAddressNotFound": {
+    "message": "Non trouvée sur la page"
+  },
+  "cardTechnologies": {
+    "message": "Technologie utilisée"
+  },
+  "cardNotDetected": {
+    "message": "Non détectée"
+  },
+  "cardSocialLinks": {
+    "message": "Réseaux sociaux"
+  },
+  "cardNoSocialLinks": {
+    "message": "Aucun lien trouvé"
+  },
+  "cardLegalPages": {
+    "message": "Page(s) analysée(s) pour les mentions légales"
+  },
+  "cardNoLegalLinks": {
+    "message": "Aucun lien de mentions légales/CGV/CGU trouvé sur la page."
+  },
+  "cardLegalText": {
+    "message": "Mentions légales"
+  },
+  "cardLegalMissing": {
+    "message": "Aucune page de mentions légales trouvée"
+  },
+  "cardLegalPresent": {
+    "message": "Présentes (langue détectée : $1)"
+  },
+  "cardLanguageUnknown": {
+    "message": "indéterminée"
+  },
+  "cardLanguageMismatch": {
+    "message": "Langue différente de celle déclarée par le site — possible mauvaise traduction."
+  },
+  "cardLegalTooShort": {
+    "message": "Texte très court, peut-être un modèle générique non adapté."
+  },
+  "cardLegalNothingToReport": {
+    "message": "Rien de particulier à signaler (vérification automatique sommaire, pas une relecture)."
+  },
+  "cardMandatoryMentions": {
+    "message": "Mentions légales obligatoires"
+  },
+  "cardMandatoryUnchecked": {
+    "message": "Non vérifiables (pas de page de mentions légales trouvée)."
+  },
+  "cardDependsOnStatus": {
+    "message": "Selon statut juridique :"
+  },
+  "cardCompanyCheck": {
+    "message": "Vérification SIRET/SIREN"
+  },
+  "cardNoCompanyNumber": {
+    "message": "Aucun numéro SIRET/SIREN trouvé sur la page."
+  },
+  "cardCompanyNumberFound": {
+    "message": "Numéro trouvé : $1"
+  },
+  "cardCompanyNumberInvalid": {
+    "message": "Format invalide (échec de la clé de contrôle) — numéro probablement mal formé ou fabriqué."
+  },
+  "cardCompanyNotFound": {
+    "message": "N'existe pas au registre officiel des entreprises françaises."
+  },
+  "cardCompanyActive": {
+    "message": "Entreprise enregistrée : $1 (active)"
+  },
+  "cardCompanyClosed": {
+    "message": "Entreprise enregistrée : $1 (cessée)"
+  },
+  "cardSeo": {
+    "message": "Optimisation SEO (balises meta)"
+  },
+  "cardPopularity": {
+    "message": "Popularité du site"
+  },
+  "cardBacklinks": {
+    "message": "Liens référents (backlinks)"
+  },
+  "cardNotAvailableYet": {
+    "message": "Non disponible (nécessite une source payante ou une clé API) — prévu pour une prochaine version."
+  },
+  "legalField_legalForm": {
+    "message": "Dénomination sociale / forme juridique"
+  },
+  "legalField_siren": {
+    "message": "Numéro SIRET/SIREN"
+  },
+  "legalField_address": {
+    "message": "Adresse du siège social"
+  },
+  "legalField_contact": {
+    "message": "Coordonnées de contact (téléphone ou email)"
+  },
+  "legalField_host": {
+    "message": "Identité de l'hébergeur du site"
+  },
+  "legalField_publicationDirector": {
+    "message": "Directeur de la publication"
+  },
+  "legalField_rcs": {
+    "message": "Immatriculation RCS"
+  },
+  "legalField_capital": {
+    "message": "Capital social"
+  },
+  "legalField_vat": {
+    "message": "Numéro de TVA intracommunautaire"
+  },
+  "legalField_mediator": {
+    "message": "Médiateur de la consommation"
+  },
+  "seoMetaDescription": {
+    "message": "Balise meta description présente"
+  },
+  "seoCanonical": {
+    "message": "Lien canonical présent"
+  },
+  "seoOpenGraph": {
+    "message": "Balises Open Graph présentes"
+  },
+  "seoTitleLength": {
+    "message": "Titre de page de longueur raisonnable ($1 caractères)"
+  },
+  "seoSingleH1": {
+    "message": "Exactement un titre H1 (trouvé : $1)"
+  },
+  "seoImageAlt": {
+    "message": "Texte alternatif sur la plupart des images ($1/$2 sans attribut alt)"
+  },
+  "reasonAllowlisted": {
+    "message": "Site ajouté à votre liste de confiance."
+  },
+  "reasonIpHostname": {
+    "message": "Le site est accédé via une adresse IP directe plutôt qu'un nom de domaine, ce qui est extrêmement rare pour un site légitime."
+  },
+  "reasonUserinfoAtSymbol": {
+    "message": "L'adresse contient un « @ » avant le nom de domaine, une technique utilisée pour maquiller une fausse adresse en vraie."
+  },
+  "reasonFakeHttpsToken": {
+    "message": "Le mot « https » apparaît dans le nom de domaine lui-même, une technique pour paraître plus sûr qu'il ne l'est."
+  },
+  "reasonRedirectionInPath": {
+    "message": "L'adresse contient un « // » dans son chemin, ce qui peut servir à dissimuler une redirection vers un autre site."
+  },
+  "reasonInsecureHttp": {
+    "message": "Le site n'utilise pas HTTPS : la connexion n'est pas chiffrée."
+  },
+  "reasonSharedHosting": {
+    "message": "Site hébergé sur un sous-domaine de $1 : il n'a pas de nom de domaine propre, son ancienneté ne peut pas être vérifiée."
+  },
+  "reasonDomainVeryNew": {
+    "message": "Le nom de domaine a été créé il y a seulement $1 jours."
+  },
+  "reasonDomainNew": {
+    "message": "Le nom de domaine a moins d'un an ($1 mois)."
+  },
+  "reasonDomainOld": {
+    "message": "Le nom de domaine existe depuis plus de 5 ans."
+  },
+  "reasonShortRegistrationSpan": {
+    "message": "Le domaine n'a été enregistré que pour environ un an, l'engagement minimal, plutôt que plusieurs années à l'avance."
+  },
+  "reasonWatchedRegistrar": {
+    "message": "Domaine récent enregistré via $1, un bureau d'enregistrement déjà vu sur des boutiques éphémères."
+  },
+  "reasonDnssecBogus": {
+    "message": "La validation DNSSEC du domaine échoue (signature invalide) : signe possible de détournement ou d'usurpation DNS."
+  },
+  "reasonDnssecOk": {
+    "message": "Le domaine est protégé par DNSSEC et la signature est valide."
+  },
+  "reasonLegalPageMissing": {
+    "message": "Aucune page de mentions légales trouvée sur le site, pourtant obligatoire pour tout site en France."
+  },
+  "reasonIncompleteLegalMentionsOne": {
+    "message": "Mentions légales incomplètes : 1 information obligatoire absente ($1)."
+  },
+  "reasonIncompleteLegalMentionsOther": {
+    "message": "Mentions légales incomplètes : $1 informations obligatoires absentes ($2)."
+  },
+  "legalMoreOne": {
+    "message": "+1 autre"
+  },
+  "legalMoreOther": {
+    "message": "+$1 autres"
+  },
+  "reasonSiretInvalidChecksum": {
+    "message": "Le numéro SIRET/SIREN indiqué dans les mentions légales est mal formé (échec de la clé de contrôle)."
+  },
+  "reasonSiretNotFound": {
+    "message": "Le numéro SIRET/SIREN indiqué n'existe pas au registre officiel des entreprises françaises."
+  },
+  "reasonCompanyClosed": {
+    "message": "L'entreprise associée au SIRET (« $1 ») est déclarée cessée au registre officiel."
+  },
+  "reasonCompanyNameMismatch": {
+    "message": "Le SIRET est valide et actif, mais correspond à « $1 » — un nom différent de celui affiché sur le site, signe possible d'un numéro SIRET réel réutilisé."
+  },
+  "reasonBrandDomainMismatch": {
+    "message": "Le site se présente comme « $1 » mais son domaine n'est pas $2."
+  },
+  "reasonBrandLookalikeDomain": {
+    "message": "Le nom de domaine ressemble à celui de « $1 » ($2), avec un mot ajouté ou une orthographe proche."
+  },
+  "bannerTitle": {
+    "message": "GuardFou : ce site est suspect (score $1/100)"
+  },
+  "bannerDetails": {
+    "message": "Détails"
+  },
+  "bannerDismiss": {
+    "message": "Ignorer"
+  },
+  "optionsTitle": {
+    "message": "Réglages GuardFou"
+  },
+  "optionsAccessHeading": {
+    "message": "Accès aux pages"
+  },
+  "optionsAccessChecking": {
+    "message": "Vérification…"
+  },
+  "optionsAccessButton": {
+    "message": "Activer l'accès aux pages visitées"
+  },
+  "optionsAccessGranted": {
+    "message": "Accès accordé."
+  },
+  "optionsAccessMissing": {
+    "message": "Accès non accordé : GuardFou ne peut analyser aucune page."
+  },
+  "optionsTrustedHeading": {
+    "message": "Sites de confiance"
+  },
+  "optionsTrustedHint": {
+    "message": "Ces domaines ne seront jamais signalés."
+  },
+  "optionsTrustedPlaceholder": {
+    "message": "exemple.fr"
+  },
+  "optionsAdd": {
+    "message": "Ajouter"
+  },
+  "optionsRemove": {
+    "message": "Retirer"
+  },
+  "optionsRegistrarsHeading": {
+    "message": "Bureaux d'enregistrement surveillés"
+  },
+  "optionsRegistrarsHint": {
+    "message": "Signalés légèrement (+8) uniquement si le domaine est aussi récent (< 2 ans) — le registrar seul ne prouve rien."
+  },
+  "optionsRegistrarsBuiltin": {
+    "message": "Liste intégrée :"
+  },
+  "optionsRegistrarsAddHint": {
+    "message": "Ajoutez-en d'autres que vous avez vous-même constatés."
+  },
+  "optionsRegistrarPlaceholder": {
+    "message": "Nom du bureau d'enregistrement"
+  },
+  "optionsAutoHeading": {
+    "message": "Vérifications automatiques"
+  },
+  "optionsAutoHint": {
+    "message": "Par défaut, l'âge du domaine n'est vérifié automatiquement que sur les pages qui ressemblent à une boutique ou citent une marque connue ; les autres sites sont vérifiés quand vous ouvrez leur fiche. Sur tous les sites, un domaine de moins de 6 mois est signalé en orange, même s'il ne vend rien, et chaque domaine visité est envoyé à rdap.org (au plus une fois par semaine)."
+  },
+  "optionsCheckAgeEverywhere": {
+    "message": "Vérifier l'âge du domaine sur tous les sites"
+  },
+  "optionsCacheHeading": {
+    "message": "Cache des recherches"
+  },
+  "optionsCacheHint": {
+    "message": "RDAP, DNSSEC et mentions légales sont gardés 7 jours pour limiter les requêtes réseau. Videz le cache si vous pensez qu'un résultat est obsolète ou qu'une recherche a échoué temporairement."
+  },
+  "optionsClearCache": {
+    "message": "Vider le cache"
+  },
+  "optionsCacheCleared": {
+    "message": "$1 entrée(s) supprimée(s)."
+  },
+  "optionsDisableCache": {
+    "message": "Désactiver le cache (re-vérifie tout à chaque fois — utile pour tester, mais plus de requêtes réseau)"
+  }
+}

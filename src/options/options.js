@@ -3,9 +3,7 @@ import { clearCache, isCacheDisabled } from '../background/cache.js';
 
 async function refreshPermissionStatus() {
   const hasAccess = await browser.permissions.contains({ origins: ['<all_urls>'] });
-  document.getElementById('permission-status').textContent = hasAccess
-    ? 'Accès accordé.'
-    : 'Accès non accordé : GuardFou ne peut analyser aucune page.';
+  document.getElementById('permission-status').textContent = t(hasAccess ? 'optionsAccessGranted' : 'optionsAccessMissing');
   document.getElementById('permission-dot').className = `status-dot ${hasAccess ? 'ok' : 'missing'}`;
   document.getElementById('activate-btn').hidden = hasAccess;
 }
@@ -19,7 +17,7 @@ async function refreshAllowlist() {
     const span = document.createElement('span');
     span.textContent = domain;
     const removeBtn = document.createElement('button');
-    removeBtn.textContent = 'Retirer';
+    removeBtn.textContent = t('optionsRemove');
     removeBtn.addEventListener('click', async () => {
       const next = allowlist.filter((d) => d !== domain);
       await browser.storage.local.set({ allowlist: next });
@@ -58,7 +56,7 @@ async function refreshRegistrarList() {
     const span = document.createElement('span');
     span.textContent = name;
     const removeBtn = document.createElement('button');
-    removeBtn.textContent = 'Retirer';
+    removeBtn.textContent = t('optionsRemove');
     removeBtn.addEventListener('click', async () => {
       const next = customWatchedRegistrars.filter((r) => r !== name);
       await browser.storage.local.set({ customWatchedRegistrars: next });
@@ -87,7 +85,7 @@ document.getElementById('builtin-registrars').textContent = WATCHED_REGISTRARS.j
 
 document.getElementById('clear-cache-btn').addEventListener('click', async () => {
   const removed = await clearCache();
-  document.getElementById('clear-cache-status').textContent = `${removed} entrée(s) supprimée(s).`;
+  document.getElementById('clear-cache-status').textContent = t('optionsCacheCleared', removed);
 });
 
 const disableCacheCheckbox = document.getElementById('disable-cache-checkbox');

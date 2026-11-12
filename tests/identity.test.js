@@ -1,3 +1,4 @@
+import './helpers/i18n.js';
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
@@ -339,9 +340,11 @@ test('summarizeSeoMeta flags missing description and multiple H1s', () => {
     imageCount: 10,
     imagesMissingAlt: 8,
   });
-  const byLabel = Object.fromEntries(summary.map((s) => [s.label.split(' (')[0], s.ok]));
-  assert.equal(byLabel['Balise meta description présente'], false);
-  assert.equal(byLabel['Lien canonical présent'], true);
+  const byKey = Object.fromEntries(summary.map((s) => [s.key, s.ok]));
+  assert.equal(byKey.metaDescription, false);
+  assert.equal(byKey.canonical, true);
+  assert.equal(byKey.singleH1, false);
+  assert.equal(summary.find((s) => s.key === 'singleH1').label, 'Exactly one H1 heading (found: 3)');
 });
 
 test('extractPhysicalAddress accepts capitalized and uppercase street types', () => {

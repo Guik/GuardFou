@@ -1,8 +1,9 @@
 {
   "manifest_version": 3,
-  "name": "GuardFou",
+  "name": "__MSG_extensionName__",
   "version": "0.1.0",
-  "description": "Détecte les faux sites marchands : usurpation de marque, domaine trop récent, mentions légales suspectes.",
+  "description": "__MSG_extensionDescription__",
+  "default_locale": "en",
   "icons": {
     "16": "icons/icon-16.png",
     "32": "icons/icon-32.png",

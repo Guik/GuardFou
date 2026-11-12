@@ -7,6 +7,7 @@
  */
 
 import { extractSirenOrSiret } from './siret.js';
+import { t } from './i18n.js';
 
 const TECH_SIGNATURES = [
   { name: 'WordPress / WooCommerce', test: /wp-content|wp-includes/i },
@@ -241,7 +242,6 @@ export function analyzeLegalText(text, declaredLang) {
 const UNIVERSAL_LEGAL_MENTIONS = [
   {
     key: 'legalForm',
-    label: 'Dénomination sociale / forme juridique',
     weight: 5,
     // Either an actual legal-form keyword, or the "dénomination sociale" /
     // "raison sociale" label itself — a page can properly name the company
@@ -253,7 +253,6 @@ const UNIVERSAL_LEGAL_MENTIONS = [
   },
   {
     key: 'siren',
-    label: 'Numéro SIRET/SIREN',
     weight: 5,
     // Reuses the same extraction the SIRET registry cross-check uses (see
     // core/siret.js), which also catches a SIREN given via its RCS
@@ -261,17 +260,15 @@ const UNIVERSAL_LEGAL_MENTIONS = [
     // "SIREN" — a real, common pattern a plain keyword search would miss.
     test: (t) => extractSirenOrSiret(t) !== null,
   },
-  { key: 'address', label: 'Adresse du siège social', weight: 5, test: (t) => Boolean(extractPhysicalAddress(t)) },
+  { key: 'address', weight: 5, test: (t) => Boolean(extractPhysicalAddress(t)) },
   {
     key: 'contact',
-    label: 'Coordonnées de contact (téléphone ou email)',
     weight: 2,
     test: (t) => /[\w.+-]+@[\w-]+\.[a-z]{2,}/i.test(t) || /(?:\+33|0)\s?[1-9](?:[\s.-]?\d{2}){4}/.test(t),
   },
-  { key: 'host', label: "Identité de l'hébergeur du site", weight: 2, test: (t) => /h[ée]bergeur|h[ée]bergement du site/i.test(t) },
+  { key: 'host', weight: 2, test: (t) => /h[ée]bergeur|h[ée]bergement du site/i.test(t) },
   {
     key: 'publicationDirector',
-    label: 'Directeur de la publication',
     weight: 2,
     test: (t) => /directeur\s+(?:de\s+la\s+)?publication|responsable\s+(?:de\s+la\s+)?publication/i.test(t),
   },
@@ -282,10 +279,9 @@ const UNIVERSAL_LEGAL_MENTIONS = [
 // VAT-exempt small business legitimately has no intracommunity VAT number.
 // Weighted lower in scoring for exactly that reason.
 const CONDITIONAL_LEGAL_MENTIONS = [
-  { key: 'rcs', label: "Immatriculation RCS", weight: 2, test: (t) => /\brcs\b/i.test(t) },
+  { key: 'rcs', weight: 2, test: (t) => /\brcs\b/i.test(t) },
   {
     key: 'capital',
-    label: 'Capital social',
     weight: 2,
     // "Capital social" as an exact phrase, or just "Capital :" followed by
     // an amount — real pages often write the shorter form and it's just as
@@ -296,13 +292,11 @@ const CONDITIONAL_LEGAL_MENTIONS = [
   },
   {
     key: 'vat',
-    label: 'Numéro de TVA intracommunautaire',
     weight: 2,
     test: (t) => /tva\s+intracommunautaire/i.test(t) || /\bfr\d{2}\s?\d{9}\b/i.test(t),
   },
   {
     key: 'mediator',
-    label: 'Médiateur de la consommation',
     weight: 2,
     test: (t) => /m[ée]diat(?:eur|rice|ion)/i.test(t) && /consommation/i.test(t),
   },
@@ -317,7 +311,9 @@ const CONDITIONAL_LEGAL_MENTIONS = [
  */
 export function checkMandatoryLegalMentions(text) {
   if (!text) return null;
-  const check = (field) => ({ key: field.key, label: field.label, weight: field.weight, present: field.test(text) });
+  // No label: display code translates `legalField_<key>` (see _locales),
+  // since this result is cached and the language can change meanwhile.
+  const check = (field) => ({ key: field.key, weight: field.weight, present: field.test(text) });
   const universal = UNIVERSAL_LEGAL_MENTIONS.map(check);
   const conditional = CONDITIONAL_LEGAL_MENTIONS.map(check);
   return {
@@ -402,14 +398,15 @@ export function extractContactLinks(html) {
  */
 export function summarizeSeoMeta(seo) {
   return [
-    { ok: seo.hasMetaDescription, label: 'Balise meta description présente' },
-    { ok: seo.hasCanonical, label: 'Lien canonical présent' },
-    { ok: seo.hasOgTitle, label: 'Balises Open Graph présentes' },
-    { ok: seo.titleLength > 10 && seo.titleLength < 70, label: `Titre de page de longueur raisonnable (${seo.titleLength} caractères)` },
-    { ok: seo.h1Count === 1, label: `Exactement un titre H1 (trouvé : ${seo.h1Count})` },
+    { key: 'metaDescription', ok: seo.hasMetaDescription, label: t('seoMetaDescription') },
+    { key: 'canonical', ok: seo.hasCanonical, label: t('seoCanonical') },
+    { key: 'openGraph', ok: seo.hasOgTitle, label: t('seoOpenGraph') },
+    { key: 'titleLength', ok: seo.titleLength > 10 && seo.titleLength < 70, label: t('seoTitleLength', seo.titleLength) },
+    { key: 'singleH1', ok: seo.h1Count === 1, label: t('seoSingleH1', seo.h1Count) },
     {
+      key: 'imageAlt',
       ok: seo.imageCount === 0 || seo.imagesMissingAlt / seo.imageCount < 0.3,
-      label: `Texte alternatif sur la plupart des images (${seo.imagesMissingAlt}/${seo.imageCount} sans attribut alt)`,
+      label: t('seoImageAlt', seo.imagesMissingAlt, seo.imageCount),
     },
   ];
 }

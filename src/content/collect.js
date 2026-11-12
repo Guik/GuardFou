@@ -208,6 +208,10 @@
 
   const SVG_NS = 'http://www.w3.org/2000/svg';
 
+  function t(key, ...substitutions) {
+    return browser.i18n.getMessage(key, substitutions.map(String)) || key;
+  }
+
   function createWarningIcon() {
     const svg = document.createElementNS(SVG_NS, 'svg');
     svg.setAttribute('viewBox', '0 0 24 24');
@@ -256,7 +260,7 @@
     const msg = document.createElement('div');
     msg.className = 'msg';
     const title = document.createElement('b');
-    title.textContent = `GuardFou : ce site est suspect (score ${verdict.score}/100)`;
+    title.textContent = t('bannerTitle', verdict.score);
     const detail = document.createElement('span');
     detail.textContent = verdict.reasons[0]?.message || '';
     msg.append(title, detail);
@@ -264,13 +268,13 @@
     const actions = document.createElement('div');
     actions.className = 'actions';
     const detailsBtn = document.createElement('button');
-    detailsBtn.textContent = 'Détails';
+    detailsBtn.textContent = t('bannerDetails');
     detailsBtn.addEventListener('click', () => {
       // eslint-disable-next-line no-alert
       alert(verdict.reasons.map((r) => `• ${r.message}`).join('\n'));
     });
     const dismissBtn = document.createElement('button');
-    dismissBtn.textContent = 'Ignorer';
+    dismissBtn.textContent = t('bannerDismiss');
     dismissBtn.addEventListener('click', () => host.remove());
     actions.append(detailsBtn, dismissBtn);
 

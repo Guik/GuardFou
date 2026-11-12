@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="fr">
+<html lang="en">
 <head>
   <meta charset="utf-8" />
   <link rel="stylesheet" href="../shared/tokens.css" />
@@ -12,8 +12,8 @@
   </header>
 
   <section id="activate" class="state" hidden>
-    <p class="lede">GuardFou a besoin d'accéder aux pages que vous visitez pour les analyser.</p>
-    <button id="activate-btn" class="btn btn-primary">Activer GuardFou</button>
+    <p class="lede" data-i18n="popupActivateLede">GuardFou needs access to the pages you visit to analyze them.</p>
+    <button id="activate-btn" class="btn btn-primary" data-i18n="popupActivateButton">Turn on GuardFou</button>
   </section>
 
   <section id="result" class="state" hidden>
@@ -37,26 +37,27 @@
   </section>
 
   <section id="empty" class="state" hidden>
-    <p class="lede muted">Aucune analyse pour cette page — ce n'est pas une page de boutique détectée, ou la page vient juste de charger.</p>
+    <p class="lede muted" data-i18n="popupEmpty">No analysis for this page: it wasn't detected as a shop, or it has only just loaded.</p>
   </section>
 
   <section id="identity-toggle" class="state" hidden>
-    <button id="identity-btn" class="btn btn-ghost">Voir la fiche d'identité du site</button>
+    <button id="identity-btn" class="btn btn-ghost" data-i18n="popupIdentityButton">View the site identity card</button>
   </section>
 
   <section id="identity" class="state" hidden>
     <div class="identity-header">
-      <h2>Fiche d'identité</h2>
-      <button id="identity-close-btn" class="btn-icon" aria-label="Fermer">✕</button>
+      <h2 data-i18n="popupIdentityTitle">Identity card</h2>
+      <button id="identity-close-btn" class="btn-icon" aria-label="Close" data-i18n-aria-label="popupClose">✕</button>
     </div>
-    <p id="identity-loading" class="lede muted">Analyse en cours…</p>
+    <p id="identity-loading" class="lede muted" data-i18n="popupIdentityLoading">Analyzing…</p>
     <dl id="identity-fields" class="identity-fields" hidden></dl>
   </section>
 
   <footer>
-    <a id="options-link" href="#">Réglages</a>
+    <a id="options-link" href="#" data-i18n="popupSettings">Settings</a>
   </footer>
 
+  <script src="../shared/i18n.js"></script>
   <script src="popup.js"></script>
 </body>
 </html>

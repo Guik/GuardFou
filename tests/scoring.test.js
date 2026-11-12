@@ -1,3 +1,4 @@
+import './helpers/i18n.js';
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { computeScore } from '../src/core/scoring.js';
@@ -146,8 +147,8 @@ test('incomplete legal mentions sum each missing field\'s own weight', () => {
   assert.ok(reason);
   assert.equal(reason.weight, 16); // 5 + 5 + 2 + 2 + 2
   // The message should name actually-missing fields, not a fixed example list.
-  assert.ok(reason.message.includes('Dénomination sociale / forme juridique'));
-  assert.ok(!reason.message.includes('Adresse du siège social')); // this one is present
+  assert.ok(reason.message.includes('Company name / legal form'));
+  assert.ok(!reason.message.includes('Registered office address')); // this one is present
 });
 
 test('missing only lower-weight administrative fields contributes much less than missing SIRET/address', () => {

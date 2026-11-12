@@ -3,6 +3,8 @@
  * @typedef {{ score: number, band: 'green'|'orange'|'red', reasons: Reason[] }} Verdict
  */
 
+import { t, formatList } from './i18n.js';
+
 export const THRESHOLDS = { orange: 30, red: 60 };
 
 /**
@@ -30,7 +32,7 @@ export const THRESHOLDS = { orange: 30, red: 60 };
  *  - isInsecureHttp: boolean (page served over plain HTTP, not HTTPS)
  *  - legalPageMissing: boolean (no mentions-légales page found at all)
  *  - legalMentions: { universal, conditional } | null — field objects
- *    carry their own { key, label, weight, present }
+ *    carry their own { key, weight, present }
  *    (from core/identity.js's checkMandatoryLegalMentions, only when a
  *    legal page was found — mutually exclusive with legalPageMissing)
  *  - siretInvalidChecksum: boolean (a SIRET/SIREN was found but fails Luhn)
@@ -47,7 +49,7 @@ export const THRESHOLDS = { orange: 30, red: 60 };
  */
 export function computeScore(signals) {
   if (signals.isAllowlisted) {
-    return { score: 0, band: 'green', reasons: [{ id: 'allowlisted', weight: 0, message: 'Site ajouté à votre liste de confiance.' }] };
+    return { score: 0, band: 'green', reasons: [{ id: 'allowlisted', weight: 0, message: t('reasonAllowlisted') }] };
   }
 
   /** @type {Reason[]} */
@@ -57,7 +59,7 @@ export function computeScore(signals) {
     reasons.push({
       id: 'ip-hostname',
       weight: 45,
-      message: "Le site est accédé via une adresse IP directe plutôt qu'un nom de domaine, ce qui est extrêmement rare pour un site légitime.",
+      message: t('reasonIpHostname'),
     });
   }
 
@@ -65,7 +67,7 @@ export function computeScore(signals) {
     reasons.push({
       id: 'userinfo-at-symbol',
       weight: 30,
-      message: "L'adresse contient un « @ » avant le nom de domaine, une technique utilisée pour maquiller une fausse adresse en vraie.",
+      message: t('reasonUserinfoAtSymbol'),
     });
   }
 
@@ -73,7 +75,7 @@ export function computeScore(signals) {
     reasons.push({
       id: 'fake-https-token',
       weight: 10,
-      message: 'Le mot « https » apparaît dans le nom de domaine lui-même, une technique pour paraître plus sûr qu\'il ne l\'est.',
+      message: t('reasonFakeHttpsToken'),
     });
   }
 
@@ -81,7 +83,7 @@ export function computeScore(signals) {
     reasons.push({
       id: 'redirection-in-path',
       weight: 10,
-      message: "L'adresse contient un « // » dans son chemin, ce qui peut servir à dissimuler une redirection vers un autre site.",
+      message: t('reasonRedirectionInPath'),
     });
   }
 
@@ -92,7 +94,7 @@ export function computeScore(signals) {
     reasons.push({
       id: 'insecure-http',
       weight: 10,
-      message: "Le site n'utilise pas HTTPS : la connexion n'est pas chiffrée.",
+      message: t('reasonInsecureHttp'),
     });
   }
 
@@ -104,17 +106,17 @@ export function computeScore(signals) {
     reasons.push({
       id: 'shared-hosting',
       weight: 0,
-      message: `Site hébergé sur un sous-domaine de ${signals.sharedHostingSuffix} : il n'a pas de nom de domaine propre, son ancienneté ne peut pas être vérifiée.`,
+      message: t('reasonSharedHosting', signals.sharedHostingSuffix),
     });
   }
 
   if (typeof signals.domainAgeDays === 'number') {
     if (signals.domainAgeDays < 30 * 6) {
-      reasons.push({ id: 'domain-very-new', weight: 35, message: `Le nom de domaine a été créé il y a seulement ${signals.domainAgeDays} jours.` });
+      reasons.push({ id: 'domain-very-new', weight: 35, message: t('reasonDomainVeryNew', signals.domainAgeDays) });
     } else if (signals.domainAgeDays < 365) {
-      reasons.push({ id: 'domain-new', weight: 20, message: `Le nom de domaine a moins d'un an (${Math.round(signals.domainAgeDays / 30)} mois).` });
+      reasons.push({ id: 'domain-new', weight: 20, message: t('reasonDomainNew', Math.round(signals.domainAgeDays / 30)) });
     } else if (signals.domainAgeDays > 365 * 5) {
-      reasons.push({ id: 'domain-old', weight: -15, message: 'Le nom de domaine existe depuis plus de 5 ans.' });
+      reasons.push({ id: 'domain-old', weight: -15, message: t('reasonDomainOld') });
     }
   }
 
@@ -126,7 +128,7 @@ export function computeScore(signals) {
     reasons.push({
       id: 'short-registration-span',
       weight: 10,
-      message: "Le domaine n'a été enregistré que pour environ un an, l'engagement minimal, plutôt que plusieurs années à l'avance.",
+      message: t('reasonShortRegistrationSpan'),
     });
   }
 
@@ -137,7 +139,7 @@ export function computeScore(signals) {
     reasons.push({
       id: 'watched-registrar-recent-domain',
       weight: 8,
-      message: `Domaine récent enregistré via ${signals.registrarName}, un bureau d'enregistrement déjà vu sur des boutiques éphémères.`,
+      message: t('reasonWatchedRegistrar', signals.registrarName),
     });
   }
 
@@ -145,19 +147,19 @@ export function computeScore(signals) {
     reasons.push({
       id: 'dnssec-bogus',
       weight: 20,
-      message: 'La validation DNSSEC du domaine échoue (signature invalide) : signe possible de détournement ou de usurpation DNS.',
+      message: t('reasonDnssecBogus'),
     });
   } else if (signals.dnssec?.validated) {
     // Most legitimate shops don't sign their zone either, so the absence of
     // DNSSEC is deliberately not penalised — only a known-bad signature is.
-    reasons.push({ id: 'dnssec-ok', weight: -5, message: 'Le domaine est protégé par DNSSEC et la signature est valide.' });
+    reasons.push({ id: 'dnssec-ok', weight: -5, message: t('reasonDnssecOk') });
   }
 
   if (signals.legalPageMissing) {
     reasons.push({
       id: 'legal-page-missing',
       weight: 15,
-      message: 'Aucune page de mentions légales trouvée sur le site, pourtant obligatoire pour tout site en France.',
+      message: t('reasonLegalPageMissing'),
     });
   } else if (signals.legalMentions) {
     const { universal = [], conditional = [] } = signals.legalMentions;
@@ -170,12 +172,17 @@ export function computeScore(signals) {
     const weight = missing.reduce((sum, m) => sum + m.weight, 0);
     if (weight > 0) {
       const total = missing.length;
-      const preview = missing.slice(0, 3).map((m) => m.label).join(', ');
-      const rest = total > 3 ? `, +${total - 3} autre${total - 3 > 1 ? 's' : ''}` : '';
+      // Labels are looked up by key rather than carried on the field: the
+      // legal analysis is cached for a week, and the reason must follow the
+      // browser's current language.
+      const shown = missing.slice(0, 3).map((m) => t(`legalField_${m.key}`));
+      const more = total - shown.length;
+      if (more > 0) shown.push(more === 1 ? t('legalMoreOne') : t('legalMoreOther', more));
+      const list = formatList(shown, 'unit');
       reasons.push({
         id: 'incomplete-legal-mentions',
         weight,
-        message: `Mentions légales incomplètes : ${total} information${total > 1 ? 's' : ''} obligatoire${total > 1 ? 's' : ''} absente${total > 1 ? 's' : ''} (${preview}${rest}).`,
+        message: total === 1 ? t('reasonIncompleteLegalMentionsOne', list) : t('reasonIncompleteLegalMentionsOther', total, list),
       });
     }
   }
@@ -188,25 +195,25 @@ export function computeScore(signals) {
     reasons.push({
       id: 'siret-invalid-checksum',
       weight: 15,
-      message: "Le numéro SIRET/SIREN indiqué dans les mentions légales est mal formé (échec de la clé de contrôle).",
+      message: t('reasonSiretInvalidChecksum'),
     });
   } else if (signals.siretNotFound) {
     reasons.push({
       id: 'siret-not-found',
       weight: 25,
-      message: "Le numéro SIRET/SIREN indiqué n'existe pas au registre officiel des entreprises françaises.",
+      message: t('reasonSiretNotFound'),
     });
   } else if (signals.companyClosed) {
     reasons.push({
       id: 'company-closed',
       weight: 30,
-      message: `L'entreprise associée au SIRET (« ${signals.registeredCompanyName} ») est déclarée cessée au registre officiel.`,
+      message: t('reasonCompanyClosed', signals.registeredCompanyName),
     });
   } else if (signals.companyNameMismatch) {
     reasons.push({
       id: 'company-name-mismatch',
       weight: 20,
-      message: `Le SIRET est valide et actif, mais correspond à « ${signals.registeredCompanyName} » — un nom différent de celui affiché sur le site, signe possible d'un numéro SIRET réel réutilisé.`,
+      message: t('reasonCompanyNameMismatch', signals.registeredCompanyName),
     });
   }
 
@@ -214,13 +221,13 @@ export function computeScore(signals) {
     reasons.push({
       id: 'brand-domain-mismatch',
       weight: 40,
-      message: `Le site se présente comme « ${signals.matchedBrand.name} » mais son domaine n'est pas ${signals.matchedBrand.officialDomains.join(' ni ')}.`,
+      message: t('reasonBrandDomainMismatch', signals.matchedBrand.name, formatList(signals.matchedBrand.officialDomains, 'disjunction')),
     });
   } else if (signals.lookalikeBrand) {
     reasons.push({
       id: 'brand-lookalike-domain',
       weight: 15,
-      message: `Le nom de domaine ressemble à celui de « ${signals.lookalikeBrand.name} » (${signals.lookalikeBrand.officialDomains.join(', ')}), avec un mot ajouté ou une orthographe proche.`,
+      message: t('reasonBrandLookalikeDomain', signals.lookalikeBrand.name, formatList(signals.lookalikeBrand.officialDomains, 'unit')),
     });
   }
 
