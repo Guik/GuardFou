@@ -255,3 +255,12 @@ test('a page claiming a brand on a lookalike domain counts the mismatch once, no
   assert.ok(verdict.reasons.some((r) => r.id === 'brand-domain-mismatch'));
   assert.ok(!verdict.reasons.some((r) => r.id === 'brand-lookalike-domain'));
 });
+
+test('a shared hosting subdomain is explained but not penalized', () => {
+  const verdict = computeScore({ sharedHostingSuffix: 'myshopify.com', domainAgeDays: null });
+  const reason = verdict.reasons.find((r) => r.id === 'shared-hosting');
+  assert.ok(reason);
+  assert.equal(reason.weight, 0);
+  assert.ok(reason.message.includes('myshopify.com'));
+  assert.equal(verdict.score, 0);
+});

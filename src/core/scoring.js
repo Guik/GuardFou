@@ -21,6 +21,8 @@ export const THRESHOLDS = { orange: 30, red: 60 };
  *  - registrarName: string | null
  *  - isWatchedRegistrar: boolean (registrarName matched your watched-registrars list)
  *  - isIpHostname: boolean (page addressed by a literal IP, not a domain)
+ *  - sharedHostingSuffix: string | null (e.g. "myshopify.com" when the site
+ *    is a subdomain of a shared hosting platform, so has no domain age)
  *  - hasUserinfoAtSymbol: boolean ("http://trusted.com@evil.com/" trick)
  *  - hasFakeHttpsToken: boolean ("https" embedded in the hostname itself)
  *  - hasRedirectionInPath: boolean ("//" inside the URL path)
@@ -91,6 +93,18 @@ export function computeScore(signals) {
       id: 'insecure-http',
       weight: 10,
       message: "Le site n'utilise pas HTTPS : la connexion n'est pas chiffrée.",
+    });
+  }
+
+  // Not a fraud signal by itself — plenty of real small shops live on
+  // Shopify/Wix subdomains — but it explains why the domain-age and DNSSEC
+  // checks are missing from the verdict, which would otherwise look
+  // suspiciously clean.
+  if (signals.sharedHostingSuffix) {
+    reasons.push({
+      id: 'shared-hosting',
+      weight: 0,
+      message: `Site hébergé sur un sous-domaine de ${signals.sharedHostingSuffix} : il n'a pas de nom de domaine propre, son ancienneté ne peut pas être vérifiée.`,
     });
   }
 

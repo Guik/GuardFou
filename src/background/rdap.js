@@ -4,7 +4,7 @@ import { extractDomainAgeDays, extractRegistrarName, extractDomainDates } from '
 
 const TTL_MS = 7 * 24 * 60 * 60 * 1000;
 
-const EMPTY_RDAP_INFO = { ageDays: null, registrarName: null, registeredAt: null, lastChangedAt: null, expiresAt: null };
+export const EMPTY_RDAP_INFO = { ageDays: null, registrarName: null, registeredAt: null, lastChangedAt: null, expiresAt: null };
 
 /**
  * Registration age, registrar name and key dates for a domain, via the RDAP

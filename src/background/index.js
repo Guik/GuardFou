@@ -2,6 +2,7 @@ import {
   getRegistrableDomain,
   getDomainLabel,
   getHostname,
+  getSharedHostingSuffix,
   isIpAddress,
   hasUserinfoAtSymbol,
   hasFakeHttpsToken,
@@ -16,7 +17,7 @@ import { detectTechnologies, detectSocialLinks, findLegalLinks, pageLooksLikeOwn
 import { isShortRegistrationSpan } from '../core/rdap.js';
 import { BRANDS_FR } from '../data/brands-fr.js';
 import { WATCHED_REGISTRARS } from '../data/watched-registrars.js';
-import { getDomainRdapInfo } from './rdap.js';
+import { getDomainRdapInfo, EMPTY_RDAP_INFO } from './rdap.js';
 import { getDnssecStatus } from './dnssec.js';
 import { getLegalPageAnalysis } from './legal.js';
 
@@ -113,6 +114,7 @@ async function handlePageSignals(tabId, url, payload) {
     lookalikeBrand: !isAllowlisted && domain && domainLabel ? findLookalikeBrand(domain, domainLabel, BRANDS_FR) : null,
     // Cheap, synchronous, URL-structural checks — always computed, no network.
     isIpHostname,
+    sharedHostingSuffix: domain ? getSharedHostingSuffix(domain) : null,
     hasUserinfoAtSymbol: hasUserinfoAtSymbol(url),
     hasFakeHttpsToken: hasFakeHttpsToken(url),
     hasRedirectionInPath: hasRedirectionInPath(url),
@@ -173,9 +175,12 @@ async function computeNetworkSignals(domain, payload, watchedRegistrars, claimed
   if (currentUrl && pageLooksLikeOwnLegalDocument(payload?.title, currentUrl)) candidateUrls.push(currentUrl);
   candidateUrls.push(...legalLinks.map((l) => l.href));
   const legalUrls = [...new Set(candidateUrls)].slice(0, 3);
+  // A subdomain of a shared hosting platform has no registration or zone of
+  // its own: RDAP and DNSSEC would only describe the platform's domain.
+  const onSharedHosting = getSharedHostingSuffix(domain) !== null;
   const [rdapInfo, dnssec, legalAnalysis] = await Promise.all([
-    getDomainRdapInfo(domain),
-    getDnssecStatus(domain),
+    onSharedHosting ? EMPTY_RDAP_INFO : getDomainRdapInfo(domain),
+    onSharedHosting ? null : getDnssecStatus(domain),
     getLegalPageAnalysis(legalUrls, payload?.htmlLang ?? null),
   ]);
 
@@ -240,7 +245,7 @@ async function buildIdentityCard(tabId) {
 
   const allLinks = payload?.allLinks ?? [];
 
-  let rdapInfo = { ageDays: null, registrarName: null, registeredAt: null, lastChangedAt: null, expiresAt: null };
+  let rdapInfo = EMPTY_RDAP_INFO;
   let legalAnalysis = { address: null, legal: { present: false, length: 0, detectedLang: 'unknown', languageMismatch: false, tooShort: false }, mandatoryMentions: null, companyCheck: { candidate: null, checksumValid: null, registry: null } };
   let legalUrls = [];
 

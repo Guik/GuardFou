@@ -1,13 +1,32 @@
 import { parse } from '../../vendor/tldts.min.js';
 
+// Private suffixes (myshopify.com, wixsite.com, github.io...) count as
+// public suffixes, like browsers do for cookies: "fake-shop.myshopify.com"
+// is its own site, run by whoever opened that shop — not "myshopify.com",
+// whose 15-year-old domain would otherwise vouch for every shop on it.
+const PARSE_OPTIONS = { allowPrivateDomains: true };
+
 /**
  * Registrable domain (eTLD+1) for a URL or hostname, e.g.
- * "www.shop.chausson.fr" -> "chausson.fr". Returns null for IPs/localhost.
+ * "www.shop.chausson.fr" -> "chausson.fr", "fake-shop.myshopify.com" ->
+ * "fake-shop.myshopify.com". Returns null for IPs/localhost.
  * @param {string} input
  * @returns {string|null}
  */
 export function getRegistrableDomain(input) {
-  return parse(input, { allowPrivateDomains: false }).domain ?? null;
+  return parse(input, PARSE_OPTIONS).domain ?? null;
+}
+
+/**
+ * The shared hosting platform's suffix when the site lives on one, e.g.
+ * "myshopify.com" for "fake-shop.myshopify.com", else null. Such a site has
+ * no domain of its own: RDAP age and DNSSEC would describe the platform.
+ * @param {string} input
+ * @returns {string|null}
+ */
+export function getSharedHostingSuffix(input) {
+  const parsed = parse(input, PARSE_OPTIONS);
+  return parsed.isPrivate && parsed.domain ? parsed.publicSuffix : null;
 }
 
 /**
@@ -16,7 +35,7 @@ export function getRegistrableDomain(input) {
  * @returns {string|null}
  */
 export function getHostname(input) {
-  return parse(input, { allowPrivateDomains: false }).hostname ?? null;
+  return parse(input, PARSE_OPTIONS).hostname ?? null;
 }
 
 /**
@@ -25,7 +44,7 @@ export function getHostname(input) {
  * @returns {string|null}
  */
 export function getDomainLabel(input) {
-  return parse(input, { allowPrivateDomains: false }).domainWithoutSuffix ?? null;
+  return parse(input, PARSE_OPTIONS).domainWithoutSuffix ?? null;
 }
 
 /**
@@ -36,7 +55,7 @@ export function getDomainLabel(input) {
  * @returns {boolean}
  */
 export function isIpAddress(input) {
-  return parse(input, { allowPrivateDomains: false }).isIp === true;
+  return parse(input, PARSE_OPTIONS).isIp === true;
 }
 
 /**

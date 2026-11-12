@@ -4,6 +4,7 @@ import {
   getRegistrableDomain,
   getHostname,
   getDomainLabel,
+  getSharedHostingSuffix,
   isIpAddress,
   hasUserinfoAtSymbol,
   hasFakeHttpsToken,
@@ -72,4 +73,17 @@ test('isInsecureHttp flags plain HTTP, not HTTPS', () => {
 
 test('isInsecureHttp handles an unparsable URL gracefully', () => {
   assert.equal(isInsecureHttp('not a url'), false);
+});
+
+test('a shared hosting subdomain is its own site, not the platform', () => {
+  assert.equal(getRegistrableDomain('https://fake-chausson.myshopify.com/products/x'), 'fake-chausson.myshopify.com');
+  assert.equal(getDomainLabel('fake-chausson.myshopify.com'), 'fake-chausson');
+  assert.equal(getSharedHostingSuffix('https://fake-chausson.myshopify.com/'), 'myshopify.com');
+  assert.equal(getSharedHostingSuffix('https://monsite.wixsite.com/boutique'), 'wixsite.com');
+});
+
+test('getSharedHostingSuffix is null for a site with its own domain', () => {
+  assert.equal(getSharedHostingSuffix('https://www.chausson.fr/'), null);
+  assert.equal(getSharedHostingSuffix('https://shop.example.co.uk/'), null);
+  assert.equal(getSharedHostingSuffix('http://192.0.2.1/'), null);
 });
