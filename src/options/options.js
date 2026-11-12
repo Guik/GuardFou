@@ -95,6 +95,16 @@ disableCacheCheckbox.addEventListener('change', async () => {
   await browser.storage.local.set({ cacheDisabled: disableCacheCheckbox.checked });
 });
 
+const checkAgeEverywhereCheckbox = document.getElementById('check-age-everywhere-checkbox');
+checkAgeEverywhereCheckbox.addEventListener('change', async () => {
+  await browser.storage.local.set({ checkAgeOnEverySite: checkAgeEverywhereCheckbox.checked });
+});
+
+async function refreshCheckAgeToggle() {
+  const { checkAgeOnEverySite = false } = await browser.storage.local.get('checkAgeOnEverySite');
+  checkAgeEverywhereCheckbox.checked = checkAgeOnEverySite;
+}
+
 async function refreshCacheToggle() {
   disableCacheCheckbox.checked = await isCacheDisabled();
 }
@@ -102,4 +112,5 @@ async function refreshCacheToggle() {
 refreshPermissionStatus();
 refreshAllowlist();
 refreshRegistrarList();
+refreshCheckAgeToggle();
 refreshCacheToggle();

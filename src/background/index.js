@@ -106,7 +106,7 @@ async function analyzePage(url, payload) {
   const domain = getRegistrableDomain(url);
   const displayId = domain ?? getHostname(url) ?? url;
 
-  const { allowlist = [], customWatchedRegistrars = [] } = await browser.storage.local.get(['allowlist', 'customWatchedRegistrars']);
+  const { allowlist = [], customWatchedRegistrars = [], checkAgeOnEverySite = false } = await browser.storage.local.get(['allowlist', 'customWatchedRegistrars', 'checkAgeOnEverySite']);
   const isAllowlisted = allowlist.includes(displayId);
   const watchedRegistrars = [...WATCHED_REGISTRARS, ...customWatchedRegistrars];
 
@@ -130,30 +130,31 @@ async function analyzePage(url, payload) {
     isInsecureHttp: isInsecureHttp(url),
   };
 
-  return { domain, displayId, isAllowlisted, watchedRegistrars, claimedText, matchedBrand, baseSignals };
+  return { domain, displayId, isAllowlisted, watchedRegistrars, checkAgeOnEverySite, claimedText, matchedBrand, baseSignals };
 }
 
 async function handlePageSignals(tabId, url, payload) {
   if (!isAnalyzable(url)) return;
   const isCurrentPage = startPageAnalysis(tabId);
-  const { domain, displayId, isAllowlisted, watchedRegistrars, claimedText, matchedBrand, baseSignals } = await analyzePage(url, payload);
+  const { domain, displayId, isAllowlisted, watchedRegistrars, checkAgeOnEverySite, claimedText, matchedBrand, baseSignals } = await analyzePage(url, payload);
 
-  // Domain age is one of the strongest signals we have and costs a single
-  // cached RDAP lookup, so it runs on every site. The deeper checks (DNSSEC,
-  // legal pages, SIRET registry) fetch several pages, so they only run
-  // automatically when the page looks like a shop or claims a known brand;
-  // other pages get them when you open the identity card — see
+  // The network-dependent checks (RDAP, DNSSEC, legal pages, SIRET registry)
+  // only run automatically when the page looks like a shop or claims a
+  // known brand; other pages get them when you open the identity card — see
   // buildIdentityCard, which runs them unconditionally and updates the
   // stored verdict so the headline score stays consistent with whatever the
-  // card ends up showing.
+  // card ends up showing. Domain age alone can be turned on for every site
+  // in the settings: it's a single cached lookup per domain, but a young
+  // domain is orange on its own, which is noisy on blogs and new projects
+  // that sell nothing, and it sends every visited domain to rdap.org.
   const signals = { ...baseSignals };
   if (!isAllowlisted && domain) {
     const wantsDeepChecks = payload?.isLikelyShop || matchedBrand;
     const [registration, deep] = await Promise.all([
-      computeRegistrationSignals(domain, watchedRegistrars),
+      wantsDeepChecks || checkAgeOnEverySite ? computeRegistrationSignals(domain, watchedRegistrars) : null,
       wantsDeepChecks ? computeDeepSignals(domain, payload, claimedText, url) : null,
     ]);
-    Object.assign(signals, registration.signals, deep?.signals);
+    Object.assign(signals, registration?.signals, deep?.signals);
   }
 
   if (!isCurrentPage()) return;

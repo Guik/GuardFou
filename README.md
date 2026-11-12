@@ -24,7 +24,7 @@ No single check proves a site is a scam. The score combines them, and every reas
 
 ### Checks that work on any website
 
-- **Domain age**: domains created in the last few months are a classic sign of short-lived scam shops. Domains registered for a single year, or through registrars often seen on scam shops, add weight when the domain is also new.
+- **Domain age**: domains created in the last few months are a classic sign of short-lived scam shops. Domains registered for a single year, or through registrars often seen on scam shops, add weight when the domain is also new. Checked automatically on shops; a setting extends it to every site.
 - **Suspicious URLs**: raw IP addresses, `user@host` tricks, "https" written into the domain name, unencrypted HTTP.
 - **DNSSEC**: flags domains whose DNS signatures are invalid.
 - **Shared hosting**: recognises shops on platform subdomains (`*.myshopify.com`, `*.wixsite.com`…), which have no domain of their own to check.
@@ -51,7 +51,7 @@ GuardFou has no server and no analytics. To run its checks it contacts:
 | [recherche-entreprises.api.gouv.fr](https://recherche-entreprises.api.gouv.fr) | The company number shown on the site | French company registry lookup |
 | The site itself | A normal page request, without your cookies | Reading its legal pages |
 
-The domain-age lookup runs for every site you visit, except sites on your trusted list. The other lookups only run on pages that look like shops or name a known brand, or when you open the identity card yourself. Results are cached on your computer for 7 days, so each domain is looked up at most once a week; you can clear the cache or turn it off in the settings.
+These lookups only run on pages that look like shops or name a known brand, or when you open the identity card yourself. If you turn on domain-age checks for every site in the settings, the domain of every site you visit (except those on your trusted list) is sent to rdap.org. Results are cached on your computer for 7 days, so each domain is looked up at most once a week; you can clear the cache or turn it off in the settings.
 
 ## Install
 
