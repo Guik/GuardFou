@@ -1,8 +1,6 @@
 import { fetchWithTimeout } from './http.js';
-import { getCached, setCached } from './cache.js';
+import { getCached, setCached, CACHE_TTL_MS } from './cache.js';
 import { interpretDnssecResponse } from '../core/dnssec.js';
-
-const TTL_MS = 7 * 24 * 60 * 60 * 1000;
 
 /**
  * DNSSEC status for a domain, via Cloudflare's DNS-over-HTTPS JSON API (free,
@@ -12,7 +10,7 @@ const TTL_MS = 7 * 24 * 60 * 60 * 1000;
  */
 export async function getDnssecStatus(domain) {
   const cacheKey = `dnssec:${domain}`;
-  const cached = await getCached(cacheKey, TTL_MS);
+  const cached = await getCached(cacheKey, CACHE_TTL_MS);
   if (cached !== undefined) return cached;
 
   const result = await fetchDnssecStatus(domain);

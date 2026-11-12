@@ -1,7 +1,5 @@
 import { fetchWithTimeout } from './http.js';
-import { getCached, setCached } from './cache.js';
-
-const TTL_MS = 7 * 24 * 60 * 60 * 1000;
+import { getCached, setCached, CACHE_TTL_MS } from './cache.js';
 
 /**
  * Looks up a SIREN/SIRET in the French government's free, no-key company
@@ -14,7 +12,7 @@ const TTL_MS = 7 * 24 * 60 * 60 * 1000;
  */
 export async function getCompanyInfo(sirenOrSiret) {
   const cacheKey = `company:${sirenOrSiret}`;
-  const cached = await getCached(cacheKey, TTL_MS);
+  const cached = await getCached(cacheKey, CACHE_TTL_MS);
   if (cached !== undefined) return cached;
 
   const result = await fetchCompanyInfo(sirenOrSiret);

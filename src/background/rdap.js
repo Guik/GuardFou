@@ -1,8 +1,6 @@
 import { fetchWithTimeout } from './http.js';
-import { getCached, setCached } from './cache.js';
+import { getCached, setCached, CACHE_TTL_MS } from './cache.js';
 import { extractDomainAgeDays, extractRegistrarName, extractDomainDates } from '../core/rdap.js';
-
-const TTL_MS = 7 * 24 * 60 * 60 * 1000;
 
 export const EMPTY_RDAP_INFO = { ageDays: null, registrarName: null, registeredAt: null, lastChangedAt: null, expiresAt: null };
 
@@ -14,7 +12,7 @@ export const EMPTY_RDAP_INFO = { ageDays: null, registrarName: null, registeredA
  */
 export async function getDomainRdapInfo(domain) {
   const cacheKey = `rdap:${domain}`;
-  const cached = await getCached(cacheKey, TTL_MS);
+  const cached = await getCached(cacheKey, CACHE_TTL_MS);
   if (cached !== undefined) return cached;
 
   const result = await fetchDomainRdapInfo(domain);

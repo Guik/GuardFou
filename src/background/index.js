@@ -20,6 +20,7 @@ import { WATCHED_REGISTRARS } from '../data/watched-registrars.js';
 import { getDomainRdapInfo, EMPTY_RDAP_INFO } from './rdap.js';
 import { getDnssecStatus } from './dnssec.js';
 import { getLegalPageAnalysis } from './legal.js';
+import { pruneExpiredCache } from './cache.js';
 
 // Firefox can unload this background script after a few minutes of
 // inactivity (it's an event page, not a persistent one). A plain in-memory
@@ -53,6 +54,8 @@ function sessionTabStore(prefix) {
 // or a red banner injected into an unrelated page). In-memory is enough: if
 // Firefox unloads this script, the in-flight work it guards dies with it.
 const currentPageByTab = new Map();
+
+pruneExpiredCache().catch(() => {});
 
 const BADGE_COLORS = { green: '#2e7d32', orange: '#ed6c02', red: '#c62828' };
 
@@ -149,7 +152,7 @@ async function handlePageSignals(tabId, url, payload) {
  * legal-page fetch + mandatory-mentions + SIRET registry cross-check) and
  * turns the results into both scoring signals and the raw data the identity
  * card displays. Each underlying fetch has its own cache, so calling this
- * twice for the same domain/legal page (once from the automatic pass, once
+ * twice for the same domain/legal pages (once from the automatic pass, once
  * from the identity card) is cheap after the first real fetch.
  * @param {string} [currentUrl] the tab's own URL — used as a fallback legal
  *   page when no link on the page points to one (many sites don't
