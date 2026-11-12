@@ -8,9 +8,24 @@
     "test": "node --test",
     "lint": "web-ext lint",
     "start": "web-ext run",
-    "build": "web-ext build"
+    "build": "web-ext build",
+    "sign": "web-ext sign --channel=unlisted"
   },
   "devDependencies": {
     "web-ext": "^8.3.0"
+  },
+  "webExt": {
+    "ignoreFiles": [
+      "tests",
+      "graft",
+      ".trail",
+      "package.json",
+      "package-lock.json",
+      "*.md"
+    ],
+    "build": {
+      "overwriteDest": true,
+      "filename": "{name}-{version}.xpi"
+    }
   }
 }
