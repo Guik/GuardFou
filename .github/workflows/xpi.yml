@@ -4,11 +4,14 @@ name: XPI
 # the run's artifacts, installable via about:debugging or in Firefox
 # Developer Edition with xpinstall.signatures.required=false).
 #
-# Pushing a tag like v0.2.0: additionally has Mozilla sign the add-on
-# (unlisted channel = self-distributed, not shown on addons.mozilla.org) and
-# attaches the signed .xpi — installable in any regular Firefox — to a
-# GitHub Release. Needs repository secrets AMO_JWT_ISSUER / AMO_JWT_SECRET
-# from https://addons.mozilla.org/developers/addon/api/key/.
+# Pushing a tag like v0.2.0: additionally submits that version to
+# addons.mozilla.org (listed channel, listing metadata from
+# amo-metadata.json) and creates a GitHub Release. Mozilla reviews listed
+# versions before publishing them, which can take days, so the job doesn't
+# wait: the signed version appears on the store once approved. The Release
+# carries the unsigned build of the exact files submitted. Needs repository
+# secrets AMO_JWT_ISSUER / AMO_JWT_SECRET from
+# https://addons.mozilla.org/developers/addon/api/key/.
 
 on:
   push:
@@ -49,7 +52,7 @@ jobs:
           cache: npm
       - run: npm ci
 
-      # AMO refuses to sign the same version twice, so the tag is the
+      # AMO refuses the same version twice, so the tag is the
       # single source of truth: bump manifest.json, commit, then tag.
       - name: Check tag matches manifest version
         run: |
@@ -59,13 +62,21 @@ jobs:
             exit 1
           fi
 
-      - name: Sign with Mozilla (unlisted)
+      - name: Submit to addons.mozilla.org
         run: npm run sign
         env:
           WEB_EXT_API_KEY: ${{ secrets.AMO_JWT_ISSUER }}
           WEB_EXT_API_SECRET: ${{ secrets.AMO_JWT_SECRET }}
 
+      - uses: actions/download-artifact@v4
+        with:
+          name: guardfou-unsigned
+          path: unsigned
+
       - name: Publish GitHub Release
-        run: gh release create "${GITHUB_REF_NAME}" web-ext-artifacts/*.xpi --title "${GITHUB_REF_NAME}" --generate-notes
+        run: |
+          for f in unsigned/*.xpi; do mv "$f" "${f%.xpi}-unsigned.xpi"; done
+          gh release create "${GITHUB_REF_NAME}" unsigned/*.xpi --title "${GITHUB_REF_NAME}" --generate-notes \
+            --notes "Submitted to addons.mozilla.org; install it from https://addons.mozilla.org/firefox/addon/guardfou/ once Mozilla has approved it. The attached .xpi is unsigned, for testing only."
         env:
           GH_TOKEN: ${{ github.token }}

@@ -55,9 +55,8 @@ These lookups only run on pages that look like shops or name a known brand, or w
 
 ## Install
 
-1. Download the latest `guardfou-x.y.z.xpi` from [Releases](../../releases).
-2. Open it in Firefox (version 140 or later; 142 on Android) and confirm the installation.
-3. Click the GuardFou icon and press the activation button to let it read the pages you visit.
+1. Install GuardFou from [addons.mozilla.org](https://addons.mozilla.org/firefox/addon/guardfou/) (Firefox 140 or later; 142 on Android).
+2. Click the GuardFou icon and press the activation button to let it read the pages you visit.
 
 ## Development
 
@@ -96,7 +95,9 @@ To publish a signed release:
 1. Bump `version` in `manifest.json` and commit.
 2. Tag and push: `git tag v0.2.0 && git push --tags`.
 
-The workflow checks that the tag matches the manifest version, has Mozilla sign the add-on (unlisted, self-distributed) and attaches the signed `.xpi` to a GitHub Release. It needs two repository secrets, `AMO_JWT_ISSUER` and `AMO_JWT_SECRET`, created at [addons.mozilla.org/developers/addon/api/key](https://addons.mozilla.org/developers/addon/api/key/).
+The workflow checks that the tag matches the manifest version, submits that version to addons.mozilla.org and creates a GitHub Release with the unsigned build. Mozilla reviews each version before publishing it on the store, which can take a few days. It needs two repository secrets, `AMO_JWT_ISSUER` and `AMO_JWT_SECRET`, created at [addons.mozilla.org/developers/addon/api/key](https://addons.mozilla.org/developers/addon/api/key/).
+
+The store listing (summary, description, categories, licence) comes from `amo-metadata.json` and is sent again with every release, so edit it there rather than on the Developer Hub.
 
 ## Roadmap
 

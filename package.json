@@ -10,7 +10,7 @@
     "lint": "web-ext lint",
     "start": "web-ext run",
     "build": "web-ext build",
-    "sign": "web-ext sign --channel=unlisted"
+    "sign": "web-ext sign --channel=listed --amo-metadata=amo-metadata.json --approval-timeout=0"
   },
   "devDependencies": {
     "web-ext": "^8.3.0"
@@ -22,6 +22,7 @@
       ".trail",
       "package.json",
       "package-lock.json",
+      "amo-metadata.json",
       "*.md"
     ],
     "build": {
