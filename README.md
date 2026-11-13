@@ -58,9 +58,9 @@ These lookups only run on pages that look like shops or name a known brand, or w
 ## Install
 
 1. Install GuardFou from [addons.mozilla.org](https://addons.mozilla.org/firefox/addon/guardfou/) (Firefox 140 or later; 142 on Android).
-2. Click the GuardFou icon and press the activation button to let it read the pages you visit.
+2. Accept the access to all websites in the install prompt. GuardFou then checks every page you open; the toolbar badge shows its score. If you turn that access off later, the popup offers a button to turn it back on.
 
-GuardFou isn't on the Chrome Web Store yet. To try it in Chrome, Edge or Brave (version 121 or later), open `chrome://extensions`, turn on developer mode, choose **Load unpacked** and select the repository folder (or an unzipped build), then press the activation button in its popup as above.
+GuardFou isn't on the Chrome Web Store yet. To try it in Chrome, Edge or Brave (version 121 or later), open `chrome://extensions`, turn on developer mode, choose **Load unpacked** and select the repository folder (or an unzipped build). It checks pages from then on, as in Firefox.
 
 ## Development
 

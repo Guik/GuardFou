@@ -25,7 +25,7 @@
   },
   "minimum_chrome_version": "121",
   "permissions": ["storage"],
-  "optional_host_permissions": ["<all_urls>"],
+  "host_permissions": ["<all_urls>"],
   "background": {
     "scripts": ["src/background/index.js"],
     "service_worker": "src/background/index.js",
