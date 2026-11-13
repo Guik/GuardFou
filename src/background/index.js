@@ -1,3 +1,4 @@
+import '../shared/browser.js';
 import {
   getRegistrableDomain,
   getDomainLabel,
@@ -58,7 +59,17 @@ pruneExpiredCache().catch(() => {});
 
 const BADGE_COLORS = { green: '#2e7d32', orange: '#ed6c02', red: '#c62828' };
 
-browser.runtime.onMessage.addListener((message, sender) => {
+// Chrome ignores a promise returned by an onMessage listener: answer through
+// sendResponse instead, and return true to keep the channel open until then.
+// Firefox accepts this form too.
+browser.runtime.onMessage.addListener((message, sender, sendResponse) => {
+  const response = handleMessage(message, sender);
+  if (response === undefined) return false;
+  Promise.resolve(response).then(sendResponse, () => sendResponse(undefined));
+  return true;
+});
+
+function handleMessage(message, sender) {
   // Reasons and labels are written in the chosen language, so wait for it.
   if (message?.type === 'GUARDFOU_SIGNALS' && sender.tab?.id != null) {
     return i18nReady.then(() => handlePageSignals(sender.tab.id, sender.tab.url, message.payload));
@@ -70,7 +81,7 @@ browser.runtime.onMessage.addListener((message, sender) => {
     return i18nReady.then(() => buildIdentityCard(message.tabId));
   }
   return undefined;
-});
+}
 
 browser.tabs.onRemoved.addListener((tabId) => {
   currentPageByTab.delete(tabId);

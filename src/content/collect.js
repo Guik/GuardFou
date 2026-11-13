@@ -161,14 +161,15 @@
 
   browser.runtime.sendMessage({ type: 'GUARDFOU_SIGNALS', payload: collectPayload() }).catch(() => {});
 
-  browser.runtime.onMessage.addListener((message) => {
+  browser.runtime.onMessage.addListener((message, sender, sendResponse) => {
     if (message?.type === 'SHOW_BANNER') {
       showBanner(message.verdict, message.text);
     }
     // The identity card reads the page again when it's opened rather than
     // relying on a copy kept since load — see buildIdentityCard.
     if (message?.type === 'GUARDFOU_COLLECT') {
-      return Promise.resolve(collectPayload());
+      // sendResponse rather than a returned promise, which Chrome ignores.
+      sendResponse(collectPayload());
     }
     return undefined;
   });

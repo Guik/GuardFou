@@ -2,7 +2,7 @@
 
 **A safeguard against fake online shops.**
 
-GuardFou is a Firefox extension that warns you when an online shop looks fake: a site impersonating a known brand, a domain registered a few weeks ago, missing or fabricated company information.
+GuardFou is a Firefox extension, also working in Chrome and other Chromium browsers, that warns you when an online shop looks fake: a site impersonating a known brand, a domain registered a few weeks ago, missing or fabricated company information.
 
 ![GuardFou warning on a suspicious shop: red banner on the page and the popup listing the reasons](store/screenshot-popup.png)
 
@@ -60,6 +60,8 @@ These lookups only run on pages that look like shops or name a known brand, or w
 1. Install GuardFou from [addons.mozilla.org](https://addons.mozilla.org/firefox/addon/guardfou/) (Firefox 140 or later; 142 on Android).
 2. Click the GuardFou icon and press the activation button to let it read the pages you visit.
 
+GuardFou isn't on the Chrome Web Store yet. To try it in Chrome, Edge or Brave (version 121 or later), open `chrome://extensions`, turn on developer mode, choose **Load unpacked** and select the repository folder (or an unzipped build), then press the activation button in its popup as above.
+
 ## Development
 
 Requires Node.js 22+ and Firefox.
@@ -74,6 +76,11 @@ npm run build   # build an unsigned web-ext-artifacts/guardfou-<version>.xpi
 
 An unsigned `.xpi` can be loaded temporarily from `about:debugging`, or installed in Firefox Developer Edition with `xpinstall.signatures.required` set to `false`.
 
+The same files run in Chrome; nothing is built separately:
+- `manifest.json` declares the background script both as `scripts` (used by Firefox) and as `service_worker` (used by Chrome). `npm run lint` warns that Firefox doesn't support `service_worker`; that warning is expected.
+- `src/shared/browser.js` aliases `chrome` to `browser`, and loads first in every part of the extension.
+- `runtime.onMessage` listeners answer through `sendResponse`, because Chrome ignores a returned promise.
+
 ### Project layout
 
 ```
@@ -83,7 +90,7 @@ src/core/         pure logic: scoring, brand matching, legal-information and SIR
 src/data/         known brands and their official domains, watched registrars
 src/popup/        toolbar popup and identity card
 src/options/      settings page
-src/shared/       styles and the page translation helper
+src/shared/       styles, the page translation helper and the Chrome alias
 _locales/         interface text, one messages.json per language
 tests/            unit tests for src/core (node --test)
 ```

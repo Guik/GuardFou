@@ -23,16 +23,18 @@
       "strict_min_version": "142.0"
     }
   },
+  "minimum_chrome_version": "121",
   "permissions": ["storage"],
   "optional_host_permissions": ["<all_urls>"],
   "background": {
     "scripts": ["src/background/index.js"],
+    "service_worker": "src/background/index.js",
     "type": "module"
   },
   "content_scripts": [
     {
       "matches": ["<all_urls>"],
-      "js": ["src/content/collect.js"],
+      "js": ["src/shared/browser.js", "src/content/collect.js"],
       "run_at": "document_idle"
     }
   ],

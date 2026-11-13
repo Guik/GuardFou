@@ -3,6 +3,7 @@
 // English text left in the HTML only shows if a key is missing. The top-level
 // await means importing pages run once the chosen language is loaded and the
 // page is translated.
+import './browser.js';
 import { t, uiLanguage, i18nReady } from '../core/i18n.js';
 
 export { t, uiLanguage };
