@@ -60,7 +60,7 @@ These lookups only run on pages that look like shops or name a known brand, or w
 1. Install GuardFou from [addons.mozilla.org](https://addons.mozilla.org/firefox/addon/guardfou/) (Firefox 140 or later; 142 on Android).
 2. Accept the access to all websites in the install prompt. GuardFou then checks every page you open; the toolbar badge shows its score. If you turn that access off later, the popup offers a button to turn it back on.
 
-GuardFou isn't on the Chrome Web Store yet. To try it in Chrome, Edge or Brave (version 121 or later), open `chrome://extensions`, turn on developer mode, choose **Load unpacked** and select the repository folder (or an unzipped build). It checks pages from then on, as in Firefox.
+GuardFou isn't on the Chrome Web Store yet. To try it in Chrome, Edge or Brave (version 121 or later), open `chrome://extensions`, turn on developer mode, choose **Load unpacked** and select the repository folder (or the unzipped `chrome-guardfou-<version>.zip` from `npm run build:chrome`). It checks pages from then on, as in Firefox.
 
 ## Development
 
@@ -72,6 +72,7 @@ npm start       # launch Firefox with the extension loaded
 npm test        # run the unit tests
 npm run lint    # validate the extension with Mozilla's linter
 npm run build   # build an unsigned web-ext-artifacts/guardfou-<version>.xpi
+npm run build:chrome  # build web-ext-artifacts/chrome-guardfou-<version>.zip for the Chrome Web Store
 ```
 
 An unsigned `.xpi` can be loaded temporarily from `about:debugging`, or installed in Firefox Developer Edition with `xpinstall.signatures.required` set to `false`.
@@ -106,7 +107,7 @@ To publish a signed release:
 1. Bump `version` in `manifest.json` and commit.
 2. Tag and push: `git tag v0.2.0 && git push --tags`.
 
-The workflow checks that the tag matches the manifest version, submits that version to addons.mozilla.org and creates a GitHub Release with the unsigned build. Mozilla reviews each version before publishing it on the store, which can take a few days. It needs two repository secrets, `AMO_JWT_ISSUER` and `AMO_JWT_SECRET`, created at [addons.mozilla.org/developers/addon/api/key](https://addons.mozilla.org/developers/addon/api/key/).
+The workflow checks that the tag matches the manifest version, submits that version to addons.mozilla.org and creates a GitHub Release with the unsigned build and the Chrome Web Store zip, which you upload by hand on the Chrome Web Store dashboard. Mozilla reviews each version before publishing it on the store, which can take a few days. It needs two repository secrets, `AMO_JWT_ISSUER` and `AMO_JWT_SECRET`, created at [addons.mozilla.org/developers/addon/api/key](https://addons.mozilla.org/developers/addon/api/key/).
 
 The store listing (summary, description, categories, licence) comes from `amo-metadata.json` and is sent again with every release, so edit it there rather than on the Developer Hub.
 

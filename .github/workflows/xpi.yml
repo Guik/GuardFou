@@ -2,7 +2,8 @@ name: XPI
 
 # Every push/PR: test, lint, and build an unsigned .xpi (downloadable from
 # the run's artifacts, installable via about:debugging or in Firefox
-# Developer Edition with xpinstall.signatures.required=false).
+# Developer Edition with xpinstall.signatures.required=false), and the
+# Chrome Web Store zip (uploaded by hand for now).
 #
 # Pushing a tag like v0.2.0: additionally submits that version to
 # addons.mozilla.org (listed channel, listing metadata from
@@ -33,10 +34,15 @@ jobs:
       - run: npm test
       - run: npm run lint
       - run: npm run build
+      - run: npm run build:chrome
       - uses: actions/upload-artifact@v7
         with:
           name: guardfou-unsigned
           path: web-ext-artifacts/*.xpi
+      - uses: actions/upload-artifact@v7
+        with:
+          name: guardfou-chrome
+          path: web-ext-artifacts/chrome-guardfou-*.zip
 
   release:
     if: startsWith(github.ref, 'refs/tags/v')
@@ -72,11 +78,15 @@ jobs:
         with:
           name: guardfou-unsigned
           path: unsigned
+      - uses: actions/download-artifact@v8
+        with:
+          name: guardfou-chrome
+          path: unsigned
 
       - name: Publish GitHub Release
         run: |
           for f in unsigned/*.xpi; do mv "$f" "${f%.xpi}-unsigned.xpi"; done
-          gh release create "${GITHUB_REF_NAME}" unsigned/*.xpi --title "${GITHUB_REF_NAME}" --generate-notes \
-            --notes "Submitted to addons.mozilla.org; install it from https://addons.mozilla.org/firefox/addon/guardfou/ once Mozilla has approved it. The attached .xpi is unsigned, for testing only."
+          gh release create "${GITHUB_REF_NAME}" unsigned/*.xpi unsigned/*.zip --title "${GITHUB_REF_NAME}" --generate-notes \
+            --notes "Submitted to addons.mozilla.org; install it from https://addons.mozilla.org/firefox/addon/guardfou/ once Mozilla has approved it. The attached .xpi is unsigned, for testing only; the chrome-guardfou .zip is the package for the Chrome Web Store."
         env:
           GH_TOKEN: ${{ github.token }}

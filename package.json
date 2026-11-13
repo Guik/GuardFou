@@ -10,6 +10,7 @@
     "lint": "web-ext lint",
     "start": "web-ext run",
     "build": "web-ext build",
+    "build:chrome": "node scripts/build-chrome.mjs",
     "sign": "web-ext sign --channel=listed --amo-metadata=amo-metadata.json --approval-timeout=0"
   },
   "devDependencies": {
@@ -25,6 +26,8 @@
       "amo-metadata.json",
       "store",
       "icons/icon.svg",
+      "scripts",
+      "web-ext-artifacts",
       "*.md"
     ],
     "build": {
