@@ -1,7 +1,11 @@
 import { t, uiLanguage } from '../shared/i18n.js';
+import { formatList } from '../core/i18n.js';
+import { timelineEvents, relativeTime, employeeRange, titleCaseCountry, LABELLED_LEGAL_FORMS } from '../core/summary.js';
+import { MAX_LISTED_NEIGHBORS } from '../core/hosting.js';
 
 const BAND_LABELS = { green: t('bandGreen'), orange: t('bandOrange'), red: t('bandRed') };
 const DATE_FORMAT = new Intl.DateTimeFormat(uiLanguage(), { year: 'numeric', month: 'long', day: 'numeric' });
+const RELATIVE_FORMAT = new Intl.RelativeTimeFormat(uiLanguage(), { numeric: 'auto' });
 const RING_RADIUS = 52;
 const RING_CIRCUMFERENCE = 2 * Math.PI * RING_RADIUS;
 
@@ -54,6 +58,7 @@ function renderScore(verdict) {
   bandLabel.textContent = BAND_LABELS[verdict.band];
   bandLabel.className = `band-label ${verdict.band}`;
   document.getElementById('domain').textContent = verdict.domain;
+  renderSummary(verdict.facts);
 
   const list = document.getElementById('reasons');
   list.innerHTML = '';
@@ -70,6 +75,81 @@ function renderScore(verdict) {
     }
   }
 
+}
+
+/** "6 years ago", "in 3 months", or null for a missing or unreadable date. */
+function relative(isoString) {
+  const date = isoString ? new Date(isoString) : null;
+  if (!date || Number.isNaN(date.getTime())) return null;
+  const { value, unit } = relativeTime(date);
+  return RELATIVE_FORMAT.format(value, unit);
+}
+
+function companyCountry(country) {
+  return country ? titleCaseCountry(country) : t('summaryFrance');
+}
+
+/**
+ * The site at a glance, under the score: domain, company, legal notice. A
+ * line is left out when its lookup didn't run (a page that isn't a shop),
+ * and the identity card runs them all.
+ * @param {ReturnType<typeof import('../core/summary.js').buildSiteFacts> | undefined} facts
+ */
+function renderSummary(facts) {
+  const rows = [];
+  const domain = facts?.domain;
+  if (domain) {
+    const created = relative(domain.registeredAt);
+    const expires = relative(domain.expiresAt);
+    const expired = domain.expiresAt && new Date(domain.expiresAt) < new Date();
+    const parts = [
+      created && t('summaryDomain', created),
+      expires && t(expired ? 'summaryExpired' : 'summaryExpires', expires),
+    ];
+    rows.push({ icon: '🌐', text: parts.filter(Boolean).join(' · '), tone: expired ? 'warning' : '' });
+  }
+
+  const company = facts?.company;
+  if (company) {
+    if (!company.hasNumber) {
+      rows.push({ icon: '🏢', text: t('summaryNoCompanyNumber'), tone: 'muted' });
+    } else if (company.checksumValid === false) {
+      rows.push({ icon: '🏢', text: t('summaryCompanyInvalid'), tone: 'warning' });
+    } else if (company.found === false) {
+      rows.push({ icon: '🏢', text: t('summaryCompanyNotFound'), tone: 'warning' });
+    } else if (company.found) {
+      const created = relative(company.creationDate);
+      const closed = company.status === 'C';
+      const parts = [company.name, companyCountry(company.country), created && t('summaryCompanyCreated', created), closed && t('summaryCompanyClosed')];
+      rows.push({ icon: '🏢', text: parts.filter(Boolean).join(' · '), tone: closed ? 'warning' : '' });
+    }
+  }
+
+  const legal = facts?.legal;
+  if (legal) {
+    if (!legal.found) {
+      rows.push({ icon: '📄', text: t('summaryLegalNone'), tone: 'warning' });
+    } else {
+      const missing = legal.missing === null ? null
+        : legal.missing === 0 ? t('summaryLegalComplete')
+          : legal.missing === 1 ? t('summaryLegalMissingOne') : t('summaryLegalMissingOther', legal.missing);
+      rows.push({ icon: '📄', text: [t('summaryLegalFound'), missing].filter(Boolean).join(' · '), tone: '' });
+    }
+  }
+
+  const list = document.getElementById('summary');
+  list.innerHTML = '';
+  if (rows.length === 0) rows.push({ icon: '', text: t('summaryMore'), tone: 'muted' });
+  for (const row of rows) {
+    const li = document.createElement('li');
+    li.className = row.tone;
+    const icon = document.createElement('span');
+    icon.className = 'summary-icon';
+    icon.setAttribute('aria-hidden', 'true');
+    icon.textContent = row.icon;
+    li.append(icon, document.createTextNode(row.text));
+    list.appendChild(li);
+  }
 }
 
 function show(sectionId) {
@@ -110,14 +190,126 @@ function addField(dl, term, buildDescription) {
   dl.append(dt, dd);
 }
 
+/**
+ * What the French registry says about the company: legal form, activity,
+ * size, head office, people. Records cached before these fields were kept
+ * only have the name and status, so each line is optional.
+ */
+function addCompanyDetails(ul, registry) {
+  const add = (text, className = '') => {
+    if (!text) return;
+    const li = document.createElement('li');
+    li.textContent = text;
+    li.className = className;
+    ul.appendChild(li);
+  };
+  if (registry.legalFormCode) {
+    const form = LABELLED_LEGAL_FORMS.includes(registry.legalFormCode)
+      ? t(`legalForm_${registry.legalFormCode}`)
+      : t('companyLegalFormCode', registry.legalFormCode);
+    add(t('companyLegalForm', form));
+  }
+  if (registry.nafSection && registry.nafCode) add(t('companyActivity', t(`nafSection_${registry.nafSection}`), registry.nafCode));
+  if (registry.creationDate) add(t('companyFounded', `${formatDate(registry.creationDate)} (${relative(registry.creationDate)})`));
+  if (registry.closureDate) add(t('companyClosedOn', formatDate(registry.closureDate)), 'warning');
+  const employees = employeeRange(registry.employeesCode);
+  if (employees) add(t('companyEmployees', employees));
+  if (registry.address) {
+    // The registry's address of a head office abroad usually ends with the country already.
+    const withCountry = registry.country && !registry.address.toUpperCase().includes(registry.country);
+    add(t('companyHeadOffice', withCountry ? `${registry.address} (${titleCaseCountry(registry.country)})` : registry.address));
+  }
+  if (registry.tradeNames?.length) add(t('companyTradeNames', formatList(registry.tradeNames)));
+  if (registry.directors?.length) {
+    add(t('companyDirectors', formatList(registry.directors.map((d) => (d.role ? `${d.name} (${d.role})` : d.name)))));
+  }
+  if (registry.siren) {
+    const li = document.createElement('li');
+    const link = document.createElement('a');
+    link.href = `https://annuaire-entreprises.data.gouv.fr/entreprise/${encodeURIComponent(registry.siren)}`;
+    link.target = '_blank';
+    link.rel = 'noopener noreferrer';
+    link.textContent = t('companyRegistryLink');
+    li.appendChild(link);
+    ul.appendChild(li);
+  }
+}
+
+/**
+ * Who owns the site's IP address and which other sites share it. Shown,
+ * not scored: see core/hosting.js.
+ */
+function renderHosting(dd, hosting) {
+  if (!hosting) {
+    dd.textContent = t('hostingUnknown');
+    dd.className = 'muted';
+    return;
+  }
+  const ul = document.createElement('ul');
+  const add = (text, className = '') => {
+    const li = document.createElement('li');
+    li.textContent = text;
+    li.className = className;
+    ul.appendChild(li);
+  };
+  const owner = hosting.owner ?? hosting.platform;
+  if (owner) add(t('hostingOwner', hosting.country ? `${owner} (${hosting.country})` : owner));
+  add(t('hostingIp', hosting.ip));
+  if (hosting.platform === 'Cloudflare') {
+    add(t('hostingCloudflare'), 'muted');
+  } else if (hosting.platform) {
+    add(t('hostingPlatform', hosting.platform), 'muted');
+  } else if (!hosting.neighbors) {
+    add(t('hostingNeighborsUnavailable'), 'muted');
+  } else if (hosting.neighbors.length === 0) {
+    add(t('hostingNoNeighbors'));
+  } else if (hosting.neighbors.length > MAX_LISTED_NEIGHBORS) {
+    add(t('hostingManyNeighbors', hosting.neighbors.length));
+  } else {
+    add(t('hostingNeighbors', formatList(hosting.neighbors)));
+  }
+  dd.appendChild(ul);
+}
+
 function renderIdentityCard(card) {
   const dl = document.getElementById('identity-fields');
   dl.innerHTML = '';
 
-  addField(dl, t('cardRegistrationDate'), (dd) => { dd.textContent = formatDate(card.registrationDate); });
-  addField(dl, t('cardLastChangedDate'), (dd) => { dd.textContent = formatDate(card.lastChangedDate); });
-  addField(dl, t('cardExpirationDate'), (dd) => { dd.textContent = formatDate(card.expirationDate); });
+  addField(dl, t('cardTimeline'), (dd) => {
+    const registry = card.companyCheck?.registry;
+    const events = timelineEvents({
+      companyCreated: registry?.found ? registry.creationDate : null,
+      domainRegistered: card.registrationDate,
+      domainChanged: card.lastChangedDate,
+      domainExpires: card.expirationDate,
+    });
+    if (events.length === 0) {
+      dd.textContent = t('cardUnknownDate');
+      dd.className = 'muted';
+      return;
+    }
+    const ol = document.createElement('ol');
+    ol.className = 'timeline';
+    for (const event of events) {
+      const li = document.createElement('li');
+      li.className = event.key === 'today' ? 'today' : event.future ? 'future' : '';
+      const label = document.createElement('span');
+      label.className = 'timeline-label';
+      label.textContent = t(`timeline_${event.key}`);
+      li.appendChild(label);
+      if (event.key !== 'today') {
+        const when = document.createElement('span');
+        when.className = 'timeline-date';
+        when.textContent = `${DATE_FORMAT.format(event.date)} · ${relative(event.date.toISOString())}`;
+        li.appendChild(when);
+      }
+      ol.appendChild(li);
+    }
+    dd.appendChild(ol);
+  });
   addField(dl, t('cardRegistrar'), (dd) => { dd.textContent = card.registrarName || t('cardUnknownRegistrar'); });
+
+  addField(dl, t('cardHosting'), (dd) => renderHosting(dd, card.hosting));
 
   addField(dl, t('cardAddress'), (dd) => {
     dd.textContent = card.address || t('cardAddressNotFound');
@@ -247,6 +439,7 @@ function renderIdentityCard(card) {
       statusLi.textContent = t(check.registry.status === 'A' ? 'cardCompanyActive' : 'cardCompanyClosed', check.registry.name);
       statusLi.className = check.registry.status === 'A' ? 'seo-ok' : 'warning';
       ul.appendChild(statusLi);
+      addCompanyDetails(ul, check.registry);
     }
     dd.appendChild(ul);
   });

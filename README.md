@@ -52,6 +52,7 @@ GuardFou has no server and no analytics. To run its checks it contacts:
 | [Cloudflare DNS](https://developers.cloudflare.com/1.1.1.1/encryption/dns-over-https/) | The site's domain name | DNSSEC status |
 | [recherche-entreprises.api.gouv.fr](https://recherche-entreprises.api.gouv.fr) | The company number shown on the site | French company registry lookup |
 | The site itself | A normal page request, without your cookies | Reading its legal pages |
+| rdap.org, Cloudflare DNS, [HackerTarget](https://hackertarget.com) | The site's IP address (HackerTarget: not for hosting platforms and CDNs) | Who hosts the site and which other sites share its server, only when you open the identity card |
 
 These lookups only run on pages that look like shops or name a known brand, or when you open the identity card yourself. If you turn on domain-age checks for every site in the settings, the domain of every site you visit (except those on your trusted list) is sent to rdap.org. Results are cached on your computer for 7 days, so each domain is looked up at most once a week; you can clear the cache or turn it off in the settings.
 

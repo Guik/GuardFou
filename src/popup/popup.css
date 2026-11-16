@@ -1,7 +1,15 @@
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
 body {
   width: 348px;
   max-height: 560px;
   overflow-y: auto;
+  overflow-x: hidden;
+  overflow-wrap: anywhere;
   margin: 0;
   font-size: 13px;
   line-height: 1.45;
@@ -113,6 +121,35 @@ header img {
   white-space: nowrap;
 }
 
+/* Summary ----------------------------------------------------------------- */
+
+.summary {
+  list-style: none;
+  margin: 0 0 var(--space-3);
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 12px;
+  color: var(--color-text-secondary);
+}
+
+.summary li {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-2);
+  min-width: 0;
+}
+
+.summary-icon {
+  flex-shrink: 0;
+  width: 16px;
+  text-align: center;
+}
+
+.summary li.warning { color: var(--color-red); }
+.summary li.muted { color: var(--color-text-tertiary); font-style: italic; }
+
 /* Reasons ----------------------------------------------------------------- */
 
 .reasons {
@@ -128,6 +165,7 @@ header img {
   display: flex;
   align-items: flex-start;
   gap: var(--space-2);
+  min-width: 0;
   padding: var(--space-2) var(--space-3);
   background: var(--color-bg-secondary);
   border-radius: var(--radius-sm);
@@ -229,7 +267,7 @@ header img {
 
 .identity-fields dd {
   margin: 3px 0 0;
-  overflow-wrap: break-word;
+  overflow-wrap: anywhere;
 }
 
 .identity-fields dd a {
@@ -253,6 +291,7 @@ header img {
   display: flex;
   align-items: flex-start;
   gap: 6px;
+  min-width: 0;
 }
 
 .identity-fields .seo-ok,
@@ -273,6 +312,51 @@ header img {
 .identity-fields .muted {
   color: var(--color-text-tertiary);
   font-style: italic;
+}
+
+/* A vertical line of dots, oldest first; the future is dimmed and today
+   is a hollow dot, so the gap between dates reads at a glance. */
+.identity-fields ol.timeline {
+  list-style: none;
+  margin: 4px 0 0;
+  padding: 0 0 0 14px;
+  border-left: 2px solid var(--color-border);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.timeline li {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+}
+
+.timeline li::before {
+  content: '';
+  position: absolute;
+  left: -20px;
+  top: 4px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--color-accent);
+}
+
+.timeline li.today::before {
+  background: var(--color-bg);
+  border: 2px solid var(--color-text-secondary);
+  width: 6px;
+  height: 6px;
+}
+
+.timeline li.today .timeline-label { font-weight: 600; }
+.timeline li.future { opacity: 0.65; }
+.timeline li.future::before { background: var(--color-text-tertiary); }
+
+.timeline-date {
+  font-size: 11px;
+  color: var(--color-text-secondary);
 }
 
 /* Footer ------------------------------------------------------------- */

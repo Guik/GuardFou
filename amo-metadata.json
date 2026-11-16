@@ -22,6 +22,6 @@
   },
   "version": {
     "license": "Apache-2.0",
-    "approval_notes": "No build step: the submitted files are the source, as in https://github.com/Guik/GuardFou. The only minified file is vendor/tldts.min.js, an unmodified copy of tldts 7.4.19 (dist/index.esm.min.js, https://unpkg.com/tldts@7.4.19/dist/index.esm.min.js, sha256 a6ed81d06198efd097bccdb3045d88eff4cd7e710b6c87b53210dd608df0aab8), used to find the registrable domain of a URL. Network requests: rdap.org (domain registration date), cloudflare-dns.com DNS-over-HTTPS (DNSSEC status), recherche-entreprises.api.gouv.fr (French company registry), and the visited site's own legal pages, fetched with credentials omitted."
+    "approval_notes": "No build step: the submitted files are the source, as in https://github.com/Guik/GuardFou. The only minified file is vendor/tldts.min.js, an unmodified copy of tldts 7.4.19 (dist/index.esm.min.js, https://unpkg.com/tldts@7.4.19/dist/index.esm.min.js, sha256 a6ed81d06198efd097bccdb3045d88eff4cd7e710b6c87b53210dd608df0aab8), used to find the registrable domain of a URL. Network requests: rdap.org (domain registration date), cloudflare-dns.com DNS-over-HTTPS (DNSSEC status), recherche-entreprises.api.gouv.fr (French company registry), the visited site's own legal pages, fetched with credentials omitted, and, only when the user opens the identity card, rdap.org for the owner of the site's IP address and api.hackertarget.com for other sites on the same IP (skipped for known hosting platforms and CDNs)."
   }
 }

@@ -14,6 +14,7 @@ import { findBrandByAlias, getBrandClaimText, isOfficialDomain, findLookalikeBra
 import { isWatchedRegistrar } from '../core/registrar.js';
 import { companyNameMatchesClaim } from '../core/siret.js';
 import { computeScore } from '../core/scoring.js';
+import { buildSiteFacts } from '../core/summary.js';
 import { t, i18nReady } from '../core/i18n.js';
 import { detectTechnologies, detectSocialLinks, findLegalLinks, pageLooksLikeOwnLegalDocument, summarizeSeoMeta } from '../core/identity.js';
 import { isShortRegistrationSpan } from '../core/rdap.js';
@@ -22,6 +23,7 @@ import { WATCHED_REGISTRARS } from '../data/watched-registrars.js';
 import { getDomainRdapInfo, EMPTY_RDAP_INFO } from './rdap.js';
 import { getDnssecStatus } from './dnssec.js';
 import { getLegalPageAnalysis } from './legal.js';
+import { getHostingInfo } from './hosting.js';
 import { pruneExpiredCache } from './cache.js';
 
 // Firefox can unload this background script after a few minutes of
@@ -161,6 +163,7 @@ async function handlePageSignals(tabId, url, payload) {
   // domain is orange on its own, which is noisy on blogs and new projects
   // that sell nothing, and it sends every visited domain to rdap.org.
   const signals = { ...baseSignals };
+  let facts = buildSiteFacts({});
   if (!isAllowlisted && domain) {
     const wantsDeepChecks = payload?.isLikelyShop || matchedBrand;
     const [registration, deep] = await Promise.all([
@@ -168,10 +171,11 @@ async function handlePageSignals(tabId, url, payload) {
       wantsDeepChecks ? computeDeepSignals(domain, payload, claimedText, url) : null,
     ]);
     Object.assign(signals, registration?.signals, deep?.signals);
+    facts = buildSiteFacts({ rdapInfo: registration?.rdapInfo, legalAnalysis: deep?.legalAnalysis });
   }
 
   if (!isCurrentPage()) return;
-  await publishVerdict(tabId, displayId, signals);
+  await publishVerdict(tabId, displayId, signals, facts);
 }
 
 /**
@@ -260,9 +264,13 @@ async function computeDeepSignals(domain, payload, claimedText, currentUrl) {
   return { signals, legalAnalysis, legalUrls };
 }
 
-async function publishVerdict(tabId, displayId, signals) {
+/**
+ * @param {ReturnType<typeof buildSiteFacts>} facts what the popup's summary shows about the site
+ */
+async function publishVerdict(tabId, displayId, signals, facts) {
   const verdict = computeScore(signals);
   verdict.domain = displayId;
+  verdict.facts = facts;
   await verdictsByTab.set(tabId, verdict);
   setBadge(tabId, verdict);
 
@@ -307,17 +315,21 @@ async function buildIdentityCard(tabId) {
   let rdapInfo = EMPTY_RDAP_INFO;
   let legalAnalysis = { address: null, legal: { present: false, length: 0, detectedLang: 'unknown', languageMismatch: false, tooShort: false }, mandatoryMentions: null, companyCheck: { candidate: null, checksumValid: null, registry: null } };
   let legalUrls = [];
+  let hosting = null;
 
   if (!isAllowlisted && domain) {
-    const [registration, deep] = await Promise.all([
+    // Hosting is for the card only (not scored), so it isn't looked up on load.
+    const [registration, deep, hostingInfo] = await Promise.all([
       computeRegistrationSignals(domain, watchedRegistrars),
       computeDeepSignals(domain, payload, claimedText, url),
+      getHostingInfo(domain, getHostname(url) ?? domain).catch(() => null),
     ]);
+    hosting = hostingInfo;
     if (!isCurrentPage()) return null; // navigated away meanwhile
     rdapInfo = registration.rdapInfo;
     legalAnalysis = deep.legalAnalysis;
     legalUrls = deep.legalUrls;
-    await publishVerdict(tabId, displayId, { ...baseSignals, ...registration.signals, ...deep.signals });
+    await publishVerdict(tabId, displayId, { ...baseSignals, ...registration.signals, ...deep.signals }, buildSiteFacts({ rdapInfo, legalAnalysis }));
   }
 
   return {
@@ -326,6 +338,7 @@ async function buildIdentityCard(tabId) {
     lastChangedDate: rdapInfo.lastChangedAt,
     expirationDate: rdapInfo.expiresAt,
     registrarName: rdapInfo.registrarName,
+    hosting,
     technologies: detectTechnologies(payload.techHints ?? '', payload.generatorMeta ?? null),
     socialLinks: detectSocialLinks((payload.allLinks ?? []).map((l) => l.href)),
     seoMetaSummary: payload.seoMeta ? summarizeSeoMeta(payload.seoMeta) : [],
