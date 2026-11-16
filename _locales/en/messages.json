@@ -544,5 +544,35 @@
   },
   "nafSection_U": {
     "message": "Extraterritorial organisations"
+  },
+  "cardHosting": {
+    "message": "Hosting"
+  },
+  "hostingOwner": {
+    "message": "Hosted by $1"
+  },
+  "hostingIp": {
+    "message": "IP address: $1"
+  },
+  "hostingCloudflare": {
+    "message": "Behind Cloudflare: this is Cloudflare's address, and the site's real server is hidden."
+  },
+  "hostingPlatform": {
+    "message": "On the $1 platform: countless sites share this address."
+  },
+  "hostingNeighbors": {
+    "message": "Same server as: $1"
+  },
+  "hostingNoNeighbors": {
+    "message": "No other known site on this server"
+  },
+  "hostingManyNeighbors": {
+    "message": "Shared with $1 other sites (shared hosting)"
+  },
+  "hostingNeighborsUnavailable": {
+    "message": "Other sites on this server: not available right now"
+  },
+  "hostingUnknown": {
+    "message": "Not found"
   }
 }

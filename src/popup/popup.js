@@ -1,6 +1,7 @@
 import { t, uiLanguage } from '../shared/i18n.js';
 import { formatList } from '../core/i18n.js';
 import { timelineEvents, relativeTime, employeeRange, titleCaseCountry, LABELLED_LEGAL_FORMS } from '../core/summary.js';
+import { MAX_LISTED_NEIGHBORS } from '../core/hosting.js';
 
 const BAND_LABELS = { green: t('bandGreen'), orange: t('bandOrange'), red: t('bandRed') };
 const DATE_FORMAT = new Intl.DateTimeFormat(uiLanguage(), { year: 'numeric', month: 'long', day: 'numeric' });
@@ -235,6 +236,42 @@ function addCompanyDetails(ul, registry) {
   }
 }
 
+/**
+ * Who owns the site's IP address and which other sites share it. Shown,
+ * not scored: see core/hosting.js.
+ */
+function renderHosting(dd, hosting) {
+  if (!hosting) {
+    dd.textContent = t('hostingUnknown');
+    dd.className = 'muted';
+    return;
+  }
+  const ul = document.createElement('ul');
+  const add = (text, className = '') => {
+    const li = document.createElement('li');
+    li.textContent = text;
+    li.className = className;
+    ul.appendChild(li);
+  };
+  const owner = hosting.owner ?? hosting.platform;
+  if (owner) add(t('hostingOwner', hosting.country ? `${owner} (${hosting.country})` : owner));
+  add(t('hostingIp', hosting.ip));
+  if (hosting.platform === 'Cloudflare') {
+    add(t('hostingCloudflare'), 'muted');
+  } else if (hosting.platform) {
+    add(t('hostingPlatform', hosting.platform), 'muted');
+  } else if (!hosting.neighbors) {
+    add(t('hostingNeighborsUnavailable'), 'muted');
+  } else if (hosting.neighbors.length === 0) {
+    add(t('hostingNoNeighbors'));
+  } else if (hosting.neighbors.length > MAX_LISTED_NEIGHBORS) {
+    add(t('hostingManyNeighbors', hosting.neighbors.length));
+  } else {
+    add(t('hostingNeighbors', formatList(hosting.neighbors)));
+  }
+  dd.appendChild(ul);
+}
+
 function renderIdentityCard(card) {
   const dl = document.getElementById('identity-fields');
   dl.innerHTML = '';
@@ -272,6 +309,8 @@ function renderIdentityCard(card) {
     dd.appendChild(ol);
   });
   addField(dl, t('cardRegistrar'), (dd) => { dd.textContent = card.registrarName || t('cardUnknownRegistrar'); });
+
+  addField(dl, t('cardHosting'), (dd) => renderHosting(dd, card.hosting));
 
   addField(dl, t('cardAddress'), (dd) => {
     dd.textContent = card.address || t('cardAddressNotFound');

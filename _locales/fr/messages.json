@@ -544,5 +544,35 @@
   },
   "nafSection_U": {
     "message": "Activités extra-territoriales"
+  },
+  "cardHosting": {
+    "message": "Hébergement"
+  },
+  "hostingOwner": {
+    "message": "Hébergé chez $1"
+  },
+  "hostingIp": {
+    "message": "Adresse IP : $1"
+  },
+  "hostingCloudflare": {
+    "message": "Derrière Cloudflare : c'est l'adresse de Cloudflare, le vrai serveur du site est masqué."
+  },
+  "hostingPlatform": {
+    "message": "Sur la plateforme $1 : d'innombrables sites partagent cette adresse."
+  },
+  "hostingNeighbors": {
+    "message": "Même serveur que : $1"
+  },
+  "hostingNoNeighbors": {
+    "message": "Aucun autre site connu sur ce serveur"
+  },
+  "hostingManyNeighbors": {
+    "message": "Partagé avec $1 autres sites (hébergement mutualisé)"
+  },
+  "hostingNeighborsUnavailable": {
+    "message": "Autres sites sur ce serveur : indisponible pour le moment"
+  },
+  "hostingUnknown": {
+    "message": "Introuvable"
   }
 }

@@ -23,6 +23,7 @@ import { WATCHED_REGISTRARS } from '../data/watched-registrars.js';
 import { getDomainRdapInfo, EMPTY_RDAP_INFO } from './rdap.js';
 import { getDnssecStatus } from './dnssec.js';
 import { getLegalPageAnalysis } from './legal.js';
+import { getHostingInfo } from './hosting.js';
 import { pruneExpiredCache } from './cache.js';
 
 // Firefox can unload this background script after a few minutes of
@@ -314,12 +315,16 @@ async function buildIdentityCard(tabId) {
   let rdapInfo = EMPTY_RDAP_INFO;
   let legalAnalysis = { address: null, legal: { present: false, length: 0, detectedLang: 'unknown', languageMismatch: false, tooShort: false }, mandatoryMentions: null, companyCheck: { candidate: null, checksumValid: null, registry: null } };
   let legalUrls = [];
+  let hosting = null;
 
   if (!isAllowlisted && domain) {
-    const [registration, deep] = await Promise.all([
+    // Hosting is for the card only (not scored), so it isn't looked up on load.
+    const [registration, deep, hostingInfo] = await Promise.all([
       computeRegistrationSignals(domain, watchedRegistrars),
       computeDeepSignals(domain, payload, claimedText, url),
+      getHostingInfo(domain).catch(() => null),
     ]);
+    hosting = hostingInfo;
     if (!isCurrentPage()) return null; // navigated away meanwhile
     rdapInfo = registration.rdapInfo;
     legalAnalysis = deep.legalAnalysis;
@@ -333,6 +338,7 @@ async function buildIdentityCard(tabId) {
     lastChangedDate: rdapInfo.lastChangedAt,
     expirationDate: rdapInfo.expiresAt,
     registrarName: rdapInfo.registrarName,
+    hosting,
     technologies: detectTechnologies(payload.techHints ?? '', payload.generatorMeta ?? null),
     socialLinks: detectSocialLinks((payload.allLinks ?? []).map((l) => l.href)),
     seoMetaSummary: payload.seoMeta ? summarizeSeoMeta(payload.seoMeta) : [],
