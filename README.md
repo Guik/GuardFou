@@ -70,6 +70,7 @@ Requires Node.js 22+ and Firefox.
 npm ci          # install dependencies
 npm start       # launch Firefox with the extension loaded
 npm test        # run the unit tests
+npm run test:e2e  # run the extension in Chromium and Firefox (needs `npx playwright-core install chromium`, and Firefox or FIREFOX_PATH)
 npm run lint    # validate the extension with Mozilla's linter
 npm run build   # build an unsigned web-ext-artifacts/guardfou-<version>.xpi
 npm run build:chrome  # build web-ext-artifacts/chrome-guardfou-<version>.zip for the Chrome Web Store
@@ -100,7 +101,7 @@ Most of the detection logic lives in `src/core/` as plain functions with no brow
 
 ### Releasing
 
-Every push and pull request runs the tests and lint and builds an unsigned `.xpi` (see the workflow run's artifacts).
+Every push and pull request runs the unit tests, the browser tests and lint and builds an unsigned `.xpi` (see the workflow run's artifacts).
 
 To publish a signed release:
 

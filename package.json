@@ -7,6 +7,7 @@
   "type": "module",
   "scripts": {
     "test": "node --test",
+    "test:e2e": "node --test --test-concurrency=1 'e2e/*.e2e.js'",
     "lint": "web-ext lint",
     "start": "web-ext run",
     "build": "web-ext build",
@@ -14,11 +15,15 @@
     "sign": "node scripts/release-notes.mjs --amo web-ext-artifacts/amo-metadata.json && web-ext sign --channel=listed --amo-metadata=web-ext-artifacts/amo-metadata.json --approval-timeout=0"
   },
   "devDependencies": {
+    "@puppeteer/browsers": "3.2.7",
+    "playwright-core": "1.63.0",
+    "puppeteer-core": "25.17.0",
     "web-ext": "^8.3.0"
   },
   "webExt": {
     "ignoreFiles": [
       "tests",
+      "e2e",
       "graft",
       ".trail",
       "package.json",
