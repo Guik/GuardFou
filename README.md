@@ -104,10 +104,11 @@ Every push and pull request runs the tests and lint and builds an unsigned `.xpi
 
 To publish a signed release:
 
-1. Bump `version` in `manifest.json` and commit.
-2. Tag and push: `git tag v0.2.0 && git push --tags`.
+1. Add a section for the new version to `CHANGELOG.md`, in English and French.
+2. Bump `version` in `manifest.json` and commit both.
+3. Tag and push: `git tag v0.2.0 && git push --tags`.
 
-The workflow checks that the tag matches the manifest version, submits that version to addons.mozilla.org and creates a GitHub Release with the unsigned build and the Chrome Web Store zip, which you upload by hand on the Chrome Web Store dashboard. Mozilla reviews each version before publishing it on the store, which can take a few days. It needs two repository secrets, `AMO_JWT_ISSUER` and `AMO_JWT_SECRET`, created at [addons.mozilla.org/developers/addon/api/key](https://addons.mozilla.org/developers/addon/api/key/).
+The workflow checks that the tag matches the manifest version, takes that version's notes from `CHANGELOG.md` (the tests fail when they're missing), submits that version to addons.mozilla.org and creates a GitHub Release with the same notes, the unsigned build and the Chrome Web Store zip, which you upload by hand on the Chrome Web Store dashboard. Mozilla reviews each version before publishing it on the store, which can take a few days. It needs two repository secrets, `AMO_JWT_ISSUER` and `AMO_JWT_SECRET`, created at [addons.mozilla.org/developers/addon/api/key](https://addons.mozilla.org/developers/addon/api/key/).
 
 The store listing (summary, description, categories, licence) comes from `amo-metadata.json` and is sent again with every release, so edit it there rather than on the Developer Hub.
 

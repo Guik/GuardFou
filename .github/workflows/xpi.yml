@@ -10,7 +10,8 @@ name: XPI
 # amo-metadata.json) and creates a GitHub Release. Mozilla reviews listed
 # versions before publishing them, which can take days, so the job doesn't
 # wait: the signed version appears on the store once approved. The Release
-# carries the unsigned build of the exact files submitted. Needs repository
+# carries the unsigned build of the exact files submitted. Both carry the
+# version's release notes from CHANGELOG.md (scripts/release-notes.mjs). Needs repository
 # secrets AMO_JWT_ISSUER / AMO_JWT_SECRET from
 # https://addons.mozilla.org/developers/addon/api/key/.
 
@@ -86,7 +87,8 @@ jobs:
       - name: Publish GitHub Release
         run: |
           for f in unsigned/*.xpi; do mv "$f" "${f%.xpi}-unsigned.xpi"; done
-          gh release create "${GITHUB_REF_NAME}" unsigned/*.xpi unsigned/*.zip --title "${GITHUB_REF_NAME}" --generate-notes \
-            --notes "Submitted to addons.mozilla.org; install it from https://addons.mozilla.org/firefox/addon/guardfou/ once Mozilla has approved it. The attached .xpi is unsigned, for testing only; the chrome-guardfou .zip is the package for the Chrome Web Store."
+          node scripts/release-notes.mjs --github "${RUNNER_TEMP}/notes.md"
+          printf '\nSubmitted to addons.mozilla.org; install it from https://addons.mozilla.org/firefox/addon/guardfou/ once Mozilla has approved it. The attached .xpi is unsigned, for testing only; the chrome-guardfou .zip is the package for the Chrome Web Store.\n' >> "${RUNNER_TEMP}/notes.md"
+          gh release create "${GITHUB_REF_NAME}" unsigned/*.xpi unsigned/*.zip --title "${GITHUB_REF_NAME}" --notes-file "${RUNNER_TEMP}/notes.md"
         env:
           GH_TOKEN: ${{ github.token }}
