@@ -14,6 +14,7 @@ import { findBrandByAlias, getBrandClaimText, isOfficialDomain, findLookalikeBra
 import { isWatchedRegistrar } from '../core/registrar.js';
 import { companyNameMatchesClaim } from '../core/siret.js';
 import { computeScore } from '../core/scoring.js';
+import { buildSiteFacts } from '../core/summary.js';
 import { t, i18nReady } from '../core/i18n.js';
 import { detectTechnologies, detectSocialLinks, findLegalLinks, pageLooksLikeOwnLegalDocument, summarizeSeoMeta } from '../core/identity.js';
 import { isShortRegistrationSpan } from '../core/rdap.js';
@@ -161,6 +162,7 @@ async function handlePageSignals(tabId, url, payload) {
   // domain is orange on its own, which is noisy on blogs and new projects
   // that sell nothing, and it sends every visited domain to rdap.org.
   const signals = { ...baseSignals };
+  let facts = buildSiteFacts({});
   if (!isAllowlisted && domain) {
     const wantsDeepChecks = payload?.isLikelyShop || matchedBrand;
     const [registration, deep] = await Promise.all([
@@ -168,10 +170,11 @@ async function handlePageSignals(tabId, url, payload) {
       wantsDeepChecks ? computeDeepSignals(domain, payload, claimedText, url) : null,
     ]);
     Object.assign(signals, registration?.signals, deep?.signals);
+    facts = buildSiteFacts({ rdapInfo: registration?.rdapInfo, legalAnalysis: deep?.legalAnalysis });
   }
 
   if (!isCurrentPage()) return;
-  await publishVerdict(tabId, displayId, signals);
+  await publishVerdict(tabId, displayId, signals, facts);
 }
 
 /**
@@ -260,9 +263,13 @@ async function computeDeepSignals(domain, payload, claimedText, currentUrl) {
   return { signals, legalAnalysis, legalUrls };
 }
 
-async function publishVerdict(tabId, displayId, signals) {
+/**
+ * @param {ReturnType<typeof buildSiteFacts>} facts what the popup's summary shows about the site
+ */
+async function publishVerdict(tabId, displayId, signals, facts) {
   const verdict = computeScore(signals);
   verdict.domain = displayId;
+  verdict.facts = facts;
   await verdictsByTab.set(tabId, verdict);
   setBadge(tabId, verdict);
 
@@ -317,7 +324,7 @@ async function buildIdentityCard(tabId) {
     rdapInfo = registration.rdapInfo;
     legalAnalysis = deep.legalAnalysis;
     legalUrls = deep.legalUrls;
-    await publishVerdict(tabId, displayId, { ...baseSignals, ...registration.signals, ...deep.signals });
+    await publishVerdict(tabId, displayId, { ...baseSignals, ...registration.signals, ...deep.signals }, buildSiteFacts({ rdapInfo, legalAnalysis }));
   }
 
   return {

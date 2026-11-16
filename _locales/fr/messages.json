@@ -53,15 +53,6 @@
   "cardUnknownRegistrar": {
     "message": "Inconnu"
   },
-  "cardRegistrationDate": {
-    "message": "Date de création du nom de domaine"
-  },
-  "cardLastChangedDate": {
-    "message": "Dernière mise à jour du nom de domaine"
-  },
-  "cardExpirationDate": {
-    "message": "Date d'expiration du nom de domaine"
-  },
   "cardRegistrar": {
     "message": "Bureau d'enregistrement"
   },
@@ -364,5 +355,194 @@
   },
   "optionsDisableCache": {
     "message": "Désactiver le cache (re-vérifie tout à chaque fois — utile pour tester, mais plus de requêtes réseau)"
+  },
+  "summaryDomain": {
+    "message": "Domaine créé $1"
+  },
+  "summaryExpires": {
+    "message": "expire $1"
+  },
+  "summaryExpired": {
+    "message": "expiré $1"
+  },
+  "summaryCompanyCreated": {
+    "message": "créée $1"
+  },
+  "summaryCompanyClosed": {
+    "message": "fermée"
+  },
+  "summaryCompanyNotFound": {
+    "message": "Numéro d'entreprise absent du registre français"
+  },
+  "summaryCompanyInvalid": {
+    "message": "Numéro d'entreprise invalide"
+  },
+  "summaryNoCompanyNumber": {
+    "message": "Aucun numéro d'entreprise affiché"
+  },
+  "summaryLegalFound": {
+    "message": "Mentions légales trouvées"
+  },
+  "summaryLegalComplete": {
+    "message": "rien d'obligatoire ne manque"
+  },
+  "summaryLegalMissingOne": {
+    "message": "1 information obligatoire manquante"
+  },
+  "summaryLegalMissingOther": {
+    "message": "$1 informations obligatoires manquantes"
+  },
+  "summaryLegalNone": {
+    "message": "Aucune mention légale trouvée"
+  },
+  "summaryMore": {
+    "message": "La fiche d'identité vérifie le domaine et l'entreprise derrière ce site."
+  },
+  "summaryFrance": {
+    "message": "France"
+  },
+  "cardTimeline": {
+    "message": "Chronologie"
+  },
+  "timeline_companyCreated": {
+    "message": "Création de l'entreprise"
+  },
+  "timeline_domainRegistered": {
+    "message": "Enregistrement du domaine"
+  },
+  "timeline_domainChanged": {
+    "message": "Dernière mise à jour du domaine"
+  },
+  "timeline_today": {
+    "message": "Aujourd'hui"
+  },
+  "timeline_domainExpires": {
+    "message": "Expiration du domaine"
+  },
+  "companyLegalForm": {
+    "message": "Forme juridique : $1"
+  },
+  "companyLegalFormCode": {
+    "message": "code $1"
+  },
+  "companyActivity": {
+    "message": "Activité : $1 ($2)"
+  },
+  "companyFounded": {
+    "message": "Création : $1"
+  },
+  "companyClosedOn": {
+    "message": "Fermeture : $1"
+  },
+  "companyEmployees": {
+    "message": "Salariés : $1"
+  },
+  "companyHeadOffice": {
+    "message": "Siège : $1"
+  },
+  "companyTradeNames": {
+    "message": "Enseignes : $1"
+  },
+  "companyDirectors": {
+    "message": "Dirigeants : $1"
+  },
+  "companyRegistryLink": {
+    "message": "Voir sa fiche sur annuaire-entreprises.data.gouv.fr"
+  },
+  "legalForm_1000": {
+    "message": "Entrepreneur individuel"
+  },
+  "legalForm_3220": {
+    "message": "Société étrangère non immatriculée au RCS"
+  },
+  "legalForm_5202": {
+    "message": "Société en nom collectif (SNC)"
+  },
+  "legalForm_5498": {
+    "message": "EURL (SARL unipersonnelle)"
+  },
+  "legalForm_5499": {
+    "message": "SARL"
+  },
+  "legalForm_5599": {
+    "message": "SA à conseil d'administration"
+  },
+  "legalForm_5699": {
+    "message": "SA à directoire"
+  },
+  "legalForm_5710": {
+    "message": "SAS"
+  },
+  "legalForm_5720": {
+    "message": "SASU (SAS unipersonnelle)"
+  },
+  "legalForm_6540": {
+    "message": "Société civile immobilière (SCI)"
+  },
+  "legalForm_9220": {
+    "message": "Association déclarée"
+  },
+  "nafSection_A": {
+    "message": "Agriculture, sylviculture et pêche"
+  },
+  "nafSection_B": {
+    "message": "Industries extractives"
+  },
+  "nafSection_C": {
+    "message": "Industrie manufacturière"
+  },
+  "nafSection_D": {
+    "message": "Production et distribution d'électricité, de gaz, de vapeur et d'air conditionné"
+  },
+  "nafSection_E": {
+    "message": "Production et distribution d'eau ; assainissement, gestion des déchets et dépollution"
+  },
+  "nafSection_F": {
+    "message": "Construction"
+  },
+  "nafSection_G": {
+    "message": "Commerce ; réparation d'automobiles et de motocycles"
+  },
+  "nafSection_H": {
+    "message": "Transports et entreposage"
+  },
+  "nafSection_I": {
+    "message": "Hébergement et restauration"
+  },
+  "nafSection_J": {
+    "message": "Information et communication"
+  },
+  "nafSection_K": {
+    "message": "Activités financières et d'assurance"
+  },
+  "nafSection_L": {
+    "message": "Activités immobilières"
+  },
+  "nafSection_M": {
+    "message": "Activités spécialisées, scientifiques et techniques"
+  },
+  "nafSection_N": {
+    "message": "Activités de services administratifs et de soutien"
+  },
+  "nafSection_O": {
+    "message": "Administration publique"
+  },
+  "nafSection_P": {
+    "message": "Enseignement"
+  },
+  "nafSection_Q": {
+    "message": "Santé humaine et action sociale"
+  },
+  "nafSection_R": {
+    "message": "Arts, spectacles et activités récréatives"
+  },
+  "nafSection_S": {
+    "message": "Autres activités de services"
+  },
+  "nafSection_T": {
+    "message": "Activités des ménages en tant qu'employeurs"
+  },
+  "nafSection_U": {
+    "message": "Activités extra-territoriales"
   }
 }

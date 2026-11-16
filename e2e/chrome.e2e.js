@@ -55,6 +55,8 @@ test('a fake shop is checked on load and flagged red, with badge and banner', as
   await waitFor(() => popup.locator('#score-number').textContent());
   assert.equal(await popup.locator('#score-number').textContent(), String(verdict.score));
   assert.equal(await popup.locator('#reasons li').count(), 3);
+  // An IP address has no domain or company to look up: the summary points to the identity card.
+  assert.equal(await popup.locator('#summary li').count(), 1);
 
   await settings.evaluate(() => chrome.storage.local.set({ language: 'fr' }));
   await popup.reload();

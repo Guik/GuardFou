@@ -53,15 +53,6 @@
   "cardUnknownRegistrar": {
     "message": "Unknown"
   },
-  "cardRegistrationDate": {
-    "message": "Domain registered on"
-  },
-  "cardLastChangedDate": {
-    "message": "Domain last updated"
-  },
-  "cardExpirationDate": {
-    "message": "Domain expires on"
-  },
   "cardRegistrar": {
     "message": "Registrar"
   },
@@ -364,5 +355,194 @@
   },
   "optionsDisableCache": {
     "message": "Turn off the cache (re-checks everything every time: useful for testing, but more network requests)"
+  },
+  "summaryDomain": {
+    "message": "Domain created $1"
+  },
+  "summaryExpires": {
+    "message": "expires $1"
+  },
+  "summaryExpired": {
+    "message": "expired $1"
+  },
+  "summaryCompanyCreated": {
+    "message": "founded $1"
+  },
+  "summaryCompanyClosed": {
+    "message": "closed"
+  },
+  "summaryCompanyNotFound": {
+    "message": "Company number not in the French registry"
+  },
+  "summaryCompanyInvalid": {
+    "message": "Company number is invalid"
+  },
+  "summaryNoCompanyNumber": {
+    "message": "No company number shown"
+  },
+  "summaryLegalFound": {
+    "message": "Legal notice found"
+  },
+  "summaryLegalComplete": {
+    "message": "nothing required is missing"
+  },
+  "summaryLegalMissingOne": {
+    "message": "1 required item missing"
+  },
+  "summaryLegalMissingOther": {
+    "message": "$1 required items missing"
+  },
+  "summaryLegalNone": {
+    "message": "No legal notice found"
+  },
+  "summaryMore": {
+    "message": "The identity card checks the domain and the company behind this site."
+  },
+  "summaryFrance": {
+    "message": "France"
+  },
+  "cardTimeline": {
+    "message": "Timeline"
+  },
+  "timeline_companyCreated": {
+    "message": "Company founded"
+  },
+  "timeline_domainRegistered": {
+    "message": "Domain registered"
+  },
+  "timeline_domainChanged": {
+    "message": "Domain record last updated"
+  },
+  "timeline_today": {
+    "message": "Today"
+  },
+  "timeline_domainExpires": {
+    "message": "Domain expires"
+  },
+  "companyLegalForm": {
+    "message": "Legal form: $1"
+  },
+  "companyLegalFormCode": {
+    "message": "code $1"
+  },
+  "companyActivity": {
+    "message": "Activity: $1 ($2)"
+  },
+  "companyFounded": {
+    "message": "Founded: $1"
+  },
+  "companyClosedOn": {
+    "message": "Closed: $1"
+  },
+  "companyEmployees": {
+    "message": "Employees: $1"
+  },
+  "companyHeadOffice": {
+    "message": "Head office: $1"
+  },
+  "companyTradeNames": {
+    "message": "Trading as: $1"
+  },
+  "companyDirectors": {
+    "message": "Directors: $1"
+  },
+  "companyRegistryLink": {
+    "message": "Open its record on annuaire-entreprises.data.gouv.fr"
+  },
+  "legalForm_1000": {
+    "message": "Sole trader"
+  },
+  "legalForm_3220": {
+    "message": "Foreign company not registered in France"
+  },
+  "legalForm_5202": {
+    "message": "SNC (general partnership)"
+  },
+  "legalForm_5498": {
+    "message": "EURL (single-member SARL)"
+  },
+  "legalForm_5499": {
+    "message": "SARL (limited liability company)"
+  },
+  "legalForm_5599": {
+    "message": "SA (public limited company)"
+  },
+  "legalForm_5699": {
+    "message": "SA (public limited company, management board)"
+  },
+  "legalForm_5710": {
+    "message": "SAS (simplified joint-stock company)"
+  },
+  "legalForm_5720": {
+    "message": "SASU (single-member SAS)"
+  },
+  "legalForm_6540": {
+    "message": "SCI (property company)"
+  },
+  "legalForm_9220": {
+    "message": "Registered association"
+  },
+  "nafSection_A": {
+    "message": "Agriculture, forestry and fishing"
+  },
+  "nafSection_B": {
+    "message": "Mining and quarrying"
+  },
+  "nafSection_C": {
+    "message": "Manufacturing"
+  },
+  "nafSection_D": {
+    "message": "Electricity, gas, steam and air conditioning supply"
+  },
+  "nafSection_E": {
+    "message": "Water supply, sewerage and waste management"
+  },
+  "nafSection_F": {
+    "message": "Construction"
+  },
+  "nafSection_G": {
+    "message": "Trade; repair of motor vehicles"
+  },
+  "nafSection_H": {
+    "message": "Transportation and storage"
+  },
+  "nafSection_I": {
+    "message": "Accommodation and food services"
+  },
+  "nafSection_J": {
+    "message": "Information and communication"
+  },
+  "nafSection_K": {
+    "message": "Financial and insurance activities"
+  },
+  "nafSection_L": {
+    "message": "Real estate activities"
+  },
+  "nafSection_M": {
+    "message": "Professional, scientific and technical activities"
+  },
+  "nafSection_N": {
+    "message": "Administrative and support services"
+  },
+  "nafSection_O": {
+    "message": "Public administration"
+  },
+  "nafSection_P": {
+    "message": "Education"
+  },
+  "nafSection_Q": {
+    "message": "Health and social work"
+  },
+  "nafSection_R": {
+    "message": "Arts, entertainment and recreation"
+  },
+  "nafSection_S": {
+    "message": "Other service activities"
+  },
+  "nafSection_T": {
+    "message": "Households as employers"
+  },
+  "nafSection_U": {
+    "message": "Extraterritorial organisations"
   }
 }
