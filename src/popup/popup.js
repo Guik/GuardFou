@@ -104,7 +104,6 @@ function renderSummary(facts) {
     const expired = domain.expiresAt && new Date(domain.expiresAt) < new Date();
     const parts = [
       created && t('summaryDomain', created),
-      domain.registrarName,
       expires && t(expired ? 'summaryExpired' : 'summaryExpires', expires),
     ];
     rows.push({ icon: '🌐', text: parts.filter(Boolean).join(' · '), tone: expired ? 'warning' : '' });

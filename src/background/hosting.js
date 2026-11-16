@@ -12,20 +12,24 @@ import { isCloudflareIp, interpretIpRdap, platformFromOwner, parseReverseIpRespo
  * @param {string} domain registrable domain
  * @returns {Promise<{ ip: string, owner: string|null, country: string|null, platform: string|null, neighbors: string[]|null } | null>}
  */
-export async function getHostingInfo(domain) {
-  const cacheKey = `hosting:${domain}`;
+export async function getHostingInfo(domain, hostname = domain) {
+  // The apex and www host can point to different services (for example, a
+  // registrar's parking/redirect IP at the apex and the real site behind a
+  // CDN on www). Key by the visited hostname so one result can't mask the other.
+  const cacheKey = `hosting:${hostname}`;
   const cached = await getCached(cacheKey, CACHE_TTL_MS);
   if (cached !== undefined) return cached;
 
-  const result = await fetchHostingInfo(domain);
+  const result = await fetchHostingInfo(domain, hostname);
   if (result.ok) await setCached(cacheKey, result.info);
   return result.info;
 }
 
-async function fetchHostingInfo(domain) {
+async function fetchHostingInfo(domain, hostname) {
   try {
-    // The site usually answers on www. too; the bare domain is what was registered.
-    const ip = (await resolveIpv4(domain)) ?? (await resolveIpv4(`www.${domain}`));
+    // Resolve the hostname from the tab, not just the registrable domain.
+    // Apex and www often point at different providers.
+    const ip = await resolveIpv4(hostname);
     if (!ip) return { ok: true, info: null };
 
     const rdap = await fetchWithTimeout(`https://rdap.org/ip/${ip}`, { headers: { Accept: 'application/rdap+json' } })

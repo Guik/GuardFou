@@ -322,7 +322,7 @@ async function buildIdentityCard(tabId) {
     const [registration, deep, hostingInfo] = await Promise.all([
       computeRegistrationSignals(domain, watchedRegistrars),
       computeDeepSignals(domain, payload, claimedText, url),
-      getHostingInfo(domain).catch(() => null),
+      getHostingInfo(domain, getHostname(url) ?? domain).catch(() => null),
     ]);
     hosting = hostingInfo;
     if (!isCurrentPage()) return null; // navigated away meanwhile
