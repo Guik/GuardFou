@@ -6,6 +6,7 @@ import {
   isValidSiret,
   isValidSirenOrSiret,
   companyNameMatchesClaim,
+  extractPublisherStatements,
 } from '../src/core/siret.js';
 
 // Real, verified SIREN/SIRET for Chausson Matériaux (checked live against
@@ -72,4 +73,22 @@ test('companyNameMatchesClaim flags a SIRET reused under a different name', () =
 test('companyNameMatchesClaim does not penalize when there is nothing to compare', () => {
   assert.equal(companyNameMatchesClaim(null, 'some text'), true);
   assert.equal(companyNameMatchesClaim('CHAUSSON MATERIAUX', ''), true);
+});
+
+// chauffage-et-climatisation.fr's legal notice: the brand is the trading
+// name of a Spanish company, whose SIRET it shows.
+const TRADING_NAME_NOTICE = 'Mentions légales Le site https://www.chauffage-et-climatisation.fr/ est édité par PLANETE HOME SLU, exerçant sous l’enseigne « CHAUFFAGE ET CLIMATISATION », sise AVDA DEL PARQUE NUM 32 - 3D 99134 LUCENA – CORDOBA, société étrangère non immatriculée au RCS. L’hébergeur du site est OVH.';
+
+test('extractPublisherStatements keeps what follows "édité par"', () => {
+  const statements = extractPublisherStatements(TRADING_NAME_NOTICE);
+  assert.match(statements, /^ PLANETE HOME SLU, exerçant sous/);
+  assert.ok(statements.length <= 600);
+  assert.equal(extractPublisherStatements('Nothing about the publisher here.'), '');
+  assert.equal(extractPublisherStatements(null), '');
+});
+
+test('a company named as publisher in the legal notice matches, despite another brand name', () => {
+  const claimed = 'Clim FTXP71N + RXP71N | Comfora inverter Daikin mono-split • Chauffage et climatisation';
+  assert.equal(companyNameMatchesClaim('PLANETE HOME SLU', claimed), false);
+  assert.equal(companyNameMatchesClaim('PLANETE HOME SLU', `${claimed} • ${extractPublisherStatements(TRADING_NAME_NOTICE)}`), true);
 });

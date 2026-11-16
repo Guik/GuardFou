@@ -91,3 +91,19 @@ export function companyNameMatchesClaim(registeredName, claimedText) {
   const matchCount = registeredWords.filter((w) => normalizedClaimed.includes(w)).length;
   return matchCount / registeredWords.length >= 0.5;
 }
+
+const PUBLISHER_INTRO = /[ée]dit[ée]e?\s+par|[ée]diteur(?:\s+du\s+site)?|exploit[ée]e?\s+par|raison\s+sociale|d[ée]nomination(?:\s+sociale)?/gi;
+
+/**
+ * The words right after each "édité par", "éditeur", "raison sociale"…
+ * in a legal notice: where a site names the company behind it, which can
+ * differ from its brand ("édité par PLANETE HOME SLU, exerçant sous
+ * l'enseigne « CHAUFFAGE ET CLIMATISATION »"). Kept short (a few hundred
+ * characters) because it's cached with the rest of the legal analysis.
+ * @param {string|null} text
+ */
+export function extractPublisherStatements(text) {
+  if (!text) return '';
+  const excerpts = [...text.matchAll(PUBLISHER_INTRO)].map((m) => text.slice(m.index + m[0].length, m.index + m[0].length + 120));
+  return excerpts.join(' • ').slice(0, 600);
+}

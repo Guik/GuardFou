@@ -88,6 +88,14 @@
   function decodeUrlCandidate(value) {
     if (!value) return null;
     if (/^https?:\/\//i.test(value)) return value;
+    // A site-relative path ("/mentions-legales.html"), resolved like a.href.
+    if (/^\/[^/]/.test(value)) {
+      try {
+        return new URL(value, document.baseURI).href;
+      } catch {
+        return null;
+      }
+    }
     try {
       const decoded = atob(value);
       return /^https?:\/\//i.test(decoded) ? decoded : null;
@@ -102,9 +110,12 @@
     // encoded, and dispatched via JS on click — e.g.
     // `<span class="olink" data-olink="aHR0cHM6Ly8..." onclick="goLink(...)">`.
     // Confirmed on a real site whose own mentions-légales/CGV links use
-    // exactly this pattern, invisible to a plain a[href] scan.
+    // exactly this pattern, invisible to a plain a[href] scan. Another
+    // (chauffage-et-climatisation.fr, Magento) uses <a> tags with no href
+    // and no onclick, only `data-href="/mentions-legales.html"`, opened by a
+    // delegated click handler.
     const results = [];
-    const candidates = document.querySelectorAll('[onclick], [role="button"], .olink');
+    const candidates = document.querySelectorAll('[onclick], [role="button"], .olink, a:not([href])');
     for (const el of candidates) {
       for (const attr of el.attributes) {
         if (!attr.name.startsWith('data-')) continue;

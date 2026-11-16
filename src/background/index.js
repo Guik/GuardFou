@@ -249,7 +249,9 @@ async function computeDeepSignals(domain, payload, claimedText, currentUrl) {
     } else if (registry?.status === 'C') {
       signals.companyClosed = true;
       signals.registeredCompanyName = registry.name;
-    } else if (registry?.found && !companyNameMatchesClaim(registry.name, claimedText)) {
+    } else if (registry?.found && !companyNameMatchesClaim(registry.name, `${claimedText} • ${legalAnalysis.publisherText}`)) {
+      // A company the legal notice itself names as publisher isn't a
+      // mismatch: brands often trade under another company's name.
       signals.companyNameMismatch = true;
       signals.registeredCompanyName = registry.name;
     }

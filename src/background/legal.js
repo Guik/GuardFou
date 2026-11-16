@@ -1,7 +1,7 @@
 import { fetchWithTimeout } from './http.js';
 import { getCached, setCached, CACHE_TTL_MS } from './cache.js';
 import { stripHtmlToText, extractContactLinks, extractPhysicalAddress, analyzeLegalText, checkMandatoryLegalMentions } from '../core/identity.js';
-import { extractSirenOrSiret, isValidSirenOrSiret } from '../core/siret.js';
+import { extractSirenOrSiret, isValidSirenOrSiret, extractPublisherStatements } from '../core/siret.js';
 import { getCompanyInfo } from './companyRegistry.js';
 
 /**
@@ -23,6 +23,7 @@ import { getCompanyInfo } from './companyRegistry.js';
  *   address: string|null,
  *   legal: ReturnType<typeof analyzeLegalText>,
  *   mandatoryMentions: ReturnType<typeof checkMandatoryLegalMentions>,
+ *   publisherText: string,
  *   companyCheck: {
  *     candidate: {type: 'siret'|'siren', digits: string} | null,
  *     checksumValid: boolean | null,
@@ -37,11 +38,12 @@ export async function getLegalPageAnalysis(legalUrls, declaredLang) {
   const textAnalysis = await getLegalTextAnalysis(urls, declaredLang);
   if (!textAnalysis) return emptyAnalysis(declaredLang);
 
-  const { address, legal, mandatoryMentions, companyNumber: { candidate, checksumValid } } = textAnalysis;
+  // publisherText is missing from analyses cached before it existed.
+  const { address, legal, mandatoryMentions, publisherText = '', companyNumber: { candidate, checksumValid } } = textAnalysis;
   // Only look up a number whose checksum passes — no point wasting a
   // registry request on an obviously fabricated one.
   const registry = candidate && checksumValid ? await getCompanyInfo(candidate.digits) : null;
-  return { address, legal, mandatoryMentions, companyCheck: { candidate, checksumValid, registry } };
+  return { address, legal, mandatoryMentions, publisherText, companyCheck: { candidate, checksumValid, registry } };
 }
 
 /**
@@ -70,6 +72,7 @@ function analyzeText(text, declaredLang) {
     address: extractPhysicalAddress(text),
     legal: analyzeLegalText(text, declaredLang),
     mandatoryMentions: checkMandatoryLegalMentions(text),
+    publisherText: extractPublisherStatements(text),
     companyNumber: { candidate, checksumValid: candidate ? isValidSirenOrSiret(candidate) : null },
   };
 }
@@ -93,6 +96,7 @@ function emptyAnalysis(declaredLang) {
     address: null,
     legal: analyzeLegalText(null, declaredLang),
     mandatoryMentions: null,
+    publisherText: '',
     companyCheck: { candidate: null, checksumValid: null, registry: null },
   };
 }
