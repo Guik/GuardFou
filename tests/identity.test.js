@@ -24,6 +24,30 @@ test('detectTechnologies includes the generator meta tag verbatim', () => {
   assert.deepEqual(detectTechnologies('<html></html>', 'WordPress 6.4'), ['WordPress 6.4']);
 });
 
+test('detectTechnologies recognises site builders and frameworks', () => {
+  const cases = {
+    Lovable: 'https://cdn.gpteng.co/gptengineer.js',
+    Framer: 'https://framerusercontent.com/sites/abc/script_main.mjs',
+    Webflow: 'https://cdn.prod.website-files.com/123/css/site.webflow.css',
+    'Hostinger Website Builder': 'https://assets.zyrosite.com/app.js',
+    'GoDaddy Website Builder': 'https://img1.wsimg.com/blobby/go/app.js',
+    Jimdo: 'https://assets.jimstatic.com/web.css',
+    Duda: 'https://irp.cdn-website.com/abc/files/style.css',
+    'Square Online / Weebly': 'https://cdn2.editmysite.com/js/site.js',
+    Odoo: '/web/assets/1/abc/web.assets_frontend.min.js',
+    'Next.js': 'https://example.fr/_next/static/chunks/main-abc.js',
+    Nuxt: 'https://example.fr/_nuxt/entry.abc.js',
+    Vite: 'https://example.fr/assets/index-BxK3_a9Z.js',
+  };
+  for (const [name, hint] of Object.entries(cases)) {
+    assert.deepEqual(detectTechnologies(hint, null), [name], name);
+  }
+});
+
+test('detectTechnologies ignores look-alike paths', () => {
+  assert.deepEqual(detectTechnologies('https://example.fr/assets/index.js https://example.fr/next/static/app.js', null), []);
+});
+
 test('detectTechnologies returns an empty array when nothing matches', () => {
   assert.deepEqual(detectTechnologies('<html><body>hello</body></html>', null), []);
 });

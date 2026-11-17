@@ -9,7 +9,13 @@
 import { extractSirenOrSiret } from './siret.js';
 import { t } from './i18n.js';
 
+// Matched against the page's script and stylesheet URLs and body classes
+// (see getTechHints in content/collect.js). Written by hand: the Wappalyzer
+// data is GPL-3.0 and megabytes long, and only a few of its thousands of
+// technologies say anything about how a site was made. Shown in the identity
+// card only, never scored.
 const TECH_SIGNATURES = [
+  // E-commerce and CMS
   { name: 'WordPress / WooCommerce', test: /wp-content|wp-includes/i },
   { name: 'Shopify', test: /cdn\.shopify\.com|Shopify\.theme|myshopify\.com/i },
   { name: 'PrestaShop', test: /prestashop/i },
@@ -17,6 +23,20 @@ const TECH_SIGNATURES = [
   { name: 'Squarespace', test: /squarespace\.com/i },
   { name: 'Magento', test: /\/skin\/frontend\/|Mage\.Cookies|\/static\/version\d+\/frontend\//i },
   { name: 'BigCommerce', test: /cdn\d*\.bigcommerce\.com/i },
+  { name: 'Odoo', test: /web\.assets_frontend/i },
+  // Site builders, including AI ones: a site can be up in an hour
+  { name: 'Lovable', test: /cdn\.gpteng\.co|lovable\.(dev|app)/i },
+  { name: 'Framer', test: /framerusercontent\.com|events\.framer\.com/i },
+  { name: 'Webflow', test: /website-files\.com|webflow\.(js|com)/i },
+  { name: 'Hostinger Website Builder', test: /zyrosite\.com/i },
+  { name: 'GoDaddy Website Builder', test: /img\d*\.wsimg\.com/i },
+  { name: 'Jimdo', test: /jimstatic\.com|jimdo(free)?\.com/i },
+  { name: 'Duda', test: /multiscreensite\.com|cdn-website\.com/i },
+  { name: 'Square Online / Weebly', test: /editmysite\.com|weebly\.com/i },
+  // JavaScript frameworks, typical of generated and hand-coded apps alike
+  { name: 'Next.js', test: /\/_next\/static\//i },
+  { name: 'Nuxt', test: /\/_nuxt\//i },
+  { name: 'Vite', test: /\/assets\/index-[\w-]{8}\.js\b/ },
 ];
 
 const SOCIAL_PLATFORMS = [
@@ -49,7 +69,7 @@ const LEGAL_LINK_TIERS = [
 ];
 
 /**
- * Detected e-commerce/CMS platforms from a page's raw HTML and <meta
+ * Detected platforms, site builders and frameworks from a page's tech hints and <meta
  * name="generator"> content, if any.
  * @param {string} html
  * @param {string|null} generatorMeta
