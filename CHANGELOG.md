@@ -13,6 +13,12 @@ isn't released.
 - The trusted-sites list is back in the settings, and now syncs with your other settings. If you had one before 0.1.4, please add your sites again.
 - The watched-registrars setting has been removed; GuardFou keeps using its built-in list.
 - The legal-notice line in the popup is shorter and fits on one line.
+- The popup shows that the page is being analyzed instead of staying blank, and waits for the result when the analysis is still running.
+- When a site's bot protection (such as Cloudflare) blocks the legal-page check, the page you're on now reads them from its own site instead. If that fails too, they are reported as unreadable, without raising the score, instead of as missing, and the site is not asked again for a day.
+- Legal links that are not real links (plain text opened by JavaScript, as on many Next.js sites) are now found through the addresses the page itself embeds.
+- The company behind a site is recognised in more legal-notice wordings ("propriété de", "publié par", the name written before the SIRET or RCS), so a site run by a company with another name, such as LesFurets by La Centrale de Financement, is no longer suspected of reusing a SIRET.
+- When a legal notice gives the hosting provider's SIRET before the publisher's, the publisher's is now checked: the host's no longer triggers a false "reused SIRET" warning.
+- A page that declares its own site name is no longer taken for a brand mentioned in its title: a comparison site's guide about EDF is no longer flagged as impersonating EDF.
 - In the identity card, the other sites on the same server are now links.
 - The identity card recognises more technologies: site builders, including AI ones (Lovable, Framer, Webflow, Hostinger, GoDaddy, Jimdo, Duda, Square Online), Odoo, and the Next.js, Nuxt and Vite frameworks.
 - A new domain whose pages ask search engines not to list them now adds to the score.
@@ -24,6 +30,12 @@ isn't released.
 - La liste des sites de confiance est de retour dans les paramètres, et se synchronise désormais avec vos autres réglages. Si vous en aviez une avant la 0.1.4, ajoutez de nouveau vos sites.
 - Le réglage des bureaux d'enregistrement surveillés a été supprimé ; GuardFou continue d'utiliser sa liste intégrée.
 - La ligne des mentions légales du popup est plus courte et tient sur une seule ligne.
+- Le popup indique que la page est en cours d'analyse au lieu de rester vide, et attend le résultat si l'analyse n'est pas terminée.
+- Quand la protection anti-robots d'un site (comme Cloudflare) bloque la vérification des pages légales, c'est désormais la page ouverte qui les lit depuis son propre site. Si cela échoue aussi, elles sont signalées comme illisibles, sans augmenter le score, au lieu d'être déclarées absentes, et le site n'est pas sollicité de nouveau avant le lendemain.
+- Les liens légaux qui ne sont pas de vrais liens (du texte ouvert par JavaScript, comme sur de nombreux sites Next.js) sont désormais retrouvés grâce aux adresses que la page contient elle-même.
+- La société derrière un site est reconnue dans plus de formulations des mentions légales (« propriété de », « publié par », le nom écrit avant le SIRET ou le RCS) : un site exploité par une société d'un autre nom, comme LesFurets par La Centrale de Financement, n'est plus soupçonné de réutiliser un SIRET.
+- Quand des mentions légales donnent le SIRET de l'hébergeur avant celui de l'éditeur, c'est désormais celui de l'éditeur qui est vérifié : celui de l'hébergeur ne déclenche plus une fausse alerte de « SIRET réutilisé ».
+- Une page qui déclare son propre nom de site n'est plus prise pour une marque citée dans son titre : le guide d'un comparateur sur EDF n'est plus signalé comme usurpant EDF.
 - Dans la fiche d'identité, les autres sites du même serveur sont désormais des liens.
 - La fiche d'identité reconnaît plus de technologies : les créateurs de sites, y compris par IA (Lovable, Framer, Webflow, Hostinger, GoDaddy, Jimdo, Duda, Square Online), Odoo, et les frameworks Next.js, Nuxt et Vite.
 - Un domaine récent dont les pages demandent à ne pas être référencées par les moteurs de recherche augmente désormais le score.
