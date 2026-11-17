@@ -53,10 +53,11 @@ Add an entry to `src/data/brands-fr.js`:
 
 - `aliases`: the names a site may use for itself. Matching ignores case and accents.
 - `officialDomains`: every domain the brand really uses, group sites included. A site on one of them is never flagged, and a domain that is one typo away from another brand's name is not reported either.
-- `sector`: one of `SECTORS` in the same file (`diy`, `electronics`, `sport`, `marketplace`, `windshield`, `energy`, `insurance`). To add a sector, add it to `SECTORS` and to this list.
+- `sector`: one of `SECTORS` in the same file (`diy`, `electronics`, `sport`, `marketplace`, `windshield`, `energy`, `insurance`, `delivery`, `government`). To add a sector, add it to `SECTORS` and to this list.
 - `source`: a short English reason the brand is on the list.
 - `verified`: the date (`YYYY-MM-DD`) the official domains were last checked.
-- `commonWord: true` (optional): set it only when a single-word alias is an ordinary French or English word, such as Boulanger, Orange or Free. For such a brand, look-alike checks ignore its single-word aliases and never report a typo of its name, so `boulangershop.fr` or `oranges.fr` is not flagged. Multi-word aliases still count (`freemobileshop.fr` is flagged for Free Mobile), and a page that names itself as the brand is still caught. Don't set it for a brand whose single-word alias is not an ordinary word. `Chausson` is an ordinary word too, but it stays without the flag because it is the founding confirmed clone case, detected by its domain; the comment in `brands-fr.js` explains it.
+- `commonWord: true` (optional): set it only when a single-word alias is an ordinary French or English word, such as Boulanger, Orange or Free. For such a brand, look-alike checks ignore its single-word aliases and never report a typo of its name, so `boulangershop.fr` or `oranges.fr` is not flagged. Multi-word aliases still count (`freemobileshop.fr` is flagged for Free Mobile), and a page that names itself as the brand is still caught. Don't set it for a brand whose single-word alias is not an ordinary word. `Chausson` is an ordinary word too, but it stays without the flag because it is the founding confirmed clone case, detected by its domain; the comment in `brands-fr.js` explains it. A domain label that is itself a common word (`dart`, `point`, `impot`) is never reported as a typo either, whichever brand it is one edit from: the list is in `src/data/common-words.js`.
+- `exactAliases` (optional): aliases that only count when they are a whole part of the site's name ("La Poste", "La Poste | Suivi"), not words inside a longer name ("Hôtel de la Poste"). Use it for a brand name that many unrelated businesses also carry.
 
 ### Verifying official domains
 
@@ -72,7 +73,9 @@ curl -s -o /dev/null -m 10 -L -w '%{http_code} %{url_effective}' -A 'Mozilla/5.0
 - Check the brand's official website on Wikidata (property P856) for domains you might have missed.
 - Set `verified` to the date you checked.
 
-The tests in `tests/brands.test.js` enforce the rest: a valid `sector`, a non-empty `source`, a valid `verified` date, no look-alike reported for any official domain, no alias or domain shared by two brands, and a single-word alias that is a common word (listed in `tests/fixtures/common-words.txt`) must be `commonWord: true`, except the exceptions named in the test. Add a word to that fixture only if it is a real common word.
+To check every official domain at once, run `npm run check:brands`. It requests `https://<domain>/` for each one (4 at a time, 10 s timeout, no retry) and prints one line per domain with its final URL, then a summary: (1) domains that failed (network error or timeout), (2) redirects that land on a registrable domain not in the brand's list, candidates to add after checking them, and (3) brands whose `verified` date is more than 180 days old. It needs the network, is a report rather than a test, is not run in CI, and always exits 0.
+
+The tests in `tests/brands.test.js` enforce the rest: a valid `sector`, a non-empty `source`, a valid `verified` date, no look-alike reported for any official domain, no alias or domain shared by two brands, and a single-word alias that is a common word (listed in `src/data/common-words.js`) must be `commonWord: true`, except the exceptions named in the test. Add a word to that list only if it is a real common word.
 
 ## Adding a language
 

@@ -1,3 +1,5 @@
+import { COMMON_WORDS } from '../data/common-words.js';
+
 const GENERIC_SUFFIXES = [
   'construction', 'shop', 'store', 'outlet', 'officiel', 'official',
   'france', 'fr', 'direct', 'discount', 'promo', 'solde', 'soldes',
@@ -15,24 +17,34 @@ export function normalize(str) {
     .trim();
 }
 
+// What separates the parts of a site name or title: "La Poste | Suivi",
+// "Colissimo - Votre colis", "Accueil • La Poste".
+const NAME_SEPARATORS = /\s+[|•·:\-–—]\s+|\s*[|•·]\s*/;
+
 /**
  * Find the first brand whose alias appears as a whole word/phrase in the
  * given text. Longest alias wins when several match, so "point p" beats a
- * shorter accidental overlap.
+ * shorter accidental overlap. An alias listed in the brand's exactAliases
+ * must instead be a whole part of the text: "La Poste" or "La Poste | Suivi"
+ * names La Poste, "Hôtel de la Poste" doesn't.
  * @param {string} text free text claiming to be a brand (title, og:site_name, footer...)
- * @param {Array<{name:string, aliases:string[], officialDomains:string[]}>} brands
+ * @param {Array<{name:string, aliases:string[], exactAliases?:string[], officialDomains:string[]}>} brands
  */
 export function findBrandByAlias(text, brands) {
   const normalizedText = normalize(text);
   if (!normalizedText) return null;
+  const parts = new Set(text.split(NAME_SEPARATORS).map(normalize).filter(Boolean));
 
   let best = null;
   for (const brand of brands) {
+    const exact = new Set((brand.exactAliases ?? []).map(normalize));
     for (const alias of brand.aliases) {
       const normalizedAlias = normalize(alias);
       if (!normalizedAlias) continue;
-      const re = new RegExp(`\\b${escapeRegExp(normalizedAlias)}\\b`);
-      if (re.test(normalizedText) && (!best || normalizedAlias.length > best.aliasLength)) {
+      const matches = exact.has(normalizedAlias)
+        ? parts.has(normalizedAlias)
+        : new RegExp(`\\b${escapeRegExp(normalizedAlias)}\\b`).test(normalizedText);
+      if (matches && (!best || normalizedAlias.length > best.aliasLength)) {
         best = { brand, aliasLength: normalizedAlias.length };
       }
     }
@@ -122,13 +134,15 @@ function maxTypoDistance(length) {
  * typosquats keep it so the name still reads right at a glance, and it
  * rules out most real words that happen to be one edit away.
  * A commonWord brand never has typos: "boulangr" is one letter from
- * "boulanger" but is not a clone of it.
+ * "boulanger" but is not a clone of it. A label that is itself a common
+ * word is never a typo either: "dart" is not Darty, "point" is not Point.P.
  * @param {string} domainLabel
  * @param {{officialDomains:string[], commonWord?:boolean}} brand
  */
 export function isNearMissSpelling(domainLabel, brand) {
   if (brand.commonWord) return false;
   const label = normalize(domainLabel).replace(/\s/g, '');
+  if (COMMON_WORDS.has(label)) return false;
   return brand.officialDomains.some((officialDomain) => {
     const officialLabel = normalize(officialDomain.split('.')[0]).replace(/\s/g, '');
     if (label === officialLabel || label[0] !== officialLabel[0]) return false;

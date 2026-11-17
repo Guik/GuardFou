@@ -12,6 +12,7 @@
     "start": "web-ext run",
     "build": "web-ext build",
     "build:chrome": "node scripts/build-chrome.mjs",
+    "check:brands": "node scripts/check-brands.mjs",
     "sign": "node scripts/release-notes.mjs --amo web-ext-artifacts/amo-metadata.json && web-ext sign --channel=listed --amo-metadata=web-ext-artifacts/amo-metadata.json --approval-timeout=0"
   },
   "devDependencies": {

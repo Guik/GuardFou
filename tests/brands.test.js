@@ -12,13 +12,7 @@ import {
   normalize,
 } from '../src/core/brands.js';
 import { BRANDS_FR, SECTORS } from '../src/data/brands-fr.js';
-
-// Common French and English words (lowercase, no accents). A single-word
-// alias found here means the brand is a common word and needs commonWord: true.
-const COMMON_WORDS = readFileSync(new URL('./fixtures/common-words.txt', import.meta.url), 'utf8')
-  .split('\n')
-  .map((line) => line.trim())
-  .filter(Boolean);
+import { COMMON_WORDS } from '../src/data/common-words.js';
 
 // Brands that are deliberately NOT commonWord although one alias is a common
 // word. "chausson" (slipper, pastry) is the founding confirmed clone case,
@@ -86,6 +80,51 @@ test('isNearMissSpelling ignores ordinary words one edit away from a short brand
 test('findLookalikeBrand catches a clone domain even when the page never names the brand', () => {
   assert.equal(findLookalikeBrand('chaussonconstruction.com', 'chaussonconstruction', BRANDS_FR)?.name, 'Chausson Matériaux');
   assert.equal(findLookalikeBrand('chaussson.fr', 'chaussson', BRANDS_FR)?.name, 'Chausson Matériaux');
+});
+
+test('a typo that spells a common word is not a look-alike of the brand', () => {
+  assert.equal(findLookalikeBrand('dart.fr', 'dart', BRANDS_FR), null); // "dart" is one edit from "darty"
+  assert.equal(findLookalikeBrand('point.fr', 'point', BRANDS_FR), null); // "point" is one edit from "pointp"
+  assert.equal(findLookalikeBrand('dartty.fr', 'dartty', BRANDS_FR)?.name, 'Darty');
+  assert.equal(findLookalikeBrand('decathon.fr', 'decathon', BRANDS_FR)?.name, 'Decathlon');
+});
+
+test('exact aliases only count as a whole part of the site name', () => {
+  for (const name of ['La Poste', 'La Poste | Suivi de colis', 'Accueil • La Poste', 'Colissimo - Votre colis']) {
+    assert.equal(findBrandByAlias(name, BRANDS_FR)?.name, 'La Poste', name);
+  }
+  for (const name of ['Hôtel de la Poste', 'Restaurant La Poste à Lyon', 'Mutuelle santé complémentaire à l\'assurance maladie']) {
+    assert.equal(findBrandByAlias(name, BRANDS_FR), null, name);
+  }
+  assert.equal(findBrandByAlias('Assurance Maladie', BRANDS_FR)?.name, 'Ameli (Assurance Maladie)');
+});
+
+test('a first name one letter from a brand is not a typo of it', () => {
+  assert.equal(findLookalikeBrand('amelie.fr', 'amelie', BRANDS_FR), null);
+  assert.equal(findLookalikeBrand('amelli.fr', 'amelli', BRANDS_FR)?.name, 'Ameli (Assurance Maladie)');
+});
+
+test('delivery and government brands flag their clones and not legitimate domains', () => {
+  // Clones: "<brand><generic word>" or a one-letter-off label.
+  assert.equal(findLookalikeBrand('colissimoshop.fr', 'colissimoshop', BRANDS_FR)?.name, 'La Poste');
+  assert.equal(findLookalikeBrand('critairshop.fr', 'critairshop', BRANDS_FR)?.name, "Crit'Air");
+  assert.equal(findLookalikeBrand('moncompteformationshop.fr', 'moncompteformationshop', BRANDS_FR)?.name, 'Mon Compte Formation');
+  assert.equal(findLookalikeBrand('laposter.fr', 'laposter', BRANDS_FR)?.name, 'La Poste');
+  // "poste" is an ordinary word, two edits from "laposte": not a clone.
+  assert.equal(findLookalikeBrand('poste.fr', 'poste', BRANDS_FR), null);
+  // Group subsidiary, not a typo or a brand plus a generic word ("immo" is not one).
+  assert.equal(findLookalikeBrand('laposteimmo.fr', 'laposteimmo', BRANDS_FR), null);
+  // Official: UPS's domain is never a look-alike, and "ups" is commonWord.
+  assert.equal(findLookalikeBrand('ups.com', 'ups', BRANDS_FR), null);
+  assert.equal(findLookalikeBrand('upsshop.fr', 'upsshop', BRANDS_FR), null);
+  // "antsy" is one edit from "ants", but a 4-letter label allows no typo.
+  assert.equal(findLookalikeBrand('antsy.com', 'antsy', BRANDS_FR), null);
+  // "cafe" is an ordinary word and one edit from the 3-letter "caf": no typo tolerance.
+  assert.equal(findLookalikeBrand('cafe.fr', 'cafe', BRANDS_FR), null);
+  // A descriptive tax site: no brand plus a generic word, no typo of "impots".
+  assert.equal(findLookalikeBrand('impot-revenu.org', 'impot-revenu', BRANDS_FR), null);
+  // "impot" is an ordinary word one edit from "impots": not a typo.
+  assert.equal(findLookalikeBrand('impot.fr', 'impot', BRANDS_FR), null);
 });
 
 test('findLookalikeBrand returns null for official and unrelated domains', () => {
@@ -209,13 +248,16 @@ test('no alias or official domain is shared by two different brands', () => {
   }
 });
 
-test('common-words fixture: lowercase, accent-free, no duplicates, and has the words the brief requires', () => {
+test('common-words list: lowercase, accent-free, no duplicate entries, and has the words the brief requires', () => {
   for (const word of COMMON_WORDS) assert.match(word, /^[a-z]+$/, `"${word}" is not a lowercase accent-free word`);
-  assert.equal(new Set(COMMON_WORDS).size, COMMON_WORDS.length, 'duplicate words in the fixture');
-  for (const word of ['orange', 'free', 'but', 'carrefour', 'boulanger', 'total']) {
-    assert.ok(COMMON_WORDS.includes(word), `"${word}" should be in the fixture`);
+  // A Set silently drops duplicates, so check the source text instead.
+  const source = readFileSync(new URL('../src/data/common-words.js', import.meta.url), 'utf8');
+  const entries = [...source.matchAll(/'([^']+)'/g)].map((match) => match[1]);
+  assert.equal(new Set(entries).size, entries.length, 'duplicate words in src/data/common-words.js');
+  for (const word of ['orange', 'free', 'but', 'carrefour', 'boulanger', 'total', 'dart', 'point']) {
+    assert.ok(COMMON_WORDS.has(word), `"${word}" should be in the common-words list`);
   }
-  assert.ok(!COMMON_WORDS.includes('auchan'), 'auchan is not a word and must not be in the fixture');
+  assert.ok(!COMMON_WORDS.has('auchan'), 'auchan is not a word and must not be in the list');
 });
 
 test('a brand whose single-word alias is a common word must be commonWord, except the documented exceptions', () => {
@@ -224,23 +266,29 @@ test('a brand whose single-word alias is a common word must be commonWord, excep
     for (const alias of brand.aliases) {
       const key = normalize(alias);
       if (key.includes(' ') || COMMON_WORD_EXCEPTIONS.has(key)) continue;
-      assert.ok(!COMMON_WORDS.includes(key), `${brand.name}: "${alias}" is a common word, set commonWord: true`);
+      assert.ok(!COMMON_WORDS.has(key), `${brand.name}: "${alias}" is a common word, set commonWord: true`);
     }
   }
 });
 
 test('the common-word exceptions are real: each is a common word on a brand that is not commonWord', () => {
   for (const key of COMMON_WORD_EXCEPTIONS) {
-    assert.ok(COMMON_WORDS.includes(key), `exception "${key}" is not in the fixture`);
+    assert.ok(COMMON_WORDS.has(key), `exception "${key}" is not in the common-words list`);
     const owners = BRANDS_FR.filter((b) => b.aliases.some((a) => normalize(a) === key));
     assert.ok(owners.length > 0 && owners.every((b) => !b.commonWord), `exception "${key}" should belong to a non-commonWord brand`);
   }
 });
 
-test('every commonWord brand has its single-word aliases in the common-words fixture', () => {
+test('every commonWord brand has its single-word aliases in the common-words list', () => {
   for (const brand of BRANDS_FR.filter((b) => b.commonWord)) {
     const singles = brand.aliases.map(normalize).filter((key) => !key.includes(' '));
     assert.ok(singles.length > 0, `${brand.name}: commonWord with no single-word alias is pointless`);
-    for (const key of singles) assert.ok(COMMON_WORDS.includes(key), `${brand.name}: "${key}" is not in the fixture`);
+    for (const key of singles) assert.ok(COMMON_WORDS.has(key), `${brand.name}: "${key}" is not in the common-words list`);
+  }
+});
+
+test('every exact alias is one of the brand\'s aliases', () => {
+  for (const brand of BRANDS_FR) {
+    for (const alias of brand.exactAliases ?? []) assert.ok(brand.aliases.includes(alias), `${brand.name}: ${alias}`);
   }
 });

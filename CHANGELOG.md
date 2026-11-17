@@ -6,6 +6,18 @@ release notes (English as en-US, French as fr) and puts both in the GitHub
 Release. A tag whose version has no section here, or no English section,
 isn't released.
 
+## Unreleased
+
+### English
+
+- Brand impersonation now also covers parcel delivery (La Poste, Colissimo, Chronopost, Mondial Relay, DHL, UPS, FedEx, Relais Colis) and government services (Ameli, impots.gouv, ANTS, CAF, Crit'Air, Mon Compte Formation, Service-Public.fr).
+- A domain whose name is a common word one letter away from a brand, such as dart.fr (Darty) or point.fr (Point.P), is no longer reported as a look-alike.
+
+### Français
+
+- La détection d'usurpation de marque couvre désormais la livraison (La Poste, Colissimo, Chronopost, Mondial Relay, DHL, UPS, FedEx, Relais Colis) et les services publics (Ameli, impots.gouv, ANTS, CAF, Crit'Air, Mon Compte Formation, Service-Public.fr).
+- Un domaine dont le nom est un mot courant, à une lettre près du nom d'une marque, comme dart.fr (Darty) ou point.fr (Point.P), n'est plus signalé comme imitation.
+
 ## 0.1.5
 
 ### English

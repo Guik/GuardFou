@@ -1,0 +1,47 @@
+/**
+ * Common French and English words, lowercase and accent-free. A brand whose
+ * single-word alias is one of these must set commonWord: true in brands-fr.js,
+ * and a domain label that is one of these is never a near-miss spelling of a
+ * brand (e.g. "dart.fr" is not a typo of Darty, "point.fr" not of Point.P).
+ * Add a word only if it is a real word.
+ */
+export const COMMON_WORDS = new Set([
+  // Common first names that sit one letter from a brand ("amelie" / Ameli).
+  'amelie',
+  'maison', 'voiture', 'table', 'chaise', 'porte', 'fenetre', 'jardin', 'cuisine', 'chambre',
+  'salon', 'bain', 'eau', 'feu', 'terre', 'ciel', 'soleil', 'lune', 'mer', 'montagne', 'riviere',
+  'route', 'rue', 'ville', 'pays', 'monde', 'temps', 'jour', 'nuit', 'matin', 'soir', 'semaine',
+  'mois', 'annee', 'heure', 'minute', 'enfant', 'femme', 'homme', 'ami', 'famille', 'pere', 'mere',
+  'frere', 'soeur', 'chien', 'chat', 'oiseau', 'poisson', 'arbre', 'fleur', 'pain', 'lait', 'vin',
+  'biere', 'fromage', 'viande', 'legume', 'fruit', 'pomme', 'poire', 'cerise', 'citron', 'raisin',
+  'orange', 'banane', 'chocolat', 'sucre', 'sel', 'poivre', 'beurre', 'oeuf', 'riz', 'pates',
+  'soupe', 'salade', 'boulanger', 'boucher', 'epicier', 'boutique', 'marche', 'magasin', 'prix',
+  'cadeau', 'achat', 'vente', 'paiement', 'panier', 'livraison', 'commande', 'colis', 'client',
+  'service', 'travail', 'emploi', 'argent', 'banque', 'compte', 'carte', 'papier', 'livre',
+  'journal', 'lettre', 'stylo', 'ecole', 'classe', 'histoire', 'science', 'musique', 'film', 'jeu',
+  'sport', 'equipe', 'match', 'parc', 'plage', 'hotel', 'voyage', 'train', 'avion', 'bateau',
+  'velo', 'moto', 'free', 'but', 'total', 'carrefour', 'chausson', 'point', 'house', 'car', 'chair',
+  'door', 'window', 'garden', 'kitchen', 'room', 'water', 'fire', 'earth', 'sky', 'moon', 'sea',
+  'mountain', 'river', 'road', 'street', 'city', 'country', 'world', 'time', 'day', 'night',
+  'morning', 'evening', 'week', 'month', 'year', 'hour', 'child', 'woman', 'man', 'friend',
+  'family', 'father', 'mother', 'brother', 'sister', 'dog', 'cat', 'bird', 'fish', 'tree', 'flower',
+  'bread', 'milk', 'wine', 'beer', 'cheese', 'meat', 'apple', 'cherry', 'lemon', 'grape',
+  'chocolate', 'sugar', 'salt', 'pepper', 'butter', 'rice', 'soup', 'salad', 'price', 'gift', 'buy',
+  'sell', 'sale', 'pay', 'payment', 'basket', 'delivery', 'order', 'customer', 'work', 'job',
+  'money', 'bank', 'account', 'card', 'paper', 'book', 'letter', 'pen', 'school', 'class',
+  'history', 'music', 'movie', 'game', 'team', 'park', 'beach', 'travel', 'plane', 'boat', 'bike',
+  'store', 'shop', 'market', 'bargain', 'deal', 'best', 'new', 'good', 'great', 'first', 'last',
+  'long', 'little', 'own', 'other', 'right', 'big', 'high', 'different', 'small', 'large', 'next',
+  'early', 'young', 'important', 'few', 'public', 'bad', 'same', 'able', 'avoir', 'etre', 'faire',
+  'dire', 'aller', 'voir', 'savoir', 'pouvoir', 'vouloir', 'venir', 'prendre', 'donner', 'trouver',
+  'parler', 'aimer', 'passer', 'mettre', 'rester', 'demander', 'devenir', 'comprendre', 'entendre',
+  'attendre', 'connaitre', 'croire', 'sentir', 'sortir', 'partir', 'ecrire', 'ouvrir', 'vendre',
+  'acheter', 'livrer', 'choisir', 'finir', 'grand', 'petit', 'bon', 'bonne', 'mauvais', 'nouveau',
+  'vieux', 'jeune', 'beau', 'belle', 'premier', 'dernier', 'seul', 'meme', 'autre', 'tout', 'toute',
+  'plus', 'moins', 'tres', 'bien', 'aussi', 'encore', 'deja', 'toujours', 'jamais', 'souvent',
+  'parfois', 'ici', 'maintenant', 'alors', 'donc', 'mais', 'pour', 'avec', 'sans', 'sous', 'chez',
+  'entre', 'vers', 'depuis', 'pendant', 'apres', 'avant', 'comme', 'quand', 'pourquoi', 'comment',
+  'quel', 'quelle', 'chaque', 'plusieurs', 'beaucoup', 'rien', 'personne', 'quelque', 'cela',
+  'celui', 'notre', 'votre', 'leur', 'dart',
+  'impot', 'ups',
+]);
