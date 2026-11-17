@@ -89,3 +89,12 @@ test('getBrandClaimText keeps the title on a shop and the site name everywhere',
   assert.equal(findBrandByAlias(getBrandClaimText(cloneShop), BRANDS_FR)?.name, 'Chausson Matériaux');
   assert.equal(findBrandByAlias(getBrandClaimText(namedSite), BRANDS_FR)?.name, 'Castorama');
 });
+
+test('home-service brands catch their clones but not their own group sites', () => {
+  assert.equal(findLookalikeBrand('franceparebrise-direct.fr', 'franceparebrise-direct', BRANDS_FR)?.name, 'France Pare-Brise');
+  assert.equal(findLookalikeBrand('carglasss.fr', 'carglasss', BRANDS_FR)?.name, 'Carglass');
+  assert.equal(findBrandByAlias('Mondial Pare-Brise', BRANDS_FR)?.name, 'Mondial Pare-Brise');
+  for (const domain of ['allianzdirect.fr', 'edf-solutions-solaires.com', 'totalenergies.com', 'mondialparebrise.fr']) {
+    assert.equal(findLookalikeBrand(domain, domain.split('.')[0], BRANDS_FR), null, domain);
+  }
+});
