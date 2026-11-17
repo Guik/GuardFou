@@ -188,11 +188,17 @@
   "seoSingleH1": {
     "message": "Exactly one H1 heading (found: $1)"
   },
+  "seoIndexable": {
+    "message": "Visible to search engines (no noindex)"
+  },
   "seoImageAlt": {
     "message": "Alt text on most images ($1/$2 without an alt attribute)"
   },
   "reasonAllowlisted": {
     "message": "Site on your trusted list."
+  },
+  "reasonNoindex": {
+    "message": "The page asks search engines not to list it, which on a new domain helps a site stay out of sight."
   },
   "reasonIpHostname": {
     "message": "The site is reached through a raw IP address instead of a domain name, which is extremely rare for a legitimate site."

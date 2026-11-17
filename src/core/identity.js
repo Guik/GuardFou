@@ -394,10 +394,11 @@ export function extractContactLinks(html) {
 /**
  * Turns raw SEO meta booleans/counts (gathered by the content script, which
  * has the DOM) into a simple pass/fail checklist for display.
- * @param {{hasMetaDescription:boolean, hasCanonical:boolean, hasOgTitle:boolean, titleLength:number, h1Count:number, imageCount:number, imagesMissingAlt:number}} seo
+ * @param {{hasMetaDescription:boolean, hasCanonical:boolean, hasOgTitle:boolean, titleLength:number, h1Count:number, imageCount:number, imagesMissingAlt:number, noindex?:boolean}} seo
  */
 export function summarizeSeoMeta(seo) {
   return [
+    { key: 'indexable', ok: !seo.noindex, label: t('seoIndexable') },
     { key: 'metaDescription', ok: seo.hasMetaDescription, label: t('seoMetaDescription') },
     { key: 'canonical', ok: seo.hasCanonical, label: t('seoCanonical') },
     { key: 'openGraph', ok: seo.hasOgTitle, label: t('seoOpenGraph') },

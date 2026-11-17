@@ -30,6 +30,7 @@ export const THRESHOLDS = { orange: 30, red: 60 };
  *  - hasRedirectionInPath: boolean ("//" inside the URL path)
  *  - isShortRegistrationSpan: boolean (domain registered for ~1 year only)
  *  - isInsecureHttp: boolean (page served over plain HTTP, not HTTPS)
+ *  - isNoindex: boolean (the page asks search engines not to index it)
  *  - legalPageMissing: boolean (no mentions-légales page found at all)
  *  - legalMentions: { universal, conditional } | null — field objects
  *    carry their own { key, weight, present }
@@ -130,6 +131,13 @@ export function computeScore(signals) {
       weight: 10,
       message: t('reasonShortRegistrationSpan'),
     });
+  }
+
+  // Hiding from search engines is normal for a site under construction, so
+  // it only counts on a new domain: a scam site does it to stay out of search
+  // results, where it would be found and reported.
+  if (signals.isNoindex && typeof signals.domainAgeDays === 'number' && signals.domainAgeDays < 30 * 6) {
+    reasons.push({ id: 'noindex-recent-domain', weight: 10, message: t('reasonNoindex') });
   }
 
   // A watched registrar alone proves nothing — they're mostly large,

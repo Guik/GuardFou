@@ -152,6 +152,9 @@
       h1Count: document.querySelectorAll('h1').length,
       imageCount: images.length,
       imagesMissingAlt: [...images].filter((img) => !img.hasAttribute('alt')).length,
+      // <meta name="robots" content="noindex"> (or "none"), also when aimed at Google only.
+      noindex: [...document.querySelectorAll('meta[name="robots" i], meta[name="googlebot" i]')]
+        .some((el) => /\b(noindex|none)\b/i.test(el.getAttribute('content') || '')),
     };
   }
 

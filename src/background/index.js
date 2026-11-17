@@ -156,6 +156,7 @@ async function analyzePage(url, payload) {
     hasFakeHttpsToken: hasFakeHttpsToken(url),
     hasRedirectionInPath: hasRedirectionInPath(url),
     isInsecureHttp: isInsecureHttp(url) && !ignorePrivateIpWarningsHere,
+    isNoindex: payload?.seoMeta?.noindex === true,
   };
 
   return { domain, displayId, isAllowlisted, checkAgeOnEverySite, claimedText, matchedBrand, baseSignals };

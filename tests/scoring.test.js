@@ -265,3 +265,10 @@ test('a shared hosting subdomain is explained but not penalized', () => {
   assert.ok(reason.message.includes('myshopify.com'));
   assert.equal(verdict.score, 0);
 });
+
+test('noindex only counts on a new domain', () => {
+  const ids = (signals) => computeScore(signals).reasons.map((r) => r.id);
+  assert.ok(ids({ isNoindex: true, domainAgeDays: 8 }).includes('noindex-recent-domain'));
+  assert.ok(!ids({ isNoindex: true, domainAgeDays: 400 }).includes('noindex-recent-domain'));
+  assert.ok(!ids({ isNoindex: true, domainAgeDays: null }).includes('noindex-recent-domain'));
+});

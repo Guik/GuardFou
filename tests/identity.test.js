@@ -347,6 +347,13 @@ test('summarizeSeoMeta flags missing description and multiple H1s', () => {
   assert.equal(summary.find((s) => s.key === 'singleH1').label, 'Exactly one H1 heading (found: 3)');
 });
 
+test('summarizeSeoMeta flags a page hidden from search engines', () => {
+  const base = { hasMetaDescription: true, hasCanonical: true, hasOgTitle: true, titleLength: 40, h1Count: 1, imageCount: 0, imagesMissingAlt: 0 };
+  const indexable = (seo) => summarizeSeoMeta(seo).find((s) => s.key === 'indexable').ok;
+  assert.equal(indexable({ ...base, noindex: true }), false);
+  assert.equal(indexable(base), true);
+});
+
 test('extractPhysicalAddress accepts capitalized and uppercase street types', () => {
   assert.equal(extractPhysicalAddress('Siège : 12 Rue des Lilas, 75001 Paris.'), '12 Rue des Lilas, 75001 Paris');
   assert.equal(extractPhysicalAddress('SIÈGE : 12 RUE DES LILAS 75001 PARIS'), '12 RUE DES LILAS 75001 PARIS');

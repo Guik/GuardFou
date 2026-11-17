@@ -29,6 +29,7 @@ No single check proves a site is a scam; the score combines them and shows every
 - **Domain age**: very recent domains are a classic sign of short-lived scam shops. A one-year registration or a registrar often seen on scam shops adds weight when the domain is also new. Checked automatically on shops; a setting extends it to every site.
 - **Suspicious URLs**: raw IP addresses, `user@host` tricks, "https" written into the domain name, unencrypted HTTP.
 - **DNSSEC**: flags domains whose DNS signatures are invalid.
+- **Hidden from search engines**: a `noindex` page on a new domain, a way for scam sites to avoid being found and reported.
 - **Shared hosting**: recognises shops on platform subdomains (`*.myshopify.com`, `*.wixsite.com`…), which have no domain of their own to check.
 
 ### France only

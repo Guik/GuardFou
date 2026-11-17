@@ -188,11 +188,17 @@
   "seoSingleH1": {
     "message": "Exactement un titre H1 (trouvé : $1)"
   },
+  "seoIndexable": {
+    "message": "Visible des moteurs de recherche (pas de noindex)"
+  },
   "seoImageAlt": {
     "message": "Texte alternatif sur la plupart des images ($1/$2 sans attribut alt)"
   },
   "reasonAllowlisted": {
     "message": "Site ajouté à votre liste de confiance."
+  },
+  "reasonNoindex": {
+    "message": "La page demande aux moteurs de recherche de ne pas la référencer, ce qui, sur un domaine récent, permet à un site de rester discret."
   },
   "reasonIpHostname": {
     "message": "Le site est accédé via une adresse IP directe plutôt qu'un nom de domaine, ce qui est extrêmement rare pour un site légitime."
