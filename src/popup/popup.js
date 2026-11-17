@@ -267,9 +267,36 @@ function renderHosting(dd, hosting) {
   } else if (hosting.neighbors.length > MAX_LISTED_NEIGHBORS) {
     add(t('hostingManyNeighbors', hosting.neighbors.length));
   } else {
-    add(t('hostingNeighbors', formatList(hosting.neighbors)));
+    const li = document.createElement('li');
+    li.append(...neighborLinks(hosting.neighbors));
+    ul.appendChild(li);
   }
   dd.appendChild(ul);
+}
+
+/**
+ * "Same server as: a.fr and b.fr" with each domain a link to its site. The
+ * list is laid out by Intl.ListFormat, so separators follow the language.
+ * @param {string[]} domains registrable domains from core/hosting.js
+ */
+function neighborLinks(domains) {
+  const MARKER = '\uE000';
+  const [before, after = ''] = t('hostingNeighbors', MARKER).split(MARKER);
+  const nodes = [document.createTextNode(before)];
+  for (const part of new Intl.ListFormat(uiLanguage(), { type: 'conjunction' }).formatToParts(domains)) {
+    if (part.type !== 'element') {
+      nodes.push(document.createTextNode(part.value));
+      continue;
+    }
+    const link = document.createElement('a');
+    link.href = `https://${part.value}/`;
+    link.target = '_blank';
+    link.rel = 'noopener noreferrer';
+    link.textContent = part.value;
+    nodes.push(link);
+  }
+  nodes.push(document.createTextNode(after));
+  return nodes;
 }
 
 function renderIdentityCard(card) {
