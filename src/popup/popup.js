@@ -130,10 +130,11 @@ function renderSummary(facts) {
     if (!legal.found) {
       rows.push({ icon: '📄', text: t('summaryLegalNone'), tone: 'warning' });
     } else {
-      const missing = legal.missing === null ? null
+      // One short sentence per case, so the row fits on one line.
+      const text = legal.missing === null ? t('summaryLegalFound')
         : legal.missing === 0 ? t('summaryLegalComplete')
           : legal.missing === 1 ? t('summaryLegalMissingOne') : t('summaryLegalMissingOther', legal.missing);
-      rows.push({ icon: '📄', text: [t('summaryLegalFound'), missing].filter(Boolean).join(' · '), tone: '' });
+      rows.push({ icon: '📄', text, tone: '' });
     }
   }
 

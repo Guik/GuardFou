@@ -384,13 +384,13 @@
     "message": "Mentions légales trouvées"
   },
   "summaryLegalComplete": {
-    "message": "rien d'obligatoire ne manque"
+    "message": "Mentions légales complètes"
   },
   "summaryLegalMissingOne": {
-    "message": "1 information obligatoire manquante"
+    "message": "Mentions légales · 1 information manquante"
   },
   "summaryLegalMissingOther": {
-    "message": "$1 informations obligatoires manquantes"
+    "message": "Mentions légales · $1 informations manquantes"
   },
   "summaryLegalNone": {
     "message": "Aucune mention légale trouvée"

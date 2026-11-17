@@ -384,13 +384,13 @@
     "message": "Legal notice found"
   },
   "summaryLegalComplete": {
-    "message": "nothing required is missing"
+    "message": "Legal notice complete"
   },
   "summaryLegalMissingOne": {
-    "message": "1 required item missing"
+    "message": "Legal notice · 1 item missing"
   },
   "summaryLegalMissingOther": {
-    "message": "$1 required items missing"
+    "message": "Legal notice · $1 items missing"
   },
   "summaryLegalNone": {
     "message": "No legal notice found"
