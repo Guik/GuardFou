@@ -2,11 +2,11 @@
 
 **A safeguard against fake online shops.**
 
-GuardFou is a Firefox extension, also working in Chrome and other Chromium browsers, that warns you when an online shop looks fake: a site impersonating a known brand, a domain registered a few weeks ago, missing or fabricated company information.
+GuardFou is a browser extension for Firefox and Chrome that warns you when an online shop looks fake: a site impersonating a known brand, a domain registered a few weeks ago, missing or fabricated company information.
 
 ![GuardFou warning on a suspicious shop: red banner on the page and the popup listing the reasons](store/screenshot-popup.png)
 
-It currently targets **France**. Some checks work on any website; others rely on French law, the French company registry and a list of French retailers (see [Scope](#scope)).
+It currently targets **France**: some checks work on any website, others rely on French law, the French company registry and a list of French retailers (see [Scope](#scope)).
 
 ## How it works
 
@@ -18,29 +18,27 @@ On every page you visit, GuardFou computes a risk score from 0 to 100:
 | 30–59 | orange | Be careful |
 | 60–100 | red | High risk, and a warning banner appears on the page |
 
-Click the toolbar icon to see the reasons behind the score, or open the **site identity card** for a detailed look at any page: domain dates, registrar, company details, legal information found, technologies used, social links.
+Click the toolbar icon to see the reasons behind the score, or open the **site identity card** for details: domain dates, registrar, company, legal information, technologies, social links.
 
-No single check proves a site is a scam. The score combines them, and every reason is shown to the user.
+No single check proves a site is a scam; the score combines them and shows every reason.
 
 ## Scope
 
-### Checks that work on any website
+### Any website
 
-- **Domain age**: domains created in the last few months are a classic sign of short-lived scam shops. Domains registered for a single year, or through registrars often seen on scam shops, add weight when the domain is also new. Checked automatically on shops; a setting extends it to every site.
+- **Domain age**: very recent domains are a classic sign of short-lived scam shops. A one-year registration or a registrar often seen on scam shops adds weight when the domain is also new. Checked automatically on shops; a setting extends it to every site.
 - **Suspicious URLs**: raw IP addresses, `user@host` tricks, "https" written into the domain name, unencrypted HTTP.
 - **DNSSEC**: flags domains whose DNS signatures are invalid.
 - **Shared hosting**: recognises shops on platform subdomains (`*.myshopify.com`, `*.wixsite.com`…), which have no domain of their own to check.
 
-### France-specific checks
+### France only
 
-- **Brand impersonation**: the site presents itself as a known French retailer (Leroy Merlin, Fnac, Decathlon…) but isn't on that brand's official domain, or its domain imitates the official one with a word added (`decathlon-outlet.com`) or a typo (`decathllon.fr`). The detection itself is generic; only the brand list, in `src/data/brands-fr.js`, is French.
-- **Mandatory legal information**: French law (LCEN) requires every site to publish its company name, SIRET number, registered address, host and contact details. GuardFou reads the site's legal notice and terms of sale pages and lists what's missing.
-- **SIRET/SIREN numbers**: checks that the company number is well-formed, exists in the official French registry, belongs to an active company, and matches the name the site uses.
-- **Shop detection**: looks for prices in euros and cart wording in French or English (product structured data works for any language).
+- **Brand impersonation**: the site claims to be a known French retailer (Leroy Merlin, Fnac, Decathlon…) but isn't on its official domain, or its domain imitates it with an added word (`decathlon-outlet.com`) or a typo (`decathllon.fr`). Only the brand list, in `src/data/brands-fr.js`, is French.
+- **Mandatory legal information**: French law (LCEN) requires a company name, SIRET number, registered address, host and contact details. GuardFou reads the legal notice and terms of sale and lists what's missing.
+- **SIRET/SIREN numbers**: checks that the number is well-formed, exists in the official registry, belongs to an active company and matches the site's name.
+- **Shop detection**: prices in euros and cart wording in French or English (product structured data works in any language).
 
-### Language
-
-The interface (popup, settings, warning banner) is available in English and French. It follows Firefox's language, falling back to English, unless you pick one under **Language** in the settings. The add-on's name and description in Firefox's menus always follow Firefox. To add a language, copy `_locales/en/messages.json` to `_locales/<code>/messages.json`, translate the messages, and add the code to `LANGUAGES` in `src/core/i18n.js` and to the list in `src/options/options.html`; the tests check that every locale has the same keys and substitutions and is in `LANGUAGES`.
+The interface is in English and French. It follows the browser's language unless you pick one in the settings.
 
 ## Privacy
 
@@ -48,80 +46,42 @@ GuardFou has no server and no analytics. To run its checks it contacts:
 
 | Service | What is sent | Why |
 |---|---|---|
-| [rdap.org](https://rdap.org), which forwards to the registry of the domain's extension | The site's domain name | Registration date and registrar |
+| [rdap.org](https://rdap.org), which forwards to the domain's registry | The site's domain name | Registration date and registrar |
 | [Cloudflare DNS](https://developers.cloudflare.com/1.1.1.1/encryption/dns-over-https/) | The site's domain name | DNSSEC status |
 | [recherche-entreprises.api.gouv.fr](https://recherche-entreprises.api.gouv.fr) | The company number shown on the site | French company registry lookup |
 | The site itself | A normal page request, without your cookies | Reading its legal pages |
-| rdap.org, Cloudflare DNS, [HackerTarget](https://hackertarget.com) | The site's IP address (HackerTarget: not for hosting platforms and CDNs) | Who hosts the site and which other sites share its server, only when you open the identity card |
+| rdap.org, Cloudflare DNS, [HackerTarget](https://hackertarget.com) | The site's IP address (HackerTarget: not for hosting platforms and CDNs) | Hosting details, only when you open the identity card |
 
-These lookups only run on pages that look like shops or name a known brand, or when you open the identity card yourself. If you turn on domain-age checks for every site in the settings, the domain of every site you visit (except those on your trusted list) is sent to rdap.org. Results are cached on your computer for 7 days, so each domain is looked up at most once a week; you can clear the cache or turn it off in the settings.
+- Lookups only run on pages that look like shops or name a known brand, or when you open the identity card. If you check domain age on every site, every domain you visit is sent to rdap.org.
+- Results are cached on your device for 7 days; you can clear or disable the cache in the settings.
+- Settings sync through Chrome Sync or Firefox Sync when extension syncing is on (not on Firefox for Android). The cache never leaves your device.
+
+See [PRIVACY.md](PRIVACY.md) for the full policy.
 
 ## Install
 
-1. Install GuardFou from [addons.mozilla.org](https://addons.mozilla.org/firefox/addon/guardfou/) (Firefox 140 or later; 142 on Android).
-2. Accept the access to all websites in the install prompt. GuardFou then checks every page you open; the toolbar badge shows its score. If you turn that access off later, the popup offers a button to turn it back on.
+**Firefox** (140+, Android 142+): install from [addons.mozilla.org](https://addons.mozilla.org/firefox/addon/guardfou/) and accept access to all websites. If you turn that access off later, the popup offers to turn it back on.
 
-GuardFou isn't on the Chrome Web Store yet. To try it in Chrome, Edge or Brave (version 121 or later), open `chrome://extensions`, turn on developer mode, choose **Load unpacked** and select the repository folder (or the unzipped `chrome-guardfou-<version>.zip` from `npm run build:chrome`). It checks pages from then on, as in Firefox.
+**Chrome, Edge, Brave** (121+): not on the Chrome Web Store yet. Open `chrome://extensions`, turn on developer mode, choose **Load unpacked** and select the repository folder (or the unzipped `chrome-guardfou-<version>.zip` from `npm run build:chrome`).
 
 ## Development
 
 Requires Node.js 22+ and Firefox.
 
 ```sh
-npm ci          # install dependencies
-npm start       # launch Firefox with the extension loaded
-npm test        # run the unit tests
-npm run test:e2e  # run the extension in Chromium and Firefox (needs `npx playwright-core install chromium`, and Firefox or FIREFOX_PATH)
-npm run lint    # validate the extension with Mozilla's linter
-npm run build   # build an unsigned web-ext-artifacts/guardfou-<version>.xpi
-npm run build:chrome  # build web-ext-artifacts/chrome-guardfou-<version>.zip for the Chrome Web Store
+npm ci      # install dependencies
+npm start   # launch Firefox with the extension loaded
+npm test    # unit tests
 ```
 
-An unsigned `.xpi` can be loaded temporarily from `about:debugging`, or installed in Firefox Developer Edition with `xpinstall.signatures.required` set to `false`.
-
-The same files run in Chrome; nothing is built separately:
-- `manifest.json` declares the background script both as `scripts` (used by Firefox) and as `service_worker` (used by Chrome). `npm run lint` warns that Firefox doesn't support `service_worker`; that warning is expected.
-- `src/shared/browser.js` aliases `chrome` to `browser`, and loads first in every part of the extension.
-- `runtime.onMessage` listeners answer through `sendResponse`, because Chrome ignores a returned promise.
-
-### Project layout
-
-```
-src/content/      reads the page (title, links, prices…) and shows the warning banner
-src/background/   runs the network lookups and keeps each tab's verdict
-src/core/         pure logic: scoring, brand matching, legal-information and SIRET checks
-src/data/         known brands and their official domains, watched registrars
-src/popup/        toolbar popup and identity card
-src/options/      settings page
-src/shared/       styles, the page translation helper and the Chrome alias
-_locales/         interface text, one messages.json per language
-tests/            unit tests for src/core (node --test)
-```
-
-Most of the detection logic lives in `src/core/` as plain functions with no browser APIs, so it can be tested without Firefox.
-
-### Releasing
-
-Every push and pull request runs the unit tests, the browser tests and lint and builds an unsigned `.xpi` (see the workflow run's artifacts).
-
-To publish a signed release:
-
-1. Add a section for the new version to `CHANGELOG.md`, in English and French.
-2. Bump `version` in `manifest.json` and commit both.
-3. Tag and push: `git tag v0.2.0 && git push --tags`.
-
-The workflow checks that the tag matches the manifest version, takes that version's notes from `CHANGELOG.md` (the tests fail when they're missing), submits that version to addons.mozilla.org and creates a GitHub Release with the same notes, the unsigned build and the Chrome Web Store zip, which you upload by hand on the Chrome Web Store dashboard. Mozilla reviews each version before publishing it on the store, which can take a few days. It needs two repository secrets, `AMO_JWT_ISSUER` and `AMO_JWT_SECRET`, created at [addons.mozilla.org/developers/addon/api/key](https://addons.mozilla.org/developers/addon/api/key/).
-
-The store listing (summary, description, categories, licence) comes from `amo-metadata.json` and is sent again with every release, so edit it there rather than on the Developer Hub.
+See [CONTRIBUTING.md](CONTRIBUTING.md) for the project layout, browser tests, builds and how to add a brand or a language, and [RELEASING.md](RELEASING.md) for publishing a version.
 
 ## Roadmap
 
 - Community reports: let users flag scam sites and vouch for trusted ones.
-- More brands in `src/data/brands-fr.js`; contributions welcome.
-- Support for other countries: brand lists, company registries and legal requirements.
+- More brands in `src/data/brands-fr.js`; contributions welcome (see [Adding a brand](CONTRIBUTING.md#adding-a-brand)).
+- Other countries: brand lists, company registries and legal requirements.
 - Site popularity and backlinks in the identity card.
-
-Store listing material lives next to the code: `amo-metadata.json` (listing text, sent with every release), `PRIVACY.md` (privacy policy) and `store/` (screenshots).
 
 ## License
 
