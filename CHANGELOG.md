@@ -6,6 +6,22 @@ release notes (English as en-US, French as fr) and puts both in the GitHub
 Release. A tag whose version has no section here, or no English section,
 isn't released.
 
+## 0.1.4
+
+### English
+
+- Settings now sync across your devices through Chrome Sync or Firefox Sync when extension syncing is enabled. Existing settings are carried over; lookup results stay on each device.
+- New option to ignore the raw-IP and unencrypted-HTTP warnings on private IP addresses (local services, development servers).
+- The trusted-sites list has been removed: every site is now checked.
+- The settings page no longer shows internal names in place of a missing translation.
+
+### Français
+
+- Les paramètres se synchronisent désormais entre vos appareils via Chrome Sync ou Firefox Sync lorsque la synchronisation des extensions est activée. Les réglages existants sont conservés ; les résultats des recherches restent sur chaque appareil.
+- Nouvelle option pour ignorer les alertes d'adresse IP brute et de connexion HTTP non chiffrée sur les adresses IP privées (services locaux, serveurs de développement).
+- La liste des sites de confiance a été supprimée : tous les sites sont désormais vérifiés.
+- La page des paramètres n'affiche plus d'identifiants techniques à la place d'une traduction manquante.
+
 ## 0.1.3
 
 ### English
