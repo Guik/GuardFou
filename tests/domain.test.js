@@ -6,6 +6,7 @@ import {
   getDomainLabel,
   getSharedHostingSuffix,
   isIpAddress,
+  isPrivateIpAddress,
   hasUserinfoAtSymbol,
   hasFakeHttpsToken,
   hasRedirectionInPath,
@@ -37,6 +38,35 @@ test('getDomainLabel strips the public suffix', () => {
 test('isIpAddress recognises a literal IP, not a domain', () => {
   assert.equal(isIpAddress('http://192.0.2.1/login'), true);
   assert.equal(isIpAddress('https://chausson.fr/'), false);
+});
+
+test('isPrivateIpAddress accepts private, loopback and link-local IPs', () => {
+  for (const url of [
+    'http://10.0.0.1/',
+    'http://127.0.0.1:8080/',
+    'http://169.254.1.1/',
+    'http://172.16.0.1/',
+    'http://172.31.255.255/',
+    'http://192.168.1.10/admin',
+    'http://[::1]:3000/',
+    'http://[fd12:3456::1]/',
+    'http://[fe80::1]/',
+  ]) {
+    assert.equal(isPrivateIpAddress(url), true, url);
+  }
+});
+
+test('isPrivateIpAddress rejects public IPs and domain names', () => {
+  for (const url of [
+    'http://8.8.8.8/',
+    'http://172.32.0.1/',
+    'http://192.0.2.1/login',
+    'http://[2001:db8::1]/',
+    'http://localhost/',
+    'https://192.168.1.10.example.com/',
+  ]) {
+    assert.equal(isPrivateIpAddress(url), false, url);
+  }
 });
 
 test('hasUserinfoAtSymbol catches the trusted.com@evil.com trick', () => {

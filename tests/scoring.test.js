@@ -3,12 +3,6 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { computeScore } from '../src/core/scoring.js';
 
-test('allowlisted site is always green regardless of other signals', () => {
-  const verdict = computeScore({ isAllowlisted: true, domainAgeDays: 1, matchedBrand: { name: 'X', officialDomains: ['x.fr'] }, isOfficialDomain: false });
-  assert.equal(verdict.band, 'green');
-  assert.equal(verdict.score, 0);
-});
-
 test('the Chausson clone scenario scores red', () => {
   const verdict = computeScore({
     domainAgeDays: 90, // ~3 months old

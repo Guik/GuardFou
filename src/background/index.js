@@ -1,4 +1,5 @@
 import '../shared/browser.js';
+import { ensureSettingsSynced, getSettings } from '../shared/settings.js';
 import {
   getRegistrableDomain,
   getDomainLabel,
@@ -9,6 +10,7 @@ import {
   hasFakeHttpsToken,
   hasRedirectionInPath,
   isInsecureHttp,
+  isPrivateIpAddress,
 } from '../core/domain.js';
 import { findBrandByAlias, getBrandClaimText, isOfficialDomain, findLookalikeBrand } from '../core/brands.js';
 import { isWatchedRegistrar } from '../core/registrar.js';
@@ -89,6 +91,12 @@ browser.tabs.onRemoved.addListener((tabId) => {
   currentPageByTab.delete(tabId);
   verdictsByTab.delete(tabId).catch(() => {});
 });
+browser.runtime.onInstalled.addListener(() => {
+  // Remove the retired local trusted-sites list from profiles upgraded from
+  // older versions; keeping it would make domains stay silently exempt.
+  browser.storage.local.remove('allowlist').catch(() => {});
+  ensureSettingsSynced().catch(() => {});
+});
 browser.tabs.onUpdated.addListener((tabId, changeInfo) => {
   if (changeInfo.status === 'loading' && changeInfo.url) {
     currentPageByTab.delete(tabId);
@@ -114,44 +122,47 @@ function startPageAnalysis(tabId) {
 
 /**
  * Everything both passes need that doesn't require the network: the
- * allowlist and watched registrars, the brand the page claims, and the
+ * watched registrars, the brand the page claims, and the
  * cheap URL-structural signals.
  */
 async function analyzePage(url, payload) {
   const domain = getRegistrableDomain(url);
   const displayId = domain ?? getHostname(url) ?? url;
 
-  const { allowlist = [], customWatchedRegistrars = [], checkAgeOnEverySite = false } = await browser.storage.local.get(['allowlist', 'customWatchedRegistrars', 'checkAgeOnEverySite']);
-  const isAllowlisted = allowlist.includes(displayId);
+  const {
+    customWatchedRegistrars = [],
+    checkAgeOnEverySite = false,
+    ignorePrivateIpWarnings = false,
+  } = await getSettings(['customWatchedRegistrars', 'checkAgeOnEverySite', 'ignorePrivateIpWarnings']);
+  const ignorePrivateIpWarningsHere = ignorePrivateIpWarnings && isPrivateIpAddress(url);
   const watchedRegistrars = [...WATCHED_REGISTRARS, ...customWatchedRegistrars];
 
   const claimedText = [payload?.title, payload?.ogSiteName, payload?.jsonLdOrgName, payload?.footerCopyright]
     .filter(Boolean)
     .join(' • ');
-  const matchedBrand = !isAllowlisted ? findBrandByAlias(getBrandClaimText(payload), BRANDS_FR) : null;
+  const matchedBrand = findBrandByAlias(getBrandClaimText(payload), BRANDS_FR);
   const domainLabel = domain ? (getDomainLabel(domain) ?? domain) : null;
 
   const baseSignals = {
-    isAllowlisted,
     matchedBrand,
     isOfficialDomain: matchedBrand && domain ? isOfficialDomain(domain, matchedBrand) : false,
-    lookalikeBrand: !isAllowlisted && domain && domainLabel ? findLookalikeBrand(domain, domainLabel, BRANDS_FR) : null,
+    lookalikeBrand: domain && domainLabel ? findLookalikeBrand(domain, domainLabel, BRANDS_FR) : null,
     // Cheap, synchronous, URL-structural checks — always computed, no network.
-    isIpHostname: isIpAddress(url),
+    isIpHostname: isIpAddress(url) && !ignorePrivateIpWarningsHere,
     sharedHostingSuffix: domain ? getSharedHostingSuffix(domain) : null,
     hasUserinfoAtSymbol: hasUserinfoAtSymbol(url),
     hasFakeHttpsToken: hasFakeHttpsToken(url),
     hasRedirectionInPath: hasRedirectionInPath(url),
-    isInsecureHttp: isInsecureHttp(url),
+    isInsecureHttp: isInsecureHttp(url) && !ignorePrivateIpWarningsHere,
   };
 
-  return { domain, displayId, isAllowlisted, watchedRegistrars, checkAgeOnEverySite, claimedText, matchedBrand, baseSignals };
+  return { domain, displayId, watchedRegistrars, checkAgeOnEverySite, claimedText, matchedBrand, baseSignals };
 }
 
 async function handlePageSignals(tabId, url, payload) {
   if (!isAnalyzable(url)) return;
   const isCurrentPage = startPageAnalysis(tabId);
-  const { domain, displayId, isAllowlisted, watchedRegistrars, checkAgeOnEverySite, claimedText, matchedBrand, baseSignals } = await analyzePage(url, payload);
+  const { domain, displayId, watchedRegistrars, checkAgeOnEverySite, claimedText, matchedBrand, baseSignals } = await analyzePage(url, payload);
 
   // The network-dependent checks (RDAP, DNSSEC, legal pages, SIRET registry)
   // only run automatically when the page looks like a shop or claims a
@@ -164,7 +175,7 @@ async function handlePageSignals(tabId, url, payload) {
   // that sell nothing, and it sends every visited domain to rdap.org.
   const signals = { ...baseSignals };
   let facts = buildSiteFacts({});
-  if (!isAllowlisted && domain) {
+  if (domain) {
     const wantsDeepChecks = payload?.isLikelyShop || matchedBrand;
     const [registration, deep] = await Promise.all([
       wantsDeepChecks || checkAgeOnEverySite ? computeRegistrationSignals(domain, watchedRegistrars) : null,
@@ -310,14 +321,14 @@ async function buildIdentityCard(tabId) {
   if (!payload) return { needsReload: true };
   if (!isCurrentPage()) return null;
 
-  const { domain, displayId, isAllowlisted, watchedRegistrars, claimedText, baseSignals } = await analyzePage(url, payload);
+  const { domain, displayId, watchedRegistrars, claimedText, baseSignals } = await analyzePage(url, payload);
 
   let rdapInfo = EMPTY_RDAP_INFO;
   let legalAnalysis = { address: null, legal: { present: false, length: 0, detectedLang: 'unknown', languageMismatch: false, tooShort: false }, mandatoryMentions: null, companyCheck: { candidate: null, checksumValid: null, registry: null } };
   let legalUrls = [];
   let hosting = null;
 
-  if (!isAllowlisted && domain) {
+  if (domain) {
     // Hosting is for the card only (not scored), so it isn't looked up on load.
     const [registration, deep, hostingInfo] = await Promise.all([
       computeRegistrationSignals(domain, watchedRegistrars),

@@ -58,10 +58,10 @@ test('a fake shop is checked on load and flagged red, with badge and banner', as
   // An IP address has no domain or company to look up: the summary points to the identity card.
   assert.equal(await popup.locator('#summary li').count(), 1);
 
-  await settings.evaluate(() => chrome.storage.local.set({ language: 'fr' }));
+  await settings.evaluate(() => chrome.storage.sync.set({ language: 'fr' }));
   await popup.reload();
   await waitFor(async () => (await popup.locator('#band-label').textContent()) === 'Risque élevé');
-  await settings.evaluate(() => chrome.storage.local.remove('language'));
+  await settings.evaluate(() => chrome.storage.sync.remove('language'));
 });
 
 test('the settings page follows the chosen language', async () => {
@@ -69,5 +69,5 @@ test('the settings page follows the chosen language', async () => {
   assert.equal(await settings.locator('h2').first().textContent(), 'Page access');
   await settings.selectOption('#language-select', 'fr');
   await waitFor(async () => (await settings.locator('h2').first().textContent()) === 'Accès aux pages');
-  await settings.evaluate(() => chrome.storage.local.remove('language'));
+  await settings.evaluate(() => chrome.storage.sync.remove('language'));
 });

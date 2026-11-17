@@ -1,4 +1,5 @@
 import { t } from '../shared/i18n.js';
+import { getSettings, setSettings, removeSettings } from '../shared/settings.js';
 import { LANGUAGE_KEY, LANGUAGES } from '../core/i18n.js';
 import { WATCHED_REGISTRARS } from '../data/watched-registrars.js';
 import { clearCache, isCacheDisabled } from '../background/cache.js';
@@ -10,47 +11,13 @@ async function refreshPermissionStatus() {
   document.getElementById('activate-btn').hidden = hasAccess;
 }
 
-async function refreshAllowlist() {
-  const { allowlist = [] } = await browser.storage.local.get('allowlist');
-  const ul = document.getElementById('allowlist');
-  ul.innerHTML = '';
-  for (const domain of allowlist) {
-    const li = document.createElement('li');
-    const span = document.createElement('span');
-    span.textContent = domain;
-    const removeBtn = document.createElement('button');
-    removeBtn.textContent = t('optionsRemove');
-    removeBtn.addEventListener('click', async () => {
-      const next = allowlist.filter((d) => d !== domain);
-      await browser.storage.local.set({ allowlist: next });
-      refreshAllowlist();
-    });
-    li.append(span, removeBtn);
-    ul.appendChild(li);
-  }
-}
-
 document.getElementById('activate-btn').addEventListener('click', async () => {
   const granted = await browser.permissions.request({ origins: ['<all_urls>'] });
   if (granted) refreshPermissionStatus();
 });
 
-document.getElementById('add-form').addEventListener('submit', async (event) => {
-  event.preventDefault();
-  const input = document.getElementById('add-input');
-  const domain = input.value.trim().toLowerCase();
-  if (!domain) return;
-  const { allowlist = [] } = await browser.storage.local.get('allowlist');
-  if (!allowlist.includes(domain)) {
-    allowlist.push(domain);
-    await browser.storage.local.set({ allowlist });
-  }
-  input.value = '';
-  refreshAllowlist();
-});
-
 async function refreshRegistrarList() {
-  const { customWatchedRegistrars = [] } = await browser.storage.local.get('customWatchedRegistrars');
+  const { customWatchedRegistrars = [] } = await getSettings('customWatchedRegistrars');
   const ul = document.getElementById('registrar-list');
   ul.innerHTML = '';
   for (const name of customWatchedRegistrars) {
@@ -61,7 +28,7 @@ async function refreshRegistrarList() {
     removeBtn.textContent = t('optionsRemove');
     removeBtn.addEventListener('click', async () => {
       const next = customWatchedRegistrars.filter((r) => r !== name);
-      await browser.storage.local.set({ customWatchedRegistrars: next });
+      await setSettings({ customWatchedRegistrars: next });
       refreshRegistrarList();
     });
     li.append(span, removeBtn);
@@ -74,10 +41,10 @@ document.getElementById('add-registrar-form').addEventListener('submit', async (
   const input = document.getElementById('add-registrar-input');
   const name = input.value.trim().toLowerCase();
   if (!name) return;
-  const { customWatchedRegistrars = [] } = await browser.storage.local.get('customWatchedRegistrars');
+  const { customWatchedRegistrars = [] } = await getSettings('customWatchedRegistrars');
   if (!customWatchedRegistrars.includes(name)) {
     customWatchedRegistrars.push(name);
-    await browser.storage.local.set({ customWatchedRegistrars });
+    await setSettings({ customWatchedRegistrars });
   }
   input.value = '';
   refreshRegistrarList();
@@ -92,28 +59,38 @@ document.getElementById('clear-cache-btn').addEventListener('click', async () =>
 
 const disableCacheCheckbox = document.getElementById('disable-cache-checkbox');
 disableCacheCheckbox.addEventListener('change', async () => {
-  await browser.storage.local.set({ cacheDisabled: disableCacheCheckbox.checked });
+  await setSettings({ cacheDisabled: disableCacheCheckbox.checked });
 });
 
 const checkAgeEverywhereCheckbox = document.getElementById('check-age-everywhere-checkbox');
 checkAgeEverywhereCheckbox.addEventListener('change', async () => {
-  await browser.storage.local.set({ checkAgeOnEverySite: checkAgeEverywhereCheckbox.checked });
+  await setSettings({ checkAgeOnEverySite: checkAgeEverywhereCheckbox.checked });
 });
 
 async function refreshCheckAgeToggle() {
-  const { checkAgeOnEverySite = false } = await browser.storage.local.get('checkAgeOnEverySite');
+  const { checkAgeOnEverySite = false } = await getSettings('checkAgeOnEverySite');
   checkAgeEverywhereCheckbox.checked = checkAgeOnEverySite;
+}
+
+const ignorePrivateIpWarningsCheckbox = document.getElementById('ignore-private-ip-warnings-checkbox');
+ignorePrivateIpWarningsCheckbox.addEventListener('change', async () => {
+  await setSettings({ ignorePrivateIpWarnings: ignorePrivateIpWarningsCheckbox.checked });
+});
+
+async function refreshPrivateIpWarningsToggle() {
+  const { ignorePrivateIpWarnings = false } = await getSettings('ignorePrivateIpWarnings');
+  ignorePrivateIpWarningsCheckbox.checked = ignorePrivateIpWarnings;
 }
 
 const languageSelect = document.getElementById('language-select');
 languageSelect.addEventListener('change', async () => {
-  if (languageSelect.value) await browser.storage.local.set({ [LANGUAGE_KEY]: languageSelect.value });
-  else await browser.storage.local.remove(LANGUAGE_KEY);
+  if (languageSelect.value) await setSettings({ [LANGUAGE_KEY]: languageSelect.value });
+  else await removeSettings(LANGUAGE_KEY);
   window.location.reload();
 });
 
 async function refreshLanguage() {
-  const { [LANGUAGE_KEY]: language } = await browser.storage.local.get(LANGUAGE_KEY);
+  const { [LANGUAGE_KEY]: language } = await getSettings(LANGUAGE_KEY);
   languageSelect.value = LANGUAGES.includes(language) ? language : '';
 }
 
@@ -122,8 +99,8 @@ async function refreshCacheToggle() {
 }
 
 refreshPermissionStatus();
-refreshAllowlist();
 refreshRegistrarList();
 refreshCheckAgeToggle();
+refreshPrivateIpWarningsToggle();
 refreshLanguage();
 refreshCacheToggle();

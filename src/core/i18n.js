@@ -1,10 +1,12 @@
+import { getSettings } from '../shared/settings.js';
+
 // Wrapper over browser.i18n so core/ keeps running outside Firefox: the unit
 // tests install a stand-in that reads _locales/en (see tests/helpers/i18n.js).
 // Messages live in _locales/<lang>/messages.json and use $1, $2... for
 // substitutions.
 //
 // browser.i18n always answers in Firefox's language. When the settings pick
-// another one (storage.local `language`), its messages.json is loaded here
+// another one (`storage.sync` `language`), its messages.json is loaded here
 // and looked up first; browser.i18n stays the fallback for missing keys.
 
 export const LANGUAGE_KEY = 'language';
@@ -64,9 +66,9 @@ async function loadLanguagePreference() {
   const storage = globalThis.browser?.storage;
   if (!storage) return;
   storage.onChanged.addListener((changes, area) => {
-    if (area === 'local' && LANGUAGE_KEY in changes) useLanguage(changes[LANGUAGE_KEY].newValue).catch(() => {});
+    if (area === 'sync' && LANGUAGE_KEY in changes) useLanguage(changes[LANGUAGE_KEY].newValue).catch(() => {});
   });
-  const { [LANGUAGE_KEY]: lang } = await storage.local.get(LANGUAGE_KEY);
+  const { [LANGUAGE_KEY]: lang } = await getSettings(LANGUAGE_KEY);
   await useLanguage(lang);
 }
 

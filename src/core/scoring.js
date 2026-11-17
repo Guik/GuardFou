@@ -18,7 +18,6 @@ export const THRESHOLDS = { orange: 30, red: 60 };
  *  - isOfficialDomain: boolean
  *  - lookalikeBrand: { name, officialDomains } | null (the brand whose
  *    domain this one imitates, from core/brands.js's findLookalikeBrand)
- *  - isAllowlisted: boolean
  *  - dnssec: { signed: boolean, validated: boolean, bogus: boolean } | null
  *  - registrarName: string | null
  *  - isWatchedRegistrar: boolean (registrarName matched your watched-registrars list)
@@ -48,10 +47,6 @@ export const THRESHOLDS = { orange: 30, red: 60 };
  * @returns {Verdict}
  */
 export function computeScore(signals) {
-  if (signals.isAllowlisted) {
-    return { score: 0, band: 'green', reasons: [{ id: 'allowlisted', weight: 0, message: t('reasonAllowlisted') }] };
-  }
-
   /** @type {Reason[]} */
   const reasons = [];
 

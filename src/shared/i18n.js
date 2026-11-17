@@ -10,9 +10,26 @@ export { t, uiLanguage };
 
 await i18nReady;
 
+function translateIfAvailable(key) {
+  const message = t(key);
+  return message === key ? null : message;
+}
+
 document.documentElement.lang = uiLanguage();
-for (const el of document.querySelectorAll('[data-i18n]')) el.textContent = t(el.dataset.i18n);
-for (const el of document.querySelectorAll('[data-i18n-placeholder]')) el.placeholder = t(el.dataset.i18nPlaceholder);
-for (const el of document.querySelectorAll('[data-i18n-aria-label]')) el.setAttribute('aria-label', t(el.dataset.i18nAriaLabel));
+for (const el of document.querySelectorAll('[data-i18n]')) {
+  const message = translateIfAvailable(el.dataset.i18n);
+  if (message !== null) el.textContent = message;
+}
+for (const el of document.querySelectorAll('[data-i18n-placeholder]')) {
+  const message = translateIfAvailable(el.dataset.i18nPlaceholder);
+  if (message !== null) el.placeholder = message;
+}
+for (const el of document.querySelectorAll('[data-i18n-aria-label]')) {
+  const message = translateIfAvailable(el.dataset.i18nAriaLabel);
+  if (message !== null) el.setAttribute('aria-label', message);
+}
 const titleKey = document.documentElement.dataset.i18nTitle;
-if (titleKey) document.title = t(titleKey);
+if (titleKey) {
+  const message = translateIfAvailable(titleKey);
+  if (message !== null) document.title = message;
+}

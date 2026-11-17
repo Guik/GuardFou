@@ -1,6 +1,6 @@
 # GuardFou privacy policy
 
-GuardFou has no server, no account, no analytics and no advertising. It never sells or shares data. Everything below happens on your device, except the lookups listed under "What leaves your device".
+GuardFou has no server, no account, no analytics and no advertising. It never sells or shares data. Lookup results and tab verdicts stay on your device. If browser extension sync is enabled, the browser's sync service may copy your GuardFou settings to your other devices; GuardFou does not receive them.
 
 ## What GuardFou reads
 
@@ -24,17 +24,15 @@ These lookups run only:
 - when you open a site's identity card (the hosting lookups run only then);
 - on every site you visit, for the domain-age lookup only, if you turn that on in the settings.
 
-They never run for sites on your trusted list, except when you open their identity card.
-
 ## What is stored, and for how long
 
-All of it stays in your browser:
+Lookup results and tab verdicts are stored locally in your browser. Settings use the browser's extension sync storage:
 
 - **Lookup results** (domain dates and registrar, DNSSEC status, legal information found, company registry answers): 7 days, so each domain is looked up at most once a week. The settings let you clear this cache or turn it off.
 - **Each tab's verdict** (score and reasons): until the tab navigates elsewhere or closes, and at most until Firefox closes.
-- **Your settings** (trusted sites, watched registrars, options): until you change them or remove the extension.
+- **Your settings** (language, watched registrars and options): until you change them or remove the extension. Chrome Sync or Firefox Sync can copy them to other devices when extension syncing is enabled. Firefox for Android does not sync extension data.
 
-Removing GuardFou deletes all of it.
+Removing GuardFou deletes its local lookup cache and tab data. Synced settings are managed by your browser's sync service.
 
 ## Contact
 

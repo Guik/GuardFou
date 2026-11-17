@@ -1,3 +1,5 @@
+import { getSettings } from '../shared/settings.js';
+
 export const CACHE_PREFIX = 'guardfou:cache:';
 const PREFIX = CACHE_PREFIX;
 
@@ -7,7 +9,7 @@ const PRUNE_INTERVAL_MS = 24 * 60 * 60 * 1000;
 
 /** @returns {Promise<boolean>} */
 export async function isCacheDisabled() {
-  const { cacheDisabled = false } = await browser.storage.local.get('cacheDisabled');
+  const { cacheDisabled = false } = await getSettings('cacheDisabled');
   return cacheDisabled;
 }
 

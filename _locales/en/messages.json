@@ -191,9 +191,6 @@
   "seoImageAlt": {
     "message": "Alt text on most images ($1/$2 without an alt attribute)"
   },
-  "reasonAllowlisted": {
-    "message": "Site on your trusted list."
-  },
   "reasonIpHostname": {
     "message": "The site is reached through a raw IP address instead of a domain name, which is extremely rare for a legitimate site."
   },
@@ -293,15 +290,6 @@
   "optionsAccessMissing": {
     "message": "Access not granted: GuardFou can't analyze any page."
   },
-  "optionsTrustedHeading": {
-    "message": "Trusted sites"
-  },
-  "optionsTrustedHint": {
-    "message": "These domains will never be flagged."
-  },
-  "optionsTrustedPlaceholder": {
-    "message": "example.com"
-  },
   "optionsAdd": {
     "message": "Add"
   },
@@ -331,6 +319,21 @@
   },
   "optionsCheckAgeEverywhere": {
     "message": "Check domain age on every site"
+  },
+  "optionsPrivateIpHeading": {
+    "message": "Private IP addresses"
+  },
+  "optionsPrivateIpHint": {
+    "message": "For local services and development. Changes apply the next time the page is analyzed."
+  },
+  "optionsIgnorePrivateIpWarnings": {
+    "message": "Ignore raw-IP and unencrypted-HTTP warnings for private IPs"
+  },
+  "optionsSyncHeading": {
+    "message": "Settings sync"
+  },
+  "optionsSyncHint": {
+    "message": "Preferences sync through Chrome Sync or Firefox Sync when extension syncing is enabled. Lookup results stay on this device. Firefox for Android does not sync extension data."
   },
   "optionsLanguageHeading": {
     "message": "Language"

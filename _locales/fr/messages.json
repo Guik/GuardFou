@@ -191,9 +191,6 @@
   "seoImageAlt": {
     "message": "Texte alternatif sur la plupart des images ($1/$2 sans attribut alt)"
   },
-  "reasonAllowlisted": {
-    "message": "Site ajouté à votre liste de confiance."
-  },
   "reasonIpHostname": {
     "message": "Le site est accédé via une adresse IP directe plutôt qu'un nom de domaine, ce qui est extrêmement rare pour un site légitime."
   },
@@ -293,15 +290,6 @@
   "optionsAccessMissing": {
     "message": "Accès non accordé : GuardFou ne peut analyser aucune page."
   },
-  "optionsTrustedHeading": {
-    "message": "Sites de confiance"
-  },
-  "optionsTrustedHint": {
-    "message": "Ces domaines ne seront jamais signalés."
-  },
-  "optionsTrustedPlaceholder": {
-    "message": "exemple.fr"
-  },
   "optionsAdd": {
     "message": "Ajouter"
   },
@@ -331,6 +319,21 @@
   },
   "optionsCheckAgeEverywhere": {
     "message": "Vérifier l'âge du domaine sur tous les sites"
+  },
+  "optionsPrivateIpHeading": {
+    "message": "Adresses IP privées"
+  },
+  "optionsPrivateIpHint": {
+    "message": "Pour les services locaux et le développement. Le réglage s'applique à la prochaine analyse de la page."
+  },
+  "optionsIgnorePrivateIpWarnings": {
+    "message": "Ignorer les alertes d'adresse IP brute et de connexion HTTP non chiffrée pour les IP privées"
+  },
+  "optionsSyncHeading": {
+    "message": "Synchronisation des paramètres"
+  },
+  "optionsSyncHint": {
+    "message": "Les paramètres se synchronisent via Chrome Sync ou Firefox Sync si la synchronisation des extensions est activée. Le cache des recherches reste sur cet appareil. Firefox pour Android ne synchronise pas les données des extensions."
   },
   "optionsLanguageHeading": {
     "message": "Langue"

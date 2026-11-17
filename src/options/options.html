@@ -23,16 +23,6 @@
     </section>
 
     <section class="card">
-      <h2 data-i18n="optionsTrustedHeading">Trusted sites</h2>
-      <p class="hint" data-i18n="optionsTrustedHint">These domains will never be flagged.</p>
-      <ul id="allowlist" class="item-list"></ul>
-      <form id="add-form" class="add-form">
-        <input id="add-input" type="text" placeholder="example.com" data-i18n-placeholder="optionsTrustedPlaceholder" />
-        <button type="submit" class="btn btn-ghost" data-i18n="optionsAdd">Add</button>
-      </form>
-    </section>
-
-    <section class="card">
       <h2 data-i18n="optionsRegistrarsHeading">Watched registrars</h2>
       <p class="hint">
         <span data-i18n="optionsRegistrarsHint">Flagged lightly (+8) only when the domain is also recent (under 2 years): the registrar alone proves nothing.</span>
@@ -56,6 +46,24 @@
         <input type="checkbox" id="check-age-everywhere-checkbox" />
         <span data-i18n="optionsCheckAgeEverywhere">Check domain age on every site</span>
       </label>
+    </section>
+
+    <section class="card">
+      <h2 data-i18n="optionsPrivateIpHeading">Private IP addresses</h2>
+      <p class="hint" data-i18n="optionsPrivateIpHint">
+        For local services and development. Changes apply the next time the page is analyzed.
+      </p>
+      <label class="toggle-row">
+        <input type="checkbox" id="ignore-private-ip-warnings-checkbox" />
+        <span data-i18n="optionsIgnorePrivateIpWarnings">Ignore raw-IP and unencrypted-HTTP warnings for private IPs</span>
+      </label>
+    </section>
+
+    <section class="card">
+      <h2 data-i18n="optionsSyncHeading">Settings sync</h2>
+      <p class="hint" data-i18n="optionsSyncHint">
+        Preferences sync through Chrome Sync or Firefox Sync when extension syncing is enabled. Lookup results stay on this device.
+      </p>
     </section>
 
     <section class="card">
