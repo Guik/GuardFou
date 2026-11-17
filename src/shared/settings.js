@@ -28,17 +28,44 @@ export async function ensureSettingsSynced() {
   return migrationPromise;
 }
 
+// storage.sync goes through the browser's sync service and can be slow or
+// never answer (Firefox Sync mid-sync, sync disabled). Every page that reads
+// a setting waits on it, so a hung read would freeze the popup and every
+// analysis: past this delay, sync counts as unavailable and the local copy
+// is used, like when sync is turned off.
+const SYNC_TIMEOUT_MS = 3000;
+// After a timeout, sync isn't waited on again for a while: settings are read
+// on every cache access, and paying the timeout each time adds up to tens
+// of seconds per analysis.
+const SYNC_RETRY_AFTER_MS = 5 * 60 * 1000;
+let syncUnavailableUntil = 0;
+
+function syncArea() {
+  return Date.now() < syncUnavailableUntil ? null : browser.storage?.sync;
+}
+
+function markSyncUnavailable(error) {
+  if (error?.message === 'storage timeout') syncUnavailableUntil = Date.now() + SYNC_RETRY_AFTER_MS;
+}
+
+function withTimeout(promise, ms) {
+  let timer;
+  const timeout = new Promise((_, reject) => { timer = setTimeout(() => reject(new Error('storage timeout')), ms); });
+  return Promise.race([promise, timeout]).finally(() => clearTimeout(timer));
+}
+
 async function read(area, keys) {
   try {
-    return { values: await area.get(keys), available: true };
-  } catch {
+    return { values: await withTimeout(area.get(keys), SYNC_TIMEOUT_MS), available: true };
+  } catch (error) {
+    if (area === browser.storage?.sync) markSyncUnavailable(error);
     return { values: {}, available: false };
   }
 }
 
 async function migrateSettings() {
   const [syncResult, localResult] = await Promise.all([
-    read(browser.storage?.sync, SYNC_SETTING_KEYS),
+    read(syncArea(), SYNC_SETTING_KEYS),
     read(browser.storage?.local, SYNC_SETTING_KEYS),
   ]);
   if (!syncResult.available || !localResult.available) return false;
@@ -51,8 +78,9 @@ async function migrateSettings() {
   }
   if (Object.keys(missing).length > 0) {
     try {
-      await browser.storage.sync.set(missing);
-    } catch {
+      await withTimeout(browser.storage.sync.set(missing), SYNC_TIMEOUT_MS);
+    } catch (error) {
+      markSyncUnavailable(error);
       // Keep the old local copy. getSettings() will continue to use it until
       // sync storage is available and the migration can be retried.
       return false;
@@ -73,7 +101,7 @@ async function migrateSettings() {
 export async function getSettings(keys) {
   await ensureSettingsSynced();
   const [syncResult, localResult] = await Promise.all([
-    read(browser.storage?.sync, keys),
+    read(syncArea(), keys),
     read(browser.storage?.local, keys),
   ]);
   return { ...localResult.values, ...syncResult.values };
@@ -82,9 +110,12 @@ export async function getSettings(keys) {
 export async function setSettings(values) {
   await ensureSettingsSynced();
   try {
-    await browser.storage.sync.set(values);
+    const sync = syncArea();
+    if (!sync) throw new Error('sync unavailable');
+    await withTimeout(sync.set(values), SYNC_TIMEOUT_MS);
     await browser.storage.local.remove(Object.keys(values));
-  } catch {
+  } catch (error) {
+    markSyncUnavailable(error);
     // Preserve the preference locally if sync is unavailable or over quota.
     await browser.storage.local.set(values);
     migrationPromise = null;
@@ -94,6 +125,7 @@ export async function setSettings(values) {
 
 export async function removeSettings(keys) {
   await ensureSettingsSynced();
-  await browser.storage.sync.remove(keys);
+  const sync = syncArea();
+  if (sync) await withTimeout(sync.remove(keys), SYNC_TIMEOUT_MS).catch(markSyncUnavailable);
   await browser.storage.local.remove(keys);
 }
