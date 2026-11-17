@@ -63,12 +63,15 @@ export function isOfficialDomain(domain, brand) {
 /**
  * True when a domain looks like "<brand><generic word>" or "<brand>-fr" etc.,
  * the classic phishing/clone pattern (e.g. "chaussonconstruction.com").
+ * A commonWord brand only uses its multi-word aliases here, so a bakery
+ * called "boulangershop" is not reported as a clone of Boulanger.
  * @param {string} domainLabel the domain without its public suffix, e.g. "chaussonconstruction"
- * @param {{aliases:string[]}} brand
+ * @param {{aliases:string[], commonWord?:boolean}} brand
  */
 export function looksLikeBrandPlusGenericWord(domainLabel, brand) {
   const label = normalize(domainLabel).replace(/\s/g, '');
   for (const alias of brand.aliases) {
+    if (brand.commonWord && !normalize(alias).includes(' ')) continue;
     const aliasKey = normalize(alias).replace(/\s/g, '');
     if (!aliasKey || !label.startsWith(aliasKey)) continue;
     const rest = label.slice(aliasKey.length);
@@ -115,10 +118,13 @@ function maxTypoDistance(length) {
  * would count as one edit away from itself. The first letter must match:
  * typosquats keep it so the name still reads right at a glance, and it
  * rules out most real words that happen to be one edit away.
+ * A commonWord brand never has typos: "boulangr" is one letter from
+ * "boulanger" but is not a clone of it.
  * @param {string} domainLabel
- * @param {{officialDomains:string[]}} brand
+ * @param {{officialDomains:string[], commonWord?:boolean}} brand
  */
 export function isNearMissSpelling(domainLabel, brand) {
+  if (brand.commonWord) return false;
   const label = normalize(domainLabel).replace(/\s/g, '');
   return brand.officialDomains.some((officialDomain) => {
     const officialLabel = normalize(officialDomain.split('.')[0]).replace(/\s/g, '');
@@ -137,8 +143,10 @@ export function isNearMissSpelling(domainLabel, brand) {
  * @param {Array<{name:string, aliases:string[], officialDomains:string[]}>} brands
  */
 export function findLookalikeBrand(domain, domainLabel, brands) {
-  return brands.find((brand) => !isOfficialDomain(domain, brand)
-    && (looksLikeBrandPlusGenericWord(domainLabel, brand) || isNearMissSpelling(domainLabel, brand))) ?? null;
+  // A domain a brand really uses is never a clone of another brand, even when
+  // its label is one typo from that brand's ("maif" vs "macif").
+  if (brands.some((brand) => isOfficialDomain(domain, brand))) return null;
+  return brands.find((brand) => looksLikeBrandPlusGenericWord(domainLabel, brand) || isNearMissSpelling(domainLabel, brand)) ?? null;
 }
 
 function escapeRegExp(str) {

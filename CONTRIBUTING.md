@@ -48,10 +48,31 @@ The same source runs in both browsers; nothing is built separately:
 Add an entry to `src/data/brands-fr.js`:
 
 ```js
-{ name: 'Fnac', aliases: ['fnac'], officialDomains: ['fnac.com'] },
+{ name: 'Fnac', aliases: ['fnac'], officialDomains: ['fnac.com'], sector: 'electronics', source: 'Large French electronics and culture retailer (initial list)', verified: '2026-11-17' },
 ```
 
-`aliases` are the names the site may use; matching ignores case and accents. `officialDomains` lists every domain the brand really uses, so its own sites aren't flagged.
+- `aliases`: the names a site may use for itself. Matching ignores case and accents.
+- `officialDomains`: every domain the brand really uses, group sites included. A site on one of them is never flagged, and a domain that is one typo away from another brand's name is not reported either.
+- `sector`: one of `SECTORS` in the same file (`diy`, `electronics`, `sport`, `marketplace`, `windshield`, `energy`, `insurance`). To add a sector, add it to `SECTORS` and to this list.
+- `source`: a short English reason the brand is on the list.
+- `verified`: the date (`YYYY-MM-DD`) the official domains were last checked.
+- `commonWord: true` (optional): set it only when a single-word alias is an ordinary French or English word, such as Boulanger, Orange or Free. For such a brand, look-alike checks ignore its single-word aliases and never report a typo of its name, so `boulangershop.fr` or `oranges.fr` is not flagged. Multi-word aliases still count (`freemobileshop.fr` is flagged for Free Mobile), and a page that names itself as the brand is still caught. Don't set it for a brand whose single-word alias is not an ordinary word. `Chausson` is an ordinary word too, but it stays without the flag because it is the founding confirmed clone case, detected by its domain; the comment in `brands-fr.js` explains it.
+
+### Verifying official domains
+
+For the domain and its `.fr` and `.com` counterparts, check where each one leads:
+
+```sh
+curl -s -o /dev/null -m 10 -L -w '%{http_code} %{url_effective}' -A 'Mozilla/5.0' https://<domain>/
+```
+
+- Look at the final host. A redirect to a registrable domain that is not in the list is usually a domain of the brand too (`allianzdirect.fr` lands on `luko.eu`, "Luko by Allianz Direct"): check the page and add it.
+- A 403 or 503 from bot protection is fine when the final host is the brand's own.
+- For a `.fr` domain, look up the registrant in RDAP (`https://rdap.org/domain/<domain>`) and confirm it is the brand's company.
+- Check the brand's official website on Wikidata (property P856) for domains you might have missed.
+- Set `verified` to the date you checked.
+
+The tests in `tests/brands.test.js` enforce the rest: a valid `sector`, a non-empty `source`, a valid `verified` date, no look-alike reported for any official domain, no alias or domain shared by two brands, and a single-word alias that is a common word (listed in `tests/fixtures/common-words.txt`) must be `commonWord: true`, except the exceptions named in the test. Add a word to that fixture only if it is a real common word.
 
 ## Adding a language
 
