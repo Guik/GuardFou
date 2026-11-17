@@ -74,7 +74,11 @@ const BADGE_COLORS = { green: '#2e7d32', orange: '#ed6c02', red: '#c62828' };
 browser.runtime.onMessage.addListener((message, sender, sendResponse) => {
   const response = handleMessage(message, sender);
   if (response === undefined) return false;
-  Promise.resolve(response).then(sendResponse, () => sendResponse(undefined));
+  Promise.resolve(response).then(sendResponse, (error) => {
+    // Visible in the extension's own console (about:debugging / chrome://extensions).
+    console.error(`GuardFou: ${message?.type} failed`, error);
+    sendResponse(undefined);
+  });
   return true;
 });
 
@@ -175,9 +179,12 @@ async function handlePageSignals(tabId, url, payload) {
   if (!isAnalyzable(url)) return;
   const isCurrentPage = startPageAnalysis(tabId);
   analyzingTabs.add(tabId);
+  const started = Date.now();
   try {
     await analyzeAndPublish(tabId, url, payload, isCurrentPage);
   } finally {
+    const seconds = (Date.now() - started) / 1000;
+    if (seconds > 10) console.info(`GuardFou: analysis of ${getHostname(url)} took ${seconds.toFixed(1)} s`);
     // A newer analysis of the same tab keeps the flag until it ends.
     if (isCurrentPage()) analyzingTabs.delete(tabId);
   }

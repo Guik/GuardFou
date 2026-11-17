@@ -1,4 +1,4 @@
-import { fetchWithTimeout } from './http.js';
+import { fetchWithTimeout, logIfSlow } from './http.js';
 import { getCached, setCached, CACHE_TTL_MS } from './cache.js';
 import { stripHtmlToText, extractContactLinks, extractPhysicalAddress, analyzeLegalText, checkMandatoryLegalMentions } from '../core/identity.js';
 import { extractSirenOrSiret, isValidSirenOrSiret, extractPublisherStatements } from '../core/siret.js';
@@ -123,7 +123,9 @@ async function fetchPageText(url, viaPage) {
   const direct = await fetchHtml(url);
   if (direct.ok) return { ok: true, blocked: false, text: pageText(direct.html) };
   if (!direct.blocked || !viaPage) return { ok: false, blocked: direct.blocked, text: '' };
+  const started = Date.now();
   const fromPage = await viaPage(url).catch(() => null);
+  logIfSlow(url, started, `read through the tab: ${fromPage?.ok ? 'ok' : 'failed'}`, !fromPage?.ok);
   if (fromPage?.ok && !isBotChallenge(fromPage.html)) return { ok: true, blocked: false, text: pageText(fromPage.html) };
   return { ok: false, blocked: true, text: '' };
 }
