@@ -83,6 +83,7 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for the project layout, browser tests, bu
 - More brands in `src/data/brands-fr.js`; contributions welcome (see [Adding a brand](CONTRIBUTING.md#adding-a-brand)).
 - Other countries: brand lists, company registries and legal requirements.
 - Site popularity and backlinks in the identity card.
+- A "Report this site" link in the identity card: the registrar's abuse contact (from RDAP), [Pharos](https://www.internet-signalement.gouv.fr) and [SignalConso](https://signal.conso.gouv.fr).
 
 ## License
 
