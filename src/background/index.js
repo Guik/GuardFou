@@ -59,6 +59,11 @@ function sessionTabStore(prefix) {
 // Firefox unloads this script, the in-flight work it guards dies with it.
 const currentPageByTab = new Map();
 
+// Tabs whose automatic analysis is still running, so the popup can show it's
+// coming rather than "no analysis". In memory: if the background restarts,
+// the analysis it tracked is gone too.
+const analyzingTabs = new Set();
+
 pruneExpiredCache().catch(() => {});
 
 const BADGE_COLORS = { green: '#2e7d32', orange: '#ed6c02', red: '#c62828' };
@@ -81,6 +86,9 @@ function handleMessage(message, sender) {
   if (message?.type === 'GET_VERDICT') {
     return verdictsByTab.get(message.tabId);
   }
+  if (message?.type === 'GET_POPUP_STATE') {
+    return verdictsByTab.get(message.tabId).then((verdict) => ({ verdict, analyzing: analyzingTabs.has(message.tabId) }));
+  }
   if (message?.type === 'GET_IDENTITY_CARD') {
     return i18nReady.then(() => buildIdentityCard(message.tabId));
   }
@@ -89,6 +97,7 @@ function handleMessage(message, sender) {
 
 browser.tabs.onRemoved.addListener((tabId) => {
   currentPageByTab.delete(tabId);
+  analyzingTabs.delete(tabId);
   verdictsByTab.delete(tabId).catch(() => {});
 });
 browser.runtime.onInstalled.addListener(() => {
@@ -165,6 +174,16 @@ async function analyzePage(url, payload) {
 async function handlePageSignals(tabId, url, payload) {
   if (!isAnalyzable(url)) return;
   const isCurrentPage = startPageAnalysis(tabId);
+  analyzingTabs.add(tabId);
+  try {
+    await analyzeAndPublish(tabId, url, payload, isCurrentPage);
+  } finally {
+    // A newer analysis of the same tab keeps the flag until it ends.
+    if (isCurrentPage()) analyzingTabs.delete(tabId);
+  }
+}
+
+async function analyzeAndPublish(tabId, url, payload, isCurrentPage) {
   const { domain, displayId, isAllowlisted, checkAgeOnEverySite, claimedText, matchedBrand, baseSignals } = await analyzePage(url, payload);
 
   // The network-dependent checks (RDAP, DNSSEC, legal pages, SIRET registry)

@@ -11,6 +11,13 @@
     <span class="wordmark">GuardFou</span>
   </header>
 
+  <!-- Shown until the popup knows what to display: the background may still
+       be analyzing the page, or busy reading its legal pages. -->
+  <section id="loading" class="state loading" role="status">
+    <span class="spinner" aria-hidden="true"></span>
+    <p class="lede muted" data-i18n="popupLoading">Analyzing this page…</p>
+  </section>
+
   <section id="activate" class="state" hidden>
     <p class="lede" data-i18n="popupActivateLede">GuardFou needs access to the pages you visit to analyze them.</p>
     <button id="activate-btn" class="btn btn-primary" data-i18n="popupActivateButton">Turn on GuardFou</button>
@@ -35,6 +42,10 @@
 
     <ul id="summary" class="summary"></ul>
     <ul id="reasons" class="reasons"></ul>
+  </section>
+
+  <section id="slow" class="state" hidden>
+    <p class="lede muted" data-i18n="popupSlow">The analysis is taking longer than usual. Open GuardFou again in a moment.</p>
   </section>
 
   <section id="empty" class="state" hidden>

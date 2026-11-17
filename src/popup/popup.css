@@ -44,6 +44,40 @@ header img {
   color: var(--color-text-secondary);
 }
 
+/* Loading ----------------------------------------------------------------- */
+
+.loading {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.loading[hidden] {
+  display: none;
+}
+
+.loading .lede {
+  margin: 0;
+}
+
+.spinner {
+  flex-shrink: 0;
+  width: 16px;
+  height: 16px;
+  border: 2px solid var(--color-border);
+  border-top-color: var(--color-accent);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .spinner { animation-duration: 2.4s; }
+}
+
 /* Score ring ------------------------------------------------------------ */
 
 .score-row {

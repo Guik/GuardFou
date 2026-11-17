@@ -11,6 +11,53 @@ const RING_CIRCUMFERENCE = 2 * Math.PI * RING_RADIUS;
 
 let currentTabId = null;
 
+// How long the popup waits for an analysis still running before giving up
+// and saying there's none. Lookups are cached and time out on their own
+// well before this.
+const ANALYSIS_WAIT_MS = 20_000;
+// After ANALYSIS_WAIT_MS the popup says the analysis is slow, but keeps
+// waiting up to this long and shows the result if it comes.
+const ANALYSIS_MAX_WAIT_MS = 60_000;
+const ANALYSIS_POLL_MS = 400;
+
+/**
+ * The tab's verdict, waiting for it while the background is still analyzing
+ * the page, the page is still loading, or the background hasn't answered.
+ * @returns {Promise<{ verdict?: object, slow?: boolean }>} slow when the
+ *   analysis was still running (or unanswered) at the deadline; neither
+ *   when there's no analysis to wait for
+ */
+async function waitForVerdict(tabId, { onSlow } = {}) {
+  const slowAt = Date.now() + ANALYSIS_WAIT_MS;
+  const deadline = Date.now() + ANALYSIS_MAX_WAIT_MS;
+  let saidSlow = false;
+  for (;;) {
+    // Each question is bounded too: a background script that doesn't answer
+    // must not keep the popup on "Analyzing…" past the deadline.
+    const remaining = Math.max(deadline - Date.now(), 0);
+    const [state, tab] = await Promise.all([
+      orNullAfter(browser.runtime.sendMessage({ type: 'GET_POPUP_STATE', tabId }), Math.min(remaining, 5000)),
+      browser.tabs.get(tabId).catch(() => null),
+    ]);
+    if (state?.verdict) return { verdict: state.verdict };
+    // No answer at all (state null) means the background is busy: keep waiting.
+    const stillWorking = state === null || state.analyzing || tab?.status === 'loading';
+    if (!stillWorking) return {};
+    if (Date.now() >= deadline) return { slow: true };
+    if (!saidSlow && Date.now() >= slowAt) {
+      saidSlow = true;
+      onSlow?.();
+    }
+    await new Promise((resolve) => setTimeout(resolve, ANALYSIS_POLL_MS));
+  }
+}
+
+function orNullAfter(promise, ms) {
+  let timer;
+  const timeout = new Promise((resolve) => { timer = setTimeout(() => resolve(null), ms); });
+  return Promise.race([promise.catch(() => null), timeout]).finally(() => clearTimeout(timer));
+}
+
 async function main() {
   const hasAccess = await browser.permissions.contains({ origins: ['<all_urls>'] });
   if (!hasAccess) {
@@ -30,9 +77,9 @@ async function main() {
   currentTabId = tab.id;
   document.getElementById('identity-toggle').hidden = false;
 
-  const verdict = await browser.runtime.sendMessage({ type: 'GET_VERDICT', tabId: tab.id });
+  const { verdict, slow } = await waitForVerdict(tab.id, { onSlow: () => show('slow') });
   if (!verdict) {
-    show('empty');
+    show(slow ? 'slow' : 'empty');
     return;
   }
 
@@ -154,7 +201,7 @@ function renderSummary(facts) {
 }
 
 function show(sectionId) {
-  for (const id of ['activate', 'result', 'empty']) {
+  for (const id of ['loading', 'activate', 'result', 'empty', 'slow']) {
     document.getElementById(id).hidden = id !== sectionId;
   }
 }
@@ -529,4 +576,4 @@ document.getElementById('options-link').addEventListener('click', (event) => {
   browser.runtime.openOptionsPage();
 });
 
-main();
+main().catch(() => show('empty'));

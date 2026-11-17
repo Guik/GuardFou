@@ -11,6 +11,12 @@
   "popupActivateButton": {
     "message": "Activer GuardFou"
   },
+  "popupLoading": {
+    "message": "Analyse de la page en cours…"
+  },
+  "popupSlow": {
+    "message": "L'analyse prend plus de temps que d'habitude. Rouvrez GuardFou dans un instant."
+  },
   "popupEmpty": {
     "message": "Aucune analyse pour cette page — ce n'est pas une page de boutique détectée, ou la page vient juste de charger."
   },

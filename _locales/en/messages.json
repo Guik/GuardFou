@@ -11,6 +11,12 @@
   "popupActivateButton": {
     "message": "Turn on GuardFou"
   },
+  "popupLoading": {
+    "message": "Analyzing this page…"
+  },
+  "popupSlow": {
+    "message": "The analysis is taking longer than usual. Open GuardFou again in a moment."
+  },
   "popupEmpty": {
     "message": "No analysis for this page: it wasn't detected as a shop, or it has only just loaded."
   },
