@@ -43,16 +43,19 @@ export function findBrandByAlias(text, brands) {
 /**
  * The text a page uses to name itself, for brand matching. og:site_name
  * and the JSON-LD organization are the site's own name, so a brand there is
- * a real claim. The title and footer only count on a page that also looks
- * like a shop: elsewhere they're routinely about a brand rather than from
- * it — a news headline "Fnac Darty publie ses résultats", or a bakery
- * titled "Boulanger artisan à Lyon" (boulanger is also a common word).
+ * a real claim — and when the site declares one, its title and footer don't
+ * count: a comparison site's "Abonnement EDF" guide, named "LesFurets", is
+ * about EDF, not EDF. Without a declared name, the title and footer only
+ * count on a page that also looks like a shop: elsewhere they're routinely
+ * about a brand rather than from it — a news headline "Fnac Darty publie
+ * ses résultats", or a bakery titled "Boulanger artisan à Lyon".
  * @param {{ogSiteName?:string|null, jsonLdOrgName?:string|null, title?:string|null, footerCopyright?:string|null, isLikelyShop?:boolean}} payload
  */
 export function getBrandClaimText(payload) {
-  const siteName = [payload?.ogSiteName, payload?.jsonLdOrgName];
+  const siteName = [payload?.ogSiteName, payload?.jsonLdOrgName].filter(Boolean);
+  if (siteName.length > 0) return siteName.join(' • ');
   const pageText = payload?.isLikelyShop ? [payload?.title, payload?.footerCopyright] : [];
-  return [...siteName, ...pageText].filter(Boolean).join(' • ');
+  return pageText.filter(Boolean).join(' • ');
 }
 
 /** @param {string} domain @param {{officialDomains:string[]}} brand */

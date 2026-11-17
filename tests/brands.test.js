@@ -109,6 +109,15 @@ test('getBrandClaimText keeps the title on a shop and the site name everywhere',
   assert.equal(findBrandByAlias(getBrandClaimText(namedSite), BRANDS_FR)?.name, 'Castorama');
 });
 
+test('getBrandClaimText ignores the title when the site declares its own name', () => {
+  // A comparison site's guide about EDF: it names itself, so the title is about EDF.
+  const guide = { title: 'Abonnement EDF : tarifs et démarches', ogSiteName: 'LesFurets', isLikelyShop: true };
+  assert.equal(findBrandByAlias(getBrandClaimText(guide), BRANDS_FR), null);
+  // A clone that copies the brand's site name is still caught.
+  const clone = { title: 'Abonnement électricité', ogSiteName: 'EDF', isLikelyShop: true };
+  assert.equal(findBrandByAlias(getBrandClaimText(clone), BRANDS_FR)?.name, 'EDF');
+});
+
 test('home-service brands catch their clones but not their own group sites', () => {
   assert.equal(findLookalikeBrand('franceparebrise-direct.fr', 'franceparebrise-direct', BRANDS_FR)?.name, 'France Pare-Brise');
   assert.equal(findLookalikeBrand('carglasss.fr', 'carglasss', BRANDS_FR)?.name, 'Carglass');
