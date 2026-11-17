@@ -282,7 +282,7 @@
     "message": "The site presents itself as “$1” but its domain isn't $2."
   },
   "reasonBrandLookalikeDomain": {
-    "message": "The domain name looks like that of “$1” ($2), with an added word or a close spelling."
+    "message": "The domain name imitates that of “$1” ($2): an added word, a close spelling or the same name under another extension."
   },
   "bannerTitle": {
     "message": "GuardFou: this site looks suspicious (score $1/100)"

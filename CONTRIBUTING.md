@@ -77,6 +77,8 @@ To check every official domain at once, run `npm run check:brands`. It requests 
 
 The tests in `tests/brands.test.js` enforce the rest: a valid `sector`, a non-empty `source`, a valid `verified` date, no look-alike reported for any official domain, no alias or domain shared by two brands, and a single-word alias that is a common word (listed in `src/data/common-words.js`) must be `commonWord: true`, except the exceptions named in the test. Add a word to that list only if it is a real common word.
 
+A domain carrying a brand's exact name under another extension (`chronopost.net`, `impots-gouv.fr`) is reported as a look-alike, so every domain the brand really uses must be listed. `npm run check:brands -- --variants` tries each brand's name with `.fr`, `.com`, `.net`, `.org`, `.eu` and `.info` and lists the ones that redirect to an official domain: add those. The others belong to someone else, or are registered but unused.
+
 ## Adding a language
 
 Copy `_locales/en/messages.json` to `_locales/<code>/messages.json`, translate it, and add the code to `LANGUAGES` in `src/core/i18n.js` and to the list in `src/options/options.html`. The tests check that every locale has the same keys and substitutions and is in `LANGUAGES`.

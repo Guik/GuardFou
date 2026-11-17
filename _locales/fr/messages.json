@@ -282,7 +282,7 @@
     "message": "Le site se présente comme « $1 » mais son domaine n'est pas $2."
   },
   "reasonBrandLookalikeDomain": {
-    "message": "Le nom de domaine ressemble à celui de « $1 » ($2), avec un mot ajouté ou une orthographe proche."
+    "message": "Le nom de domaine imite celui de « $1 » ($2) : mot ajouté, orthographe proche ou même nom avec une autre extension."
   },
   "bannerTitle": {
     "message": "GuardFou : ce site est suspect (score $1/100)"

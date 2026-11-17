@@ -12,11 +12,13 @@ isn't released.
 
 - Brand impersonation now also covers parcel delivery (La Poste, Colissimo, Chronopost, Mondial Relay, DHL, UPS, FedEx, Relais Colis) and government services (Ameli, impots.gouv, ANTS, CAF, Crit'Air, Mon Compte Formation, Service-Public.fr).
 - A domain whose name is a common word one letter away from a brand, such as dart.fr (Darty) or point.fr (Point.P), is no longer reported as a look-alike.
+- A domain that carries a brand's exact name under another extension, such as impots-gouv.fr or moncompteformation.fr, is now reported as a look-alike. The brands' own other domains (laposte.net, castorama.com…) are recognised.
 
 ### Français
 
 - La détection d'usurpation de marque couvre désormais la livraison (La Poste, Colissimo, Chronopost, Mondial Relay, DHL, UPS, FedEx, Relais Colis) et les services publics (Ameli, impots.gouv, ANTS, CAF, Crit'Air, Mon Compte Formation, Service-Public.fr).
 - Un domaine dont le nom est un mot courant, à une lettre près du nom d'une marque, comme dart.fr (Darty) ou point.fr (Point.P), n'est plus signalé comme imitation.
+- Un domaine qui reprend le nom exact d'une marque avec une autre extension, comme impots-gouv.fr ou moncompteformation.fr, est désormais signalé comme imitation. Les autres domaines des marques elles-mêmes (laposte.net, castorama.com…) sont reconnus.
 
 ## 0.1.5
 

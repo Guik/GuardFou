@@ -292,3 +292,29 @@ test('every exact alias is one of the brand\'s aliases', () => {
     for (const alias of brand.exactAliases ?? []) assert.ok(brand.aliases.includes(alias), `${brand.name}: ${alias}`);
   }
 });
+
+test('the same brand name under another extension is a look-alike', () => {
+  // Real cases found by `npm run check:brands -- --variants` (Nov 2026).
+  const cases = {
+    'impots-gouv.fr': 'impots.gouv (DGFiP)',
+    'moncompteformation.fr': 'Mon Compte Formation',
+    'mon-compte-formation.com': 'Mon Compte Formation',
+    'service-public-fr.net': 'Service-Public.fr',
+    'certificat-air.com': "Crit'Air",
+    'chronopost.net': 'Chronopost',
+  };
+  for (const [domain, brand] of Object.entries(cases)) {
+    assert.equal(findLookalikeBrand(domain, domain.slice(0, domain.lastIndexOf('.')), BRANDS_FR)?.name, brand, domain);
+  }
+});
+
+test('the same-name rule spares owned domains, short names, ordinary words and other countries', () => {
+  for (const domain of ['laposte.net', 'castorama.com', 'fedex.fr', 'mondialrelay.com']) {
+    assert.equal(findLookalikeBrand(domain, domain.split('.')[0], BRANDS_FR), null, `${domain} is the brand's own`);
+  }
+  assert.equal(findLookalikeBrand('caf.com', 'caf', BRANDS_FR), null, 'too short: may belong to anyone');
+  assert.equal(findLookalikeBrand('axa.net', 'axa', BRANDS_FR), null);
+  assert.equal(findLookalikeBrand('boulanger.org', 'boulanger', BRANDS_FR), null, 'commonWord brand');
+  assert.equal(findLookalikeBrand('chronopost.de', 'chronopost', BRANDS_FR), null, "another country's extension");
+  assert.equal(findLookalikeBrand('chronopost.re', 'chronopost', BRANDS_FR)?.name, 'Chronopost', 'French overseas extension');
+});

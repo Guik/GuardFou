@@ -163,7 +163,45 @@ export function findLookalikeBrand(domain, domainLabel, brands) {
   // A domain a brand really uses is never a clone of another brand, even when
   // its label is one typo from that brand's ("maif" vs "macif").
   if (brands.some((brand) => isOfficialDomain(domain, brand))) return null;
-  return brands.find((brand) => looksLikeBrandPlusGenericWord(domainLabel, brand) || isNearMissSpelling(domainLabel, brand)) ?? null;
+  return brands.find((brand) => looksLikeBrandPlusGenericWord(domainLabel, brand)
+    || isNearMissSpelling(domainLabel, brand)
+    || isSameNameOnOtherDomain(domain, domainLabel, brand)) ?? null;
+}
+
+// Country-code extensions used in France (metropolitan and overseas).
+const FRENCH_CCTLDS = new Set(['fr', 're', 'gp', 'mq', 'gf', 'yt', 'pm', 'nc', 'pf', 'wf', 'tf', 'bl', 'mf']);
+
+/**
+ * The names a domain label is compared with: the brand's aliases and its
+ * official domains' labels, spaces and hyphens removed. A commonWord brand's
+ * single-word aliases are left out, like everywhere else.
+ * @param {{aliases:string[], officialDomains:string[], commonWord?:boolean}} brand
+ */
+export function brandNameKeys(brand) {
+  const aliases = brand.aliases.filter((alias) => !brand.commonWord || normalize(alias).includes(' '));
+  const officialLabels = brand.commonWord ? [] : brand.officialDomains.map((domain) => domain.split('.')[0]);
+  return [...new Set([...aliases, ...officialLabels].map((name) => normalize(name).replace(/\s/g, '')).filter(Boolean))];
+}
+
+/**
+ * True when the domain carries the brand's exact name under another
+ * extension: "impots-gouv.fr" or "moncompteformation.fr" for sites on
+ * .gouv.fr, "chronopost.net" for chronopost.fr. A classic phishing domain,
+ * since the name reads right. Short names (under 5 letters) and ordinary
+ * words are skipped — "caf.com" or "axa.net" can belong to anyone — and so
+ * are other countries' extensions, where an international brand has its own
+ * sites (dhl.de). The brand's real other domains must be in officialDomains:
+ * `npm run check:brands -- --variants` finds them.
+ * @param {string} domain registrable domain, e.g. "impots-gouv.fr"
+ * @param {string} domainLabel the domain without its public suffix
+ * @param {{aliases:string[], officialDomains:string[], commonWord?:boolean}} brand
+ */
+export function isSameNameOnOtherDomain(domain, domainLabel, brand) {
+  const label = normalize(domainLabel).replace(/\s/g, '');
+  if (label.length < 5 || COMMON_WORDS.has(label)) return false;
+  const tld = domain.split('.').pop();
+  if (tld.length === 2 && !FRENCH_CCTLDS.has(tld)) return false;
+  return brandNameKeys(brand).includes(label);
 }
 
 function escapeRegExp(str) {

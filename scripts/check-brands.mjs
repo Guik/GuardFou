@@ -39,6 +39,50 @@ async function mapWithConcurrency(items, limit, fn) {
   return results;
 }
 
+// --variants: each brand's name under other extensions (.fr, .com…), to find
+// the domains a brand really owns (they redirect to an official domain: add
+// them to officialDomains) before brands.js flags the same name elsewhere.
+// A DNS lookup first: only names that exist get one HTTP request.
+if (process.argv.includes('--variants')) {
+  const { lookup } = await import('node:dns/promises');
+  const { brandNameKeys, normalize } = await import('../src/core/brands.js');
+  const { COMMON_WORDS } = await import('../src/data/common-words.js');
+  const TLDS = ['fr', 'com', 'net', 'org', 'eu', 'info'];
+  const variantJobs = [];
+  for (const brand of BRANDS_FR) {
+    const keys = brandNameKeys(brand).filter((key) => key.length >= 5 && !COMMON_WORDS.has(key));
+    // Hyphenated spellings too ("service-public", "mon-compte-formation").
+    const hyphenated = brand.aliases.filter((alias) => normalize(alias).includes(' ')).map((alias) => normalize(alias).replace(/\s+/g, '-'));
+    const labels = new Set([...keys, ...hyphenated, ...brand.officialDomains.map((d) => d.split('.')[0])]);
+    for (const label of labels) {
+      if (normalize(label).replace(/[\s-]/g, '').length < 5) continue;
+      for (const tld of TLDS) {
+        const domain = `${label}.${tld}`;
+        if (!brand.officialDomains.includes(domain)) variantJobs.push({ brand, domain });
+      }
+    }
+  }
+  console.log(`Looking up ${variantJobs.length} name variants...\n`);
+  const found = await mapWithConcurrency(variantJobs, CONCURRENCY, async ({ brand, domain }) => {
+    try {
+      await lookup(domain);
+    } catch {
+      return null; // doesn't exist
+    }
+    const result = await probe(domain);
+    const finalRegistrable = result.ok ? getRegistrableDomain(new URL(result.finalUrl).hostname) : null;
+    return { brand, domain, result, owned: brand.officialDomains.includes(finalRegistrable), finalRegistrable };
+  });
+  const existing = found.filter(Boolean);
+  console.log('Owned by the brand (redirect to an official domain): add to officialDomains');
+  for (const { brand, domain, result } of existing.filter((e) => e.owned)) console.log(`  + ${brand.name}: ${domain} -> ${result.finalUrl}`);
+  console.log('\nSomeone else, or no answer: flagged as look-alikes (review by hand)');
+  for (const { brand, domain, result, owned } of existing.filter((e) => !e.owned)) {
+    console.log(`  ? ${brand.name}: ${domain} -> ${result.ok ? `${result.status} ${result.finalUrl}` : result.error}`);
+  }
+  process.exit(0);
+}
+
 const jobs = BRANDS_FR.flatMap((brand) => brand.officialDomains.map((domain) => ({ brand, domain })));
 console.log(`Checking ${jobs.length} official domains of ${BRANDS_FR.length} brands (${CONCURRENCY} at a time, ${TIMEOUT_MS / 1000} s timeout)...\n`);
 
