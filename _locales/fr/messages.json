@@ -83,6 +83,9 @@
   "cardLegalPages": {
     "message": "Page(s) analysée(s) pour les mentions légales"
   },
+  "cardLegalUnreadable": {
+    "message": "Les pages légales liées depuis cette page n'ont pas pu être lues : le site bloque les requêtes automatiques ou n'a pas répondu."
+  },
   "cardNoLegalLinks": {
     "message": "Aucun lien de mentions légales/CGV/CGU trouvé sur la page."
   },
@@ -245,6 +248,9 @@
   "reasonDnssecOk": {
     "message": "Le domaine est protégé par DNSSEC et la signature est valide."
   },
+  "reasonLegalPageUnreadable": {
+    "message": "Les pages de mentions légales du site n'ont pas pu être lues (le site bloque les requêtes automatiques ou n'a pas répondu) : elles n'ont pas été vérifiées."
+  },
   "reasonLegalPageMissing": {
     "message": "Aucune page de mentions légales trouvée sur le site, pourtant obligatoire pour tout site en France."
   },
@@ -403,6 +409,9 @@
   },
   "summaryLegalMissingOther": {
     "message": "Mentions légales · $1 informations manquantes"
+  },
+  "summaryLegalUnreadable": {
+    "message": "Mentions légales illisibles"
   },
   "summaryLegalNone": {
     "message": "Aucune mention légale trouvée"

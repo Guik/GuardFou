@@ -1,4 +1,4 @@
-import { test, beforeEach } from 'node:test';
+import { test, beforeEach, mock } from 'node:test';
 import assert from 'node:assert/strict';
 import { CACHE_PREFIX } from '../src/background/cache.js';
 import { getLegalPageAnalysis } from '../src/background/legal.js';
@@ -33,6 +33,8 @@ beforeEach(() => {
       return new Response(JSON.stringify({ results: [{ nom_complet: 'EXEMPLE', etat_administratif: 'A' }] }));
     }
     if (failingUrls.has(String(url))) throw new TypeError('network error');
+    if (String(url).includes('blocked')) return new Response('<html><head><title>Attention Required! | Cloudflare</title></head><body>Sorry, you have been blocked</body></html>', { status: 403 });
+    if (String(url).includes('challenge')) return new Response('<html><head><title>Just a moment...</title></head><body>Checking your browser</body></html>');
     return new Response(LEGAL_HTML);
   };
 });
@@ -60,4 +62,79 @@ test('does not cache when one of the pages failed to load', async () => {
   await getLegalPageAnalysis(urls, 'fr');
   await getLegalPageAnalysis(urls, 'fr');
   assert.equal(legalPageFetches().length, 4, 'both pages are fetched again on the second call');
+});
+
+test('legal pages that could not be fetched are unreadable, not missing', async () => {
+  for (const url of ['https://exemple.fr/blocked/mentions-legales', 'https://exemple.fr/challenge/mentions-legales']) {
+    const analysis = await getLegalPageAnalysis([url], 'fr');
+    assert.equal(analysis.unreadable, true, url);
+    assert.equal(analysis.legal.present, false, url);
+  }
+  failingUrls.add('https://exemple.fr/down');
+  assert.equal((await getLegalPageAnalysis(['https://exemple.fr/down'], 'fr')).unreadable, true);
+});
+
+test('one readable page is enough: the analysis is not unreadable', async () => {
+  const analysis = await getLegalPageAnalysis(['https://exemple.fr/blocked/cgv', 'https://exemple.fr/mentions-legales'], 'fr');
+  assert.equal(analysis.unreadable, false);
+  assert.equal(analysis.legal.present, true);
+});
+
+test('no legal link at all is not unreadable', async () => {
+  assert.equal((await getLegalPageAnalysis([], 'fr')).unreadable, false);
+});
+
+test('a page blocked by bot protection is read through the tab instead', async () => {
+  const viaPageCalls = [];
+  const viaPage = async (url) => { viaPageCalls.push(url); return { ok: true, html: LEGAL_HTML }; };
+  const analysis = await getLegalPageAnalysis(['https://exemple.fr/blocked/via-tab'], 'fr', { viaPage });
+  assert.deepEqual(viaPageCalls, ['https://exemple.fr/blocked/via-tab']);
+  assert.equal(analysis.unreadable, false);
+  assert.equal(analysis.legal.present, true);
+  assert.equal(analysis.companyCheck.candidate.digits, '73282932000074');
+});
+
+test('the tab is not asked when the direct request works or simply failed', async () => {
+  const viaPageCalls = [];
+  const viaPage = async (url) => { viaPageCalls.push(url); return { ok: true, html: LEGAL_HTML }; };
+  await getLegalPageAnalysis(['https://exemple.fr/mentions-legales'], 'fr', { viaPage });
+  failingUrls.add('https://exemple.fr/down');
+  const down = await getLegalPageAnalysis(['https://exemple.fr/down'], 'fr', { viaPage });
+  assert.deepEqual(viaPageCalls, [], 'cookies are only used when the site blocks the plain request');
+  assert.equal(down.unreadable, true);
+});
+
+test('a block is remembered for a day instead of retried on every page', async () => {
+  const urls = ['https://exemple.fr/blocked/remembered'];
+  const viaPage = async () => ({ ok: false, html: '' });
+  assert.equal((await getLegalPageAnalysis(urls, 'fr', { viaPage })).unreadable, true);
+  assert.equal((await getLegalPageAnalysis(urls, 'fr', { viaPage })).unreadable, true);
+  assert.equal(legalPageFetches().length, 1, 'the second call is answered from the cache');
+
+  // A day later, the site is asked again.
+  const now = Date.now();
+  mock.method(Date, 'now', () => now + 25 * 60 * 60 * 1000);
+  try {
+    await getLegalPageAnalysis(urls, 'fr', { viaPage });
+  } finally {
+    mock.restoreAll();
+  }
+  assert.equal(legalPageFetches().length, 2);
+});
+
+test('a block is remembered even with the cache turned off', async () => {
+  const urls = ['https://exemple.fr/blocked/no-cache'];
+  globalThis.browser.storage.sync = { async get() { return { cacheDisabled: true }; } };
+  await getLegalPageAnalysis(urls, 'fr');
+  await getLegalPageAnalysis(urls, 'fr');
+  delete globalThis.browser.storage.sync;
+  assert.equal(legalPageFetches().length, 1, 'in-memory record, nothing stored');
+  assert.ok(!Object.keys(stored).some((key) => key.includes('no-cache')));
+});
+
+test('a network failure is not remembered: it is retried next time', async () => {
+  failingUrls.add('https://exemple.fr/down');
+  await getLegalPageAnalysis(['https://exemple.fr/down'], 'fr');
+  await getLegalPageAnalysis(['https://exemple.fr/down'], 'fr');
+  assert.equal(legalPageFetches().length, 2);
 });

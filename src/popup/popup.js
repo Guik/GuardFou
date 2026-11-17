@@ -174,7 +174,9 @@ function renderSummary(facts) {
 
   const legal = facts?.legal;
   if (legal) {
-    if (!legal.found) {
+    if (legal.unreadable) {
+      rows.push({ icon: '📄', text: t('summaryLegalUnreadable'), tone: 'muted' });
+    } else if (!legal.found) {
       rows.push({ icon: '📄', text: t('summaryLegalNone'), tone: 'warning' });
     } else {
       // One short sentence per case, so the row fits on one line.
@@ -433,6 +435,11 @@ function renderIdentityCard(card) {
 
   addField(dl, t('cardLegalText'), (dd) => {
     const legal = card.legalText;
+    if (card.legalUnreadable) {
+      dd.textContent = t('cardLegalUnreadable');
+      dd.className = 'muted';
+      return;
+    }
     if (!legal.present) {
       dd.textContent = t('cardLegalMissing');
       dd.className = 'warning';

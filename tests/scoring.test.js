@@ -272,3 +272,10 @@ test('noindex only counts on a new domain', () => {
   assert.ok(!ids({ isNoindex: true, domainAgeDays: 400 }).includes('noindex-recent-domain'));
   assert.ok(!ids({ isNoindex: true, domainAgeDays: null }).includes('noindex-recent-domain'));
 });
+
+test('unreadable legal pages are explained but not scored', () => {
+  const verdict = computeScore({ legalPageUnreadable: true });
+  assert.equal(verdict.score, 0);
+  assert.ok(verdict.reasons.some((r) => r.id === 'legal-page-unreadable' && r.weight === 0));
+  assert.ok(!verdict.reasons.some((r) => r.id === 'legal-page-missing'));
+});

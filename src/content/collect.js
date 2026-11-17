@@ -1,9 +1,9 @@
 // Classic (non-module) content script — Firefox's content_scripts manifest
-// key has no "type": "module" option, so this can't use ES imports. It does
-// no network calls itself, just scrapes raw DOM material (plus a few cheap
-// derived fields) and hands it to the background script, which does the
-// scoring, the richer identity-card parsing (via core/identity.js, an ES
-// module there), and any network calls.
+// key has no "type": "module" option, so this can't use ES imports. It
+// scrapes raw DOM material (plus a few cheap derived fields) and hands it to
+// the background script, which does the scoring, the richer identity-card
+// parsing (via core/identity.js, an ES module there), and the network calls.
+// The one exception is GUARDFOU_FETCH_PAGE below.
 (function () {
   function getMetaContent(name) {
     const el = document.querySelector(`meta[property="${name}"], meta[name="${name}"]`);
@@ -129,8 +129,49 @@
     return results;
   }
 
+  // Single-page apps (Next.js, Nuxt...) often render footer links as plain
+  // <span>s whose destination only lives in JavaScript: no href, no data-*
+  // attribute. Their route data is usually inlined in the page, though
+  // (__NEXT_DATA__, self.__next_f chunks): confirmed on lesfurets.com, whose
+  // footer "Mentions légales" is a MUI <span> and whose inline scripts hold
+  // "/mentions-legales". Only the page's own inline scripts are read, only
+  // paths that name a legal page are kept, and each gets a text built from
+  // its path so the background ranks it like a real link.
+  const LEGAL_LINK_WORDING = /mentions|l[ée]gal|\bcg[uv]\b|conditions|confidentialit/i;
+  const LEGAL_PATH = /(?:^|\/)(mentions[-_]?legales?|conditions[-_]generales[\w-]*|cgu|cgv|legal[-_]notice|politique[-_]de[-_]confidentialite)(?:[/.?#]|$)/i;
+  const ASSET_PATH = /\.(png|jpe?g|gif|svg|webp|avif|ico|css|js|mjs|json|woff2?|ttf|pdf)(?:[?#]|$)/i;
+  const MAX_INLINE_SCRIPT_TEXT = 5_000_000;
+  function getEmbeddedLegalPaths() {
+    let text = '';
+    for (const script of document.querySelectorAll('script:not([src])')) {
+      text += ` ${script.textContent}`;
+      if (text.length > MAX_INLINE_SCRIPT_TEXT) break;
+    }
+    const found = new Map();
+    const tokens = text.replace(/\\\//g, '/').match(/https?:\/\/[^\s"'<>()\\,;{}]+|\/[\w\-./]+/g) ?? [];
+    for (const token of tokens) {
+      let url;
+      try {
+        url = new URL(token, location.href);
+      } catch {
+        continue;
+      }
+      // The path itself must name a legal page: an ad or tracking link such
+      // as ".../clk/?url=https://site.fr/cgv" only has one in its query
+      // string, and loading it would count as a click on the ad.
+      const match = url.pathname.match(LEGAL_PATH);
+      if (!match || ASSET_PATH.test(url.pathname)) continue;
+      if (!/^https?:$/.test(url.protocol) || found.has(url.href)) continue;
+      found.set(url.href, { text: match[1].replace(/[-_]/g, ' '), href: url.href });
+      if (found.size >= 5) break;
+    }
+    return [...found.values()];
+  }
+
   function getAllLinks() {
-    return [...getRealLinks(), ...getObfuscatedLinks()];
+    const links = [...getRealLinks(), ...getObfuscatedLinks()];
+    if (!links.some((link) => LEGAL_LINK_WORDING.test(link.text))) links.push(...getEmbeddedLegalPaths());
+    return links;
   }
 
   function getTechHints() {
@@ -173,6 +214,33 @@
     };
   }
 
+  // Bot protection (Cloudflare and the like) blocks the background script's
+  // requests: they carry none of the site's cookies, including the one that
+  // proves this browser passed the site's check. When that happens, the
+  // background asks this script to read the legal page instead: from the
+  // page, the request is the site's own, with its cookies, like browsing it.
+  // Same origin only: never a request to another site. In Firefox,
+  // content.fetch() makes the request as the page rather than the extension.
+  const PAGE_FETCH_TIMEOUT_MS = 8000;
+  const MAX_PAGE_HTML = 2_000_000;
+  async function fetchSameOriginPage(url) {
+    let target;
+    try {
+      target = new URL(url, location.href);
+    } catch {
+      return null;
+    }
+    if (target.origin !== location.origin) return null;
+    const fetchAsPage = typeof content !== 'undefined' && typeof content?.fetch === 'function'
+      ? (href) => content.fetch(href)
+      : (href) => fetch(href);
+    const timeout = new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), PAGE_FETCH_TIMEOUT_MS));
+    const res = await Promise.race([fetchAsPage(target.href), timeout]);
+    if (!res.ok) return { ok: false, status: res.status, html: '' };
+    const html = await Promise.race([res.text(), timeout]);
+    return { ok: true, status: res.status, html: html.slice(0, MAX_PAGE_HTML) };
+  }
+
   browser.runtime.sendMessage({ type: 'GUARDFOU_SIGNALS', payload: collectPayload() }).catch(() => {});
 
   browser.runtime.onMessage.addListener((message, sender, sendResponse) => {
@@ -184,6 +252,10 @@
     if (message?.type === 'GUARDFOU_COLLECT') {
       // sendResponse rather than a returned promise, which Chrome ignores.
       sendResponse(collectPayload());
+    }
+    if (message?.type === 'GUARDFOU_FETCH_PAGE') {
+      fetchSameOriginPage(message.url).then(sendResponse, () => sendResponse(null));
+      return true; // keeps the channel open for the async answer
     }
     return undefined;
   });

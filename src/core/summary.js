@@ -27,6 +27,7 @@ export function buildSiteFacts({ rdapInfo = null, legalAnalysis = null }) {
     domain,
     legal: {
       found: legalAnalysis.legal.present,
+      unreadable: Boolean(legalAnalysis.unreadable),
       missing: mentions ? mentions.missingUniversalCount + mentions.missingConditionalCount : null,
     },
     company: {

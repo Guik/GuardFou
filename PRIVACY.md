@@ -15,7 +15,7 @@ To check a site, GuardFou contacts these services. Like any web request, each on
 | [rdap.org](https://rdap.org), which forwards to the registry of the domain's extension | The site's domain name | Registration date and registrar |
 | [Cloudflare DNS](https://developers.cloudflare.com/1.1.1.1/privacy/public-dns-resolver/) (cloudflare-dns.com) | The site's domain name | DNSSEC status |
 | [recherche-entreprises.api.gouv.fr](https://recherche-entreprises.api.gouv.fr) | The company number (SIREN/SIRET) shown on the site | French company registry lookup |
-| The site itself | A normal request for its legal pages, without your cookies | Reading its legal information |
+| The site itself | A normal request for its legal pages, without your cookies. If the site's bot protection blocks it, the page you're on makes the same request to its own site, with that site's cookies, as when you browse it; never to another site | Reading its legal information |
 | [rdap.org](https://rdap.org), Cloudflare DNS | The site's IP address (rdap.org); the domain name (Cloudflare DNS) | Who hosts the site, shown in the identity card only |
 | [HackerTarget](https://hackertarget.com/privacy/) (api.hackertarget.com) | The site's IP address, unless it belongs to a hosting platform or CDN | Other sites on the same server, shown in the identity card only |
 

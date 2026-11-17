@@ -32,6 +32,8 @@ export const THRESHOLDS = { orange: 30, red: 60 };
  *  - isInsecureHttp: boolean (page served over plain HTTP, not HTTPS)
  *  - isNoindex: boolean (the page asks search engines not to index it)
  *  - legalPageMissing: boolean (no mentions-légales page found at all)
+ *  - legalPageUnreadable: boolean (legal pages linked but none could be
+ *    fetched, e.g. blocked by bot protection: not scored)
  *  - legalMentions: { universal, conditional } | null — field objects
  *    carry their own { key, weight, present }
  *    (from core/identity.js's checkMandatoryLegalMentions, only when a
@@ -169,6 +171,8 @@ export function computeScore(signals) {
       weight: 15,
       message: t('reasonLegalPageMissing'),
     });
+  } else if (signals.legalPageUnreadable) {
+    reasons.push({ id: 'legal-page-unreadable', weight: 0, message: t('reasonLegalPageUnreadable') });
   } else if (signals.legalMentions) {
     const { universal = [], conditional = [] } = signals.legalMentions;
     // Each field carries its own weight now (SIRET/adresse/dénomination

@@ -50,7 +50,7 @@ GuardFou has no server and no analytics. To run its checks it contacts:
 | [rdap.org](https://rdap.org), which forwards to the domain's registry | The site's domain name | Registration date and registrar |
 | [Cloudflare DNS](https://developers.cloudflare.com/1.1.1.1/encryption/dns-over-https/) | The site's domain name | DNSSEC status |
 | [recherche-entreprises.api.gouv.fr](https://recherche-entreprises.api.gouv.fr) | The company number shown on the site | French company registry lookup |
-| The site itself | A normal page request, without your cookies | Reading its legal pages |
+| The site itself | A normal page request, without your cookies; if the site's bot protection blocks it, the page you're on requests it, with that site's cookies | Reading its legal pages |
 | rdap.org, Cloudflare DNS, [HackerTarget](https://hackertarget.com) | The site's IP address (HackerTarget: not for hosting platforms and CDNs) | Hosting details, only when you open the identity card |
 
 - Lookups only run on pages that look like shops or name a known brand, or when you open the identity card. If you check domain age on every site, every domain you visit (except your trusted sites) is sent to rdap.org.

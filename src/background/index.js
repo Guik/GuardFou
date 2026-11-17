@@ -201,7 +201,7 @@ async function analyzeAndPublish(tabId, url, payload, isCurrentPage) {
     const wantsDeepChecks = payload?.isLikelyShop || matchedBrand;
     const [registration, deep] = await Promise.all([
       wantsDeepChecks || checkAgeOnEverySite ? computeRegistrationSignals(domain) : null,
-      wantsDeepChecks ? computeDeepSignals(domain, payload, claimedText, url) : null,
+      wantsDeepChecks ? computeDeepSignals(tabId, domain, payload, claimedText, url) : null,
     ]);
     Object.assign(signals, registration?.signals, deep?.signals);
     facts = buildSiteFacts({ rdapInfo: registration?.rdapInfo, legalAnalysis: deep?.legalAnalysis });
@@ -237,12 +237,14 @@ async function computeRegistrationSignals(domain) {
  * Each underlying fetch has its own cache, so calling this twice for the
  * same domain/legal pages (once from the automatic pass, once from the
  * identity card) is cheap after the first real fetch.
+ * @param {number} tabId whose content script reads a legal page the
+ *   site's bot protection refuses to the background (see legal.js)
  * @param {string} [currentUrl] the tab's own URL — used as a fallback legal
  *   page when no link on the page points to one (many sites don't
  *   hyperlink the nav item for the page you're already on, so visiting a
  *   legal page directly would otherwise find nothing to check)
  */
-async function computeDeepSignals(domain, payload, claimedText, currentUrl) {
+async function computeDeepSignals(tabId, domain, payload, claimedText, currentUrl) {
   const legalLinks = findLegalLinks(payload?.allLinks ?? [], domain);
   // Real sites routinely split legal info across separate documents
   // (mentions légales for company identity, CGV for commercial terms
@@ -266,13 +268,17 @@ async function computeDeepSignals(domain, payload, claimedText, currentUrl) {
   const onSharedHosting = getSharedHostingSuffix(domain) !== null;
   const [dnssec, legalAnalysis] = await Promise.all([
     onSharedHosting ? null : getDnssecStatus(domain),
-    getLegalPageAnalysis(legalUrls, payload?.htmlLang ?? null),
+    getLegalPageAnalysis(legalUrls, payload?.htmlLang ?? null, {
+      viaPage: (pageUrl) => browser.tabs.sendMessage(tabId, { type: 'GUARDFOU_FETCH_PAGE', url: pageUrl }),
+    }),
   ]);
 
   const signals = { dnssec };
 
   if (legalAnalysis.legal.present) {
     signals.legalMentions = legalAnalysis.mandatoryMentions;
+  } else if (legalAnalysis.unreadable) {
+    signals.legalPageUnreadable = true;
   } else {
     signals.legalPageMissing = true;
   }
@@ -354,7 +360,7 @@ async function buildIdentityCard(tabId) {
     // Hosting is for the card only (not scored), so it isn't looked up on load.
     const [registration, deep, hostingInfo] = await Promise.all([
       computeRegistrationSignals(domain),
-      computeDeepSignals(domain, payload, claimedText, url),
+      computeDeepSignals(tabId, domain, payload, claimedText, url),
       getHostingInfo(domain, getHostname(url) ?? domain).catch(() => null),
     ]);
     hosting = hostingInfo;
@@ -377,6 +383,7 @@ async function buildIdentityCard(tabId) {
     seoMetaSummary: payload.seoMeta ? summarizeSeoMeta(payload.seoMeta) : [],
     address: legalAnalysis.address,
     legalText: legalAnalysis.legal,
+    legalUnreadable: Boolean(legalAnalysis.unreadable),
     legalUrls,
     mandatoryMentions: legalAnalysis.mandatoryMentions,
     companyCheck: legalAnalysis.companyCheck,

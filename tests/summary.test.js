@@ -17,7 +17,7 @@ const LEGAL = {
 test('buildSiteFacts keeps what the summary shows', () => {
   assert.deepEqual(buildSiteFacts({ rdapInfo: RDAP, legalAnalysis: LEGAL }), {
     domain: RDAP,
-    legal: { found: true, missing: 3 },
+    legal: { found: true, unreadable: false, missing: 3 },
     company: { hasNumber: true, checksumValid: true, found: true, name: 'PLANETE HOME SLU', status: 'A', creationDate: '2015-06-01', country: 'ESPAGNE' },
   });
 });
@@ -27,7 +27,8 @@ test('buildSiteFacts leaves out the lookups that did not run', () => {
   const empty = { registeredAt: null, lastChangedAt: null, expiresAt: null, registrarName: null };
   assert.equal(buildSiteFacts({ rdapInfo: empty }).domain, null);
   const noLegal = { legal: { present: false }, mandatoryMentions: null, companyCheck: { candidate: null, checksumValid: null, registry: null } };
-  assert.deepEqual(buildSiteFacts({ legalAnalysis: noLegal }).legal, { found: false, missing: null });
+  assert.deepEqual(buildSiteFacts({ legalAnalysis: noLegal }).legal, { found: false, unreadable: false, missing: null });
+  assert.equal(buildSiteFacts({ legalAnalysis: { ...noLegal, unreadable: true } }).legal.unreadable, true);
   assert.equal(buildSiteFacts({ legalAnalysis: noLegal }).company.hasNumber, false);
 });
 

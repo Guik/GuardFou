@@ -83,6 +83,9 @@
   "cardLegalPages": {
     "message": "Page(s) checked for legal information"
   },
+  "cardLegalUnreadable": {
+    "message": "The legal pages linked from this page could not be read: the site blocks automated requests or did not answer."
+  },
   "cardNoLegalLinks": {
     "message": "No legal notice or terms of sale link found on the page."
   },
@@ -245,6 +248,9 @@
   "reasonDnssecOk": {
     "message": "The domain is protected by DNSSEC and its signature is valid."
   },
+  "reasonLegalPageUnreadable": {
+    "message": "The site's legal pages could not be read (the site blocks automated requests or did not answer), so they were not checked."
+  },
   "reasonLegalPageMissing": {
     "message": "No legal notice page found on the site, although every site in France must have one."
   },
@@ -403,6 +409,9 @@
   },
   "summaryLegalMissingOther": {
     "message": "Legal notice · $1 items missing"
+  },
+  "summaryLegalUnreadable": {
+    "message": "Legal notice could not be read"
   },
   "summaryLegalNone": {
     "message": "No legal notice found"
