@@ -1,6 +1,6 @@
 {
   "name": "guardfou",
-  "version": "0.1.4",
+  "version": "0.1.5",
   "private": true,
   "description": "Extension Firefox et Chrome qui détecte les faux sites marchands (usurpation de marque, domaine trop récent).",
   "license": "Apache-2.0",
