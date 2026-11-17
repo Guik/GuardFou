@@ -191,6 +191,9 @@
   "seoImageAlt": {
     "message": "Texte alternatif sur la plupart des images ($1/$2 sans attribut alt)"
   },
+  "reasonAllowlisted": {
+    "message": "Site ajouté à votre liste de confiance."
+  },
   "reasonIpHostname": {
     "message": "Le site est accédé via une adresse IP directe plutôt qu'un nom de domaine, ce qui est extrêmement rare pour un site légitime."
   },
@@ -290,26 +293,20 @@
   "optionsAccessMissing": {
     "message": "Accès non accordé : GuardFou ne peut analyser aucune page."
   },
+  "optionsTrustedHeading": {
+    "message": "Sites de confiance"
+  },
+  "optionsTrustedHint": {
+    "message": "Ces domaines ne seront jamais signalés."
+  },
+  "optionsTrustedPlaceholder": {
+    "message": "exemple.fr"
+  },
   "optionsAdd": {
     "message": "Ajouter"
   },
   "optionsRemove": {
     "message": "Retirer"
-  },
-  "optionsRegistrarsHeading": {
-    "message": "Bureaux d'enregistrement surveillés"
-  },
-  "optionsRegistrarsHint": {
-    "message": "Signalés légèrement (+8) uniquement si le domaine est aussi récent (< 2 ans) — le registrar seul ne prouve rien."
-  },
-  "optionsRegistrarsBuiltin": {
-    "message": "Liste intégrée :"
-  },
-  "optionsRegistrarsAddHint": {
-    "message": "Ajoutez-en d'autres que vous avez vous-même constatés."
-  },
-  "optionsRegistrarPlaceholder": {
-    "message": "Nom du bureau d'enregistrement"
   },
   "optionsAutoHeading": {
     "message": "Vérifications automatiques"

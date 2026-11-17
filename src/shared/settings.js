@@ -4,7 +4,7 @@ import './browser.js';
 // stay in storage.local.
 export const SYNC_SETTING_KEYS = [
   'language',
-  'customWatchedRegistrars',
+  'allowlist',
   'checkAgeOnEverySite',
   'ignorePrivateIpWarnings',
   'cacheDisabled',

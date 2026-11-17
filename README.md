@@ -52,7 +52,7 @@ GuardFou has no server and no analytics. To run its checks it contacts:
 | The site itself | A normal page request, without your cookies | Reading its legal pages |
 | rdap.org, Cloudflare DNS, [HackerTarget](https://hackertarget.com) | The site's IP address (HackerTarget: not for hosting platforms and CDNs) | Hosting details, only when you open the identity card |
 
-- Lookups only run on pages that look like shops or name a known brand, or when you open the identity card. If you check domain age on every site, every domain you visit is sent to rdap.org.
+- Lookups only run on pages that look like shops or name a known brand, or when you open the identity card. If you check domain age on every site, every domain you visit (except your trusted sites) is sent to rdap.org.
 - Results are cached on your device for 7 days; you can clear or disable the cache in the settings.
 - Settings sync through Chrome Sync or Firefox Sync when extension syncing is on (not on Firefox for Android). The cache never leaves your device.
 

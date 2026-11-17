@@ -191,6 +191,9 @@
   "seoImageAlt": {
     "message": "Alt text on most images ($1/$2 without an alt attribute)"
   },
+  "reasonAllowlisted": {
+    "message": "Site on your trusted list."
+  },
   "reasonIpHostname": {
     "message": "The site is reached through a raw IP address instead of a domain name, which is extremely rare for a legitimate site."
   },
@@ -290,26 +293,20 @@
   "optionsAccessMissing": {
     "message": "Access not granted: GuardFou can't analyze any page."
   },
+  "optionsTrustedHeading": {
+    "message": "Trusted sites"
+  },
+  "optionsTrustedHint": {
+    "message": "These domains will never be flagged."
+  },
+  "optionsTrustedPlaceholder": {
+    "message": "example.com"
+  },
   "optionsAdd": {
     "message": "Add"
   },
   "optionsRemove": {
     "message": "Remove"
-  },
-  "optionsRegistrarsHeading": {
-    "message": "Watched registrars"
-  },
-  "optionsRegistrarsHint": {
-    "message": "Flagged lightly (+8) only when the domain is also recent (under 2 years): the registrar alone proves nothing."
-  },
-  "optionsRegistrarsBuiltin": {
-    "message": "Built-in list:"
-  },
-  "optionsRegistrarsAddHint": {
-    "message": "Add others you have seen yourself."
-  },
-  "optionsRegistrarPlaceholder": {
-    "message": "Registrar name"
   },
   "optionsAutoHeading": {
     "message": "Automatic checks"

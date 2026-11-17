@@ -1,7 +1,6 @@
 import { t } from '../shared/i18n.js';
 import { getSettings, setSettings, removeSettings } from '../shared/settings.js';
 import { LANGUAGE_KEY, LANGUAGES } from '../core/i18n.js';
-import { WATCHED_REGISTRARS } from '../data/watched-registrars.js';
 import { clearCache, isCacheDisabled } from '../background/cache.js';
 
 async function refreshPermissionStatus() {
@@ -16,41 +15,40 @@ document.getElementById('activate-btn').addEventListener('click', async () => {
   if (granted) refreshPermissionStatus();
 });
 
-async function refreshRegistrarList() {
-  const { customWatchedRegistrars = [] } = await getSettings('customWatchedRegistrars');
-  const ul = document.getElementById('registrar-list');
+async function refreshAllowlist() {
+  const { allowlist = [] } = await getSettings('allowlist');
+  const ul = document.getElementById('allowlist');
   ul.innerHTML = '';
-  for (const name of customWatchedRegistrars) {
+  for (const domain of allowlist) {
     const li = document.createElement('li');
     const span = document.createElement('span');
     span.textContent = name;
     const removeBtn = document.createElement('button');
     removeBtn.textContent = t('optionsRemove');
     removeBtn.addEventListener('click', async () => {
-      const next = customWatchedRegistrars.filter((r) => r !== name);
-      await setSettings({ customWatchedRegistrars: next });
-      refreshRegistrarList();
+      const next = allowlist.filter((d) => d !== domain);
+      await setSettings({ allowlist: next });
+      refreshAllowlist();
     });
     li.append(span, removeBtn);
     ul.appendChild(li);
   }
 }
 
-document.getElementById('add-registrar-form').addEventListener('submit', async (event) => {
+document.getElementById('add-form').addEventListener('submit', async (event) => {
   event.preventDefault();
-  const input = document.getElementById('add-registrar-input');
-  const name = input.value.trim().toLowerCase();
-  if (!name) return;
-  const { customWatchedRegistrars = [] } = await getSettings('customWatchedRegistrars');
-  if (!customWatchedRegistrars.includes(name)) {
-    customWatchedRegistrars.push(name);
-    await setSettings({ customWatchedRegistrars });
+  const input = document.getElementById('add-input');
+  const domain = input.value.trim().toLowerCase();
+  if (!domain) return;
+  const { allowlist = [] } = await getSettings('allowlist');
+  if (!allowlist.includes(domain)) {
+    allowlist.push(domain);
+    await setSettings({ allowlist });
   }
   input.value = '';
-  refreshRegistrarList();
+  refreshAllowlist();
 });
 
-document.getElementById('builtin-registrars').textContent = WATCHED_REGISTRARS.join(', ');
 
 document.getElementById('clear-cache-btn').addEventListener('click', async () => {
   const removed = await clearCache();
@@ -99,7 +97,7 @@ async function refreshCacheToggle() {
 }
 
 refreshPermissionStatus();
-refreshRegistrarList();
+refreshAllowlist();
 refreshCheckAgeToggle();
 refreshPrivateIpWarningsToggle();
 refreshLanguage();

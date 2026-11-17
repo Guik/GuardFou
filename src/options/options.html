@@ -23,15 +23,11 @@
     </section>
 
     <section class="card">
-      <h2 data-i18n="optionsRegistrarsHeading">Watched registrars</h2>
-      <p class="hint">
-        <span data-i18n="optionsRegistrarsHint">Flagged lightly (+8) only when the domain is also recent (under 2 years): the registrar alone proves nothing.</span>
-        <span data-i18n="optionsRegistrarsBuiltin">Built-in list:</span> <em id="builtin-registrars"></em>.
-        <span data-i18n="optionsRegistrarsAddHint">Add others you have seen yourself.</span>
-      </p>
-      <ul id="registrar-list" class="item-list"></ul>
-      <form id="add-registrar-form" class="add-form">
-        <input id="add-registrar-input" type="text" placeholder="Registrar name" data-i18n-placeholder="optionsRegistrarPlaceholder" />
+      <h2 data-i18n="optionsTrustedHeading">Trusted sites</h2>
+      <p class="hint" data-i18n="optionsTrustedHint">These domains will never be flagged.</p>
+      <ul id="allowlist" class="item-list"></ul>
+      <form id="add-form" class="add-form">
+        <input id="add-input" type="text" placeholder="example.com" data-i18n-placeholder="optionsTrustedPlaceholder" />
         <button type="submit" class="btn btn-ghost" data-i18n="optionsAdd">Add</button>
       </form>
     </section>
