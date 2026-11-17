@@ -366,6 +366,8 @@ const NAMED_HTML_ENTITIES = {
   euro: '€', pound: '£', cent: '¢', yen: '¥',
   deg: '°', hellip: '…', ndash: '–', mdash: '—',
   laquo: '«', raquo: '»',
+  rsquo: '’', lsquo: '‘', rdquo: '”', ldquo: '“', sbquo: '‚', bdquo: '„',
+  copy: '©', reg: '®', trade: '™', sect: '§', middot: '·', bull: '•', thinsp: ' ', ensp: ' ', emsp: ' ',
 };
 
 /**

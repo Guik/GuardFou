@@ -392,3 +392,7 @@ test('extractPhysicalAddress accepts bis/ter house numbers', () => {
 test('extractPhysicalAddress still requires a capitalized city after the postal code', () => {
   assert.equal(extractPhysicalAddress('12 rue des Lilas 75001 immatriculée au RCS'), null);
 });
+
+test('stripHtmlToText decodes typographic quotes and common symbols', () => {
+  assert.equal(stripHtmlToText('<p>l&rsquo;issue &ldquo;AXA&rdquo; &copy; 2026</p>'), 'l’issue “AXA” © 2026');
+});

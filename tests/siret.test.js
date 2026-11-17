@@ -36,6 +36,17 @@ test('extractSirenOrSiret returns null with nothing to find', () => {
 // Real text from www.adepem.com/conditions-generales-vente — the SIREN is
 // only given via the RCS registration line, with no "SIREN"/"SIRET" label
 // anywhere on the page.
+// yesassurances.fr's legal notice (Nov 2026): the host's SIRET comes first.
+const HOST_FIRST_NOTICE = 'Les Agents AXA sont régis par le code des assurances. – Informations Générales Hébergeur : 1&1 Internet SARL 7, place de la Gare, BP 70109, 57201 Sarreguemines Cedex RCS Sarreguemines B : 431 303 775 SIRET : 431 303 775 000 16 CNIL : 8 rue Vivienne 75083 PARIS Cedex 02 Tél : 01 53 73 22 22 N° d’enregistrement : 1838567. Auteur, Directeur de la publication, Concepteur, Réalisateur, Editeur : Stephan CHARRIER Agent général d’assurance AXA 94 avenue de la République 44600 St Nazaire www.yesassurances.fr N°ORIAS :14005665 N°SIRET : 804 471 142 00021 Agent Général d’assurance.';
+
+test('extractSirenOrSiret skips the host\'s SIRET for the publisher\'s', () => {
+  assert.deepEqual(extractSirenOrSiret(HOST_FIRST_NOTICE), { type: 'siret', digits: '80447114200021' });
+});
+
+test('extractSirenOrSiret still uses the host\'s number when it is the only one', () => {
+  assert.deepEqual(extractSirenOrSiret('Hébergeur : OVH SAS, RCS Lille 424 761 419, SIRET : 424 761 419 00045.'), { type: 'siret', digits: '42476141900045' });
+});
+
 test('extractSirenOrSiret finds a SIREN given only via its RCS registration', () => {
   const result = extractSirenOrSiret('Immatriculation: RCS Paris B 321045395');
   assert.deepEqual(result, { type: 'siren', digits: '321045395' });
@@ -82,9 +93,19 @@ const TRADING_NAME_NOTICE = 'Mentions légales Le site https://www.chauffage-et-
 test('extractPublisherStatements keeps what follows "édité par"', () => {
   const statements = extractPublisherStatements(TRADING_NAME_NOTICE);
   assert.match(statements, /^ PLANETE HOME SLU, exerçant sous/);
-  assert.ok(statements.length <= 600);
+  assert.ok(statements.length <= 900);
   assert.equal(extractPublisherStatements('Nothing about the publisher here.'), '');
   assert.equal(extractPublisherStatements(null), '');
+});
+
+test('extractPublisherStatements reads other wordings and the name before a company number', () => {
+  const ownedBy = 'Le site lesfurets.com est la propriété de La Centrale de Financement, société par actions simplifiée.';
+  assert.match(extractPublisherStatements(ownedBy), /La Centrale de Financement/);
+  const beforeNumber = 'Mentions légales. LCF - La Centrale de Financement, SAS au capital de 1 000 000 €, RCS Paris 123 456 789. Hébergeur : AWS.';
+  assert.equal(companyNameMatchesClaim('LA CENTRALE DE FINANCEMENT (LCF)', `LesFurets • ${extractPublisherStatements(beforeNumber)}`), true);
+  // A notice that names another company before the number still mismatches.
+  const reused = 'Boutique Mode Paris, SAS au capital de 1 000 €, RCS Paris 123 456 789.';
+  assert.equal(companyNameMatchesClaim('LA CENTRALE DE FINANCEMENT (LCF)', `Boutique Mode • ${extractPublisherStatements(reused)}`), false);
 });
 
 test('a company named as publisher in the legal notice matches, despite another brand name', () => {

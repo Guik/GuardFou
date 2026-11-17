@@ -56,6 +56,10 @@ export async function getLegalPageAnalysis(legalUrls, declaredLang, { viaPage } 
 
 const UNREADABLE = Symbol('unreadable');
 
+// 2: publisher statements also read "propriété de", "publié par"… and the
+// words before a SIRET/SIREN/RCS. 3: the host's SIRET is skipped.
+const LEGAL_ANALYSIS_VERSION = 3;
+
 // A site that blocked us is asked again after a day, not on every page view:
 // retrying each time is exactly what gets a visitor's IP flagged as a bot.
 const BLOCKED_TTL_MS = 24 * 60 * 60 * 1000;
@@ -73,7 +77,9 @@ const blockedSince = new Map();
  * @param {string|null} declaredLang
  */
 async function getLegalTextAnalysis(urls, declaredLang, viaPage) {
-  const cacheKey = `legal:${declaredLang ?? ''}:${urls.join(' ')}`;
+  // Bump LEGAL_ANALYSIS_VERSION when analyzeText changes, so week-old
+  // analyses made by the previous code are ignored instead of served.
+  const cacheKey = `legal:v${LEGAL_ANALYSIS_VERSION}:${declaredLang ?? ''}:${urls.join(' ')}`;
   if (Date.now() - (blockedSince.get(cacheKey) ?? -Infinity) < BLOCKED_TTL_MS) return UNREADABLE;
   const cached = await getCached(cacheKey, CACHE_TTL_MS);
   if (cached?.blocked) {

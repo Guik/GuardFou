@@ -8,27 +8,42 @@ import { normalize } from './brands.js';
  * @returns {{type: 'siret'|'siren', digits: string}|null}
  */
 export function extractSirenOrSiret(text) {
-  const siretLabeled = text.match(/siret\s*:?\s*([\d\s]{14,20})/i);
-  if (siretLabeled) {
-    const digits = siretLabeled[1].replace(/\D/g, '');
-    if (digits.length >= 14) return { type: 'siret', digits: digits.slice(0, 14) };
-  }
+  // Legal notices also give the host's numbers ("Hébergeur : 1&1 Internet
+  // SARL… SIRET : 431 303 775 00016", seen on yesassurances.fr before the
+  // publisher's own): a number in the hosting section is only used when
+  // there's no other.
+  const pick = (regex, read) => {
+    let fallback = null;
+    for (const match of text.matchAll(regex)) {
+      const found = read(match);
+      if (!found) continue;
+      if (!inHostingSection(text, match.index)) return found;
+      fallback ??= found;
+    }
+    return fallback;
+  };
 
-  const sirenLabeled = text.match(/siren\s*:?\s*([\d\s]{9,14})/i);
-  if (sirenLabeled) {
-    const digits = sirenLabeled[1].replace(/\D/g, '');
-    if (digits.length >= 9) return { type: 'siren', digits: digits.slice(0, 9) };
-  }
+  const siretLabeled = pick(/siret\s*:?\s*([\d\s]{14,20})/gi, (m) => {
+    const digits = m[1].replace(/\D/g, '');
+    return digits.length >= 14 ? { type: 'siret', digits: digits.slice(0, 14) } : null;
+  });
+  if (siretLabeled) return siretLabeled;
+
+  const sirenLabeled = pick(/siren\s*:?\s*([\d\s]{9,14})/gi, (m) => {
+    const digits = m[1].replace(/\D/g, '');
+    return digits.length >= 9 ? { type: 'siren', digits: digits.slice(0, 9) } : null;
+  });
+  if (sirenLabeled) return sirenLabeled;
 
   // A company's SIREN is routinely given via its RCS registration instead
   // of the word "SIREN" itself, e.g. "RCS Paris B 321045395" — real text
   // seen on an actual legal-notice page, which the two checks above missed
   // entirely despite the number being right there.
-  const rcsLabeled = text.match(/\brcs\b[^\n]{0,40}?(\d[\d\s]{7,13}\d)/i);
-  if (rcsLabeled) {
-    const digits = rcsLabeled[1].replace(/\D/g, '');
-    if (digits.length === 9) return { type: 'siren', digits };
-  }
+  const rcsLabeled = pick(/\brcs\b[^\n]{0,40}?(\d[\d\s]{7,13}\d)/gi, (m) => {
+    const digits = m[1].replace(/\D/g, '');
+    return digits.length === 9 ? { type: 'siren', digits } : null;
+  });
+  if (rcsLabeled) return rcsLabeled;
 
   const bareSiret = text.match(/\b\d{3}[\s.]?\d{3}[\s.]?\d{3}[\s.]?\d{5}\b/);
   if (bareSiret) return { type: 'siret', digits: bareSiret[0].replace(/\D/g, '') };
@@ -92,18 +107,43 @@ export function companyNameMatchesClaim(registeredName, claimedText) {
   return matchCount / registeredWords.length >= 0.5;
 }
 
-const PUBLISHER_INTRO = /[ée]dit[ée]e?\s+par|[ée]diteur(?:\s+du\s+site)?|exploit[ée]e?\s+par|raison\s+sociale|d[ée]nomination(?:\s+sociale)?/gi;
+// Section headings that say whose details follow: the host's, or the
+// publisher's. A number belongs to the closer one before it.
+const HOSTING_HEADING = /h[ée]berg(?:eur|ement|[ée]e?\s+(?:par|chez))|\bhost(?:ing|ed\s+by)\b/gi;
+const PUBLISHER_HEADING = /[ée]dit[ée]e?\s+par|[ée]diteur|propri[ée]taire|\bpublisher\b/gi;
+const SECTION_LOOKBACK = 400;
+
+/** True when the closest section heading before `index` is the host's. */
+function inHostingSection(text, index) {
+  const before = text.slice(Math.max(index - SECTION_LOOKBACK, 0), index);
+  const lastIndex = (regex) => Math.max(-1, ...[...before.matchAll(regex)].map((m) => m.index));
+  const host = lastIndex(HOSTING_HEADING);
+  return host >= 0 && host > lastIndex(PUBLISHER_HEADING);
+}
+
+const PUBLISHER_INTRO = /[ée]dit[ée]e?\s+par|[ée]diteur(?:\s+du\s+site)?|exploit[ée]e?\s+par|publi[ée]e?\s+par|g[ée]r[ée]e?\s+par|(?:la\s+)?propri[ée]t[ée]\s+(?:exclusive\s+)?de|appartenant\s+[àa]|raison\s+sociale|d[ée]nomination(?:\s+sociale)?/gi;
+// A company number: the company's name is almost always written just
+// before it ("La Centrale de Financement, SAS au capital de…, RCS Paris…").
+const COMPANY_ID = /\b(?:siret|siren|rcs)\b/gi;
 
 /**
- * The words right after each "édité par", "éditeur", "raison sociale"…
- * in a legal notice: where a site names the company behind it, which can
- * differ from its brand ("édité par PLANETE HOME SLU, exerçant sous
- * l'enseigne « CHAUFFAGE ET CLIMATISATION »"). Kept short (a few hundred
- * characters) because it's cached with the rest of the legal analysis.
+ * Where a legal notice names the company behind the site, which can differ
+ * from its brand ("édité par PLANETE HOME SLU, exerçant sous l'enseigne
+ * « CHAUFFAGE ET CLIMATISATION »"): the words right after each "édité
+ * par", "éditeur", "propriété de", "raison sociale"…, and the words just
+ * before each SIRET/SIREN/RCS. Kept short (under a thousand characters)
+ * because it's cached with the rest of the legal analysis.
  * @param {string|null} text
  */
 export function extractPublisherStatements(text) {
   if (!text) return '';
-  const excerpts = [...text.matchAll(PUBLISHER_INTRO)].map((m) => text.slice(m.index + m[0].length, m.index + m[0].length + 120));
-  return excerpts.join(' • ').slice(0, 600);
+  const after = [...text.matchAll(PUBLISHER_INTRO)].map((m) => text.slice(m.index + m[0].length, m.index + m[0].length + 120));
+  const before = [...text.matchAll(COMPANY_ID)].map((m) => text.slice(Math.max(m.index - 150, 0), m.index));
+  // Interleaved so that a notice with many of one kind still keeps the other.
+  const excerpts = [];
+  for (let i = 0; i < Math.max(after.length, before.length); i += 1) {
+    if (after[i]) excerpts.push(after[i]);
+    if (before[i]) excerpts.push(before[i]);
+  }
+  return excerpts.join(' • ').slice(0, 900);
 }
