@@ -22,7 +22,7 @@ async function refreshAllowlist() {
   for (const domain of allowlist) {
     const li = document.createElement('li');
     const span = document.createElement('span');
-    span.textContent = name;
+    span.textContent = domain;
     const removeBtn = document.createElement('button');
     removeBtn.textContent = t('optionsRemove');
     removeBtn.addEventListener('click', async () => {
