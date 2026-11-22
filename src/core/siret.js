@@ -114,7 +114,7 @@ const PUBLISHER_HEADING = /[ée]dit[ée]e?\s+par|[ée]diteur|propri[ée]taire|\b
 const SECTION_LOOKBACK = 400;
 
 /** True when the closest section heading before `index` is the host's. */
-function inHostingSection(text, index) {
+export function inHostingSection(text, index) {
   const before = text.slice(Math.max(index - SECTION_LOOKBACK, 0), index);
   const lastIndex = (regex) => Math.max(-1, ...[...before.matchAll(regex)].map((m) => m.index));
   const host = lastIndex(HOSTING_HEADING);

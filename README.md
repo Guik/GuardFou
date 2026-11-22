@@ -39,6 +39,10 @@ No single check proves a site is a scam; the score combines them and shows every
 - **SIRET/SIREN numbers**: checks that the number is well-formed, exists in the official registry, belongs to an active company and matches the site's name.
 - **Shop detection**: prices in euros and cart wording in French or English (product structured data works in any language).
 
+### Optional: dropshipping
+
+Dropshipping is not a scam: the shop resells products a supplier ships straight to you, often from Asia, with long delivery times and difficult returns. A setting, off by default, points out likely dropshipping shops apart from the risk score (a "DS" badge, a purple banner on the shop and the clues in the popup), from their legal notice, terms and shipping policy (or FAQ): a registered office shared by many dropshipping shops, a seller's address in Hong Kong or mainland China, the shop saying it ships from Asia, delivery times of several weeks, orders split across warehouses.
+
 The interface is in English and French. It follows the browser's language unless you pick one in the settings.
 
 ## Privacy
@@ -50,7 +54,7 @@ GuardFou has no server and no analytics. To run its checks it contacts:
 | [rdap.org](https://rdap.org), which forwards to the domain's registry | The site's domain name | Registration date and registrar |
 | [Cloudflare DNS](https://developers.cloudflare.com/1.1.1.1/encryption/dns-over-https/) | The site's domain name | DNSSEC status |
 | [recherche-entreprises.api.gouv.fr](https://recherche-entreprises.api.gouv.fr) | The company number shown on the site | French company registry lookup |
-| The site itself | A normal page request, without your cookies; if the site's bot protection blocks it, the page you're on requests it, with that site's cookies | Reading its legal pages |
+| The site itself | A normal page request, without your cookies; if the site's bot protection blocks it, the page you're on requests it, with that site's cookies | Reading its legal pages, and its shipping policy (or else its FAQ) when the dropshipping alert is on |
 | rdap.org, Cloudflare DNS, [HackerTarget](https://hackertarget.com) | The site's IP address (HackerTarget: not for hosting platforms and CDNs) | Hosting details, only when you open the identity card |
 
 - Lookups only run on pages that look like shops or name a known brand, or when you open the identity card. If you check domain age on every site, every domain you visit (except your trusted sites) is sent to rdap.org.

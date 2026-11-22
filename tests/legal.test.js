@@ -1,7 +1,7 @@
 import { test, beforeEach, mock } from 'node:test';
 import assert from 'node:assert/strict';
 import { CACHE_PREFIX } from '../src/background/cache.js';
-import { getLegalPageAnalysis } from '../src/background/legal.js';
+import { getLegalPageAnalysis, getShippingPolicyClues } from '../src/background/legal.js';
 
 const LEGAL_HTML = `<h1>Mentions légales</h1><p>Exemple SAS, capital social 10 000 €.
   Siège : 12 rue des Lilas, 75001 Paris. SIRET : 732 829 320 00074. RCS Paris.
@@ -137,4 +137,21 @@ test('a network failure is not remembered: it is retried next time', async () =>
   await getLegalPageAnalysis(['https://exemple.fr/down'], 'fr');
   await getLegalPageAnalysis(['https://exemple.fr/down'], 'fr');
   assert.equal(legalPageFetches().length, 2);
+});
+
+test('the shipping policy is read once, then served from the cache', async () => {
+  const url = 'https://exemple.fr/pages/livraison';
+  const first = await getShippingPolicyClues(url);
+  assert.equal(first.virtualOffice, null);
+  assert.equal(fetched.filter((u) => u === url).length, 1);
+  assert.deepEqual(await getShippingPolicyClues(url), first);
+  assert.equal(fetched.filter((u) => u === url).length, 1);
+  assert.equal(await getShippingPolicyClues(null), null);
+});
+
+test('a shipping policy that bot protection blocks is not asked again', async () => {
+  const url = 'https://exemple.fr/blocked/livraison';
+  assert.equal(await getShippingPolicyClues(url), null);
+  assert.equal(await getShippingPolicyClues(url), null);
+  assert.equal(fetched.filter((u) => u === url).length, 1);
 });

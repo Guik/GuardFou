@@ -578,6 +578,27 @@
   "hostingUnknown": {
     "message": "Introuvable"
   },
+  "optionsDropshippingAlert": {
+    "message": "Signaler les boutiques probablement en dropshipping"
+  },
+  "popupDropshippingTitle": {
+    "message": "Dropshipping probable"
+  },
+  "popupDropshippingHint": {
+    "message": "Pas une arnaque : les produits sont expédiés par un fournisseur, souvent depuis l'Asie. Attendez-vous à des délais longs et à des retours difficiles."
+  },
+  "dropshippingVirtualOffice": {
+    "message": "Domiciliée au $1, une adresse partagée par de nombreuses boutiques en dropshipping"
+  },
+  "dropshippingAsianSeller": {
+    "message": "L'adresse du vendeur est à $1"
+  },
+  "dropshippingLongDelivery": {
+    "message": "Délais de livraison longs annoncés : « $1 »"
+  },
+  "dropshippingSplitShipments": {
+    "message": "Une commande peut arriver en plusieurs colis, depuis différents entrepôts"
+  },
   "optionsChecksHeading": {
     "message": "Vérifications"
   },
@@ -587,6 +608,9 @@
   "optionsCheckAgeEverywhereHint": {
     "message": "Par défaut, seulement sur les pages qui ressemblent à une boutique ou citent une marque connue. Ailleurs, un domaine de moins de 6 mois passe en orange même s'il ne vend rien, et chaque domaine visité est envoyé à rdap.org (au plus une fois par semaine)."
   },
+  "optionsDropshippingAlertHint": {
+    "message": "Le dropshipping n'est pas une arnaque : un fournisseur, souvent en Asie, vous expédie directement les produits, avec des délais longs et des retours difficiles. Signalé à part du score de risque ; la politique de livraison de la boutique, ou à défaut sa FAQ, est lue aussi."
+  },
   "optionsIgnorePrivateIpWarningsHint": {
     "message": "Pour les services locaux et le développement."
   },
@@ -595,5 +619,11 @@
   },
   "optionsDisableCacheHint": {
     "message": "Tout est revérifié à chaque fois : utile pour tester, mais plus de requêtes réseau."
+  },
+  "bannerDropshippingTitle": {
+    "message": "GuardFou : cette boutique fait probablement du dropshipping"
+  },
+  "dropshippingShipsFromAsia": {
+    "message": "La boutique indique expédier depuis l'Asie : « $1 »"
   }
 }

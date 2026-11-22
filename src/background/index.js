@@ -24,7 +24,8 @@ import { BRANDS_FR } from '../data/brands-fr.js';
 import { WATCHED_REGISTRARS } from '../data/watched-registrars.js';
 import { getDomainRdapInfo, EMPTY_RDAP_INFO } from './rdap.js';
 import { getDnssecStatus } from './dnssec.js';
-import { getLegalPageAnalysis } from './legal.js';
+import { getLegalPageAnalysis, getShippingPolicyClues } from './legal.js';
+import { assessDropshipping, findShippingInfoLink } from '../core/dropshipping.js';
 import { getHostingInfo } from './hosting.js';
 import { pruneExpiredCache } from './cache.js';
 
@@ -64,9 +65,24 @@ const currentPageByTab = new Map();
 // the analysis it tracked is gone too.
 const analyzingTabs = new Set();
 
+// Sites whose dropshipping banner a tab has already shown, so browsing the
+// shop doesn't bring it back on every page: the badge and popup keep saying
+// it. In memory: after a background restart it may show once more.
+const dropshippingBannerShown = new Set();
+
 pruneExpiredCache().catch(() => {});
 
 const BADGE_COLORS = { green: '#2e7d32', orange: '#ed6c02', red: '#c62828' };
+// A likely dropshipping shop on an otherwise green verdict: not a risk, so
+// not a score, but visible without opening the popup.
+const DROPSHIPPING_BADGE = { text: 'DS', color: '#5e5ce6' };
+const DROPSHIPPING_MESSAGES = {
+  'virtual-office': 'dropshippingVirtualOffice',
+  'asian-seller': 'dropshippingAsianSeller',
+  'ships-from-asia': 'dropshippingShipsFromAsia',
+  'long-delivery': 'dropshippingLongDelivery',
+  'split-shipments': 'dropshippingSplitShipments',
+};
 
 // Chrome ignores a promise returned by an onMessage listener: answer through
 // sendResponse instead, and return true to keep the channel open until then.
@@ -130,6 +146,7 @@ async function openAnalysis(tab) {
 browser.tabs.onRemoved.addListener((tabId) => {
   currentPageByTab.delete(tabId);
   analyzingTabs.delete(tabId);
+  for (const key of dropshippingBannerShown) if (key.startsWith(`${tabId} `)) dropshippingBannerShown.delete(key);
   verdictsByTab.delete(tabId).catch(() => {});
 });
 browser.runtime.onInstalled.addListener(() => {
@@ -175,7 +192,8 @@ async function analyzePage(url, payload) {
     allowlist = [],
     checkAgeOnEverySite = false,
     ignorePrivateIpWarnings = false,
-  } = await getSettings(['allowlist', 'checkAgeOnEverySite', 'ignorePrivateIpWarnings']);
+    dropshippingAlert = false,
+  } = await getSettings(['allowlist', 'checkAgeOnEverySite', 'ignorePrivateIpWarnings', 'dropshippingAlert']);
   const isAllowlisted = allowlist.includes(displayId);
   const ignorePrivateIpWarningsHere = ignorePrivateIpWarnings && isPrivateIpAddress(url);
 
@@ -200,7 +218,7 @@ async function analyzePage(url, payload) {
     isNoindex: payload?.seoMeta?.noindex === true,
   };
 
-  return { domain, displayId, isAllowlisted, checkAgeOnEverySite, claimedText, matchedBrand, baseSignals };
+  return { domain, displayId, isAllowlisted, checkAgeOnEverySite, dropshippingAlert, claimedText, matchedBrand, baseSignals };
 }
 
 async function handlePageSignals(tabId, url, payload) {
@@ -219,7 +237,7 @@ async function handlePageSignals(tabId, url, payload) {
 }
 
 async function analyzeAndPublish(tabId, url, payload, isCurrentPage) {
-  const { domain, displayId, isAllowlisted, checkAgeOnEverySite, claimedText, matchedBrand, baseSignals } = await analyzePage(url, payload);
+  const { domain, displayId, isAllowlisted, checkAgeOnEverySite, dropshippingAlert, claimedText, matchedBrand, baseSignals } = await analyzePage(url, payload);
 
   // The network-dependent checks (RDAP, DNSSEC, legal pages, SIRET registry)
   // only run automatically when the page looks like a shop or claims a
@@ -232,18 +250,20 @@ async function analyzeAndPublish(tabId, url, payload, isCurrentPage) {
   // that sell nothing, and it sends every visited domain to rdap.org.
   const signals = { ...baseSignals };
   let facts = buildSiteFacts({});
+  let dropshipping = [];
   if (!isAllowlisted && domain) {
     const wantsDeepChecks = payload?.isLikelyShop || matchedBrand;
     const [registration, deep] = await Promise.all([
       wantsDeepChecks || checkAgeOnEverySite ? computeRegistrationSignals(domain) : null,
-      wantsDeepChecks ? computeDeepSignals(tabId, domain, payload, claimedText, url) : null,
+      wantsDeepChecks ? computeDeepSignals(tabId, domain, payload, claimedText, url, { dropshippingAlert }) : null,
     ]);
     Object.assign(signals, registration?.signals, deep?.signals);
     facts = buildSiteFacts({ rdapInfo: registration?.rdapInfo, legalAnalysis: deep?.legalAnalysis });
+    dropshipping = deep?.dropshipping ?? [];
   }
 
   if (!isCurrentPage()) return;
-  await publishVerdict(tabId, displayId, signals, facts);
+  await publishVerdict(tabId, displayId, signals, facts, dropshipping);
 }
 
 /**
@@ -278,8 +298,10 @@ async function computeRegistrationSignals(domain) {
  *   page when no link on the page points to one (many sites don't
  *   hyperlink the nav item for the page you're already on, so visiting a
  *   legal page directly would otherwise find nothing to check)
+ * @param {{ dropshippingAlert?: boolean }} [options] with the dropshipping
+ *   alert on, the shipping policy (or FAQ) is read too and the clues are assessed
  */
-async function computeDeepSignals(tabId, domain, payload, claimedText, currentUrl) {
+async function computeDeepSignals(tabId, domain, payload, claimedText, currentUrl, { dropshippingAlert = false } = {}) {
   const legalLinks = findLegalLinks(payload?.allLinks ?? [], domain);
   // Real sites routinely split legal info across separate documents
   // (mentions légales for company identity, CGV for commercial terms
@@ -301,12 +323,16 @@ async function computeDeepSignals(tabId, domain, payload, claimedText, currentUr
   // A subdomain of a shared hosting platform has no DNS zone of its own:
   // DNSSEC would only describe the platform's domain.
   const onSharedHosting = getSharedHostingSuffix(domain) !== null;
-  const [dnssec, legalAnalysis] = await Promise.all([
+  const viaPage = (pageUrl) => browser.tabs.sendMessage(tabId, { type: 'GUARDFOU_FETCH_PAGE', url: pageUrl });
+  const shippingUrl = dropshippingAlert ? findShippingInfoLink(payload?.allLinks ?? [], domain) : null;
+  const [dnssec, legalAnalysis, shippingClues] = await Promise.all([
     onSharedHosting ? null : getDnssecStatus(domain),
-    getLegalPageAnalysis(legalUrls, payload?.htmlLang ?? null, {
-      viaPage: (pageUrl) => browser.tabs.sendMessage(tabId, { type: 'GUARDFOU_FETCH_PAGE', url: pageUrl }),
-    }),
+    getLegalPageAnalysis(legalUrls, payload?.htmlLang ?? null, { viaPage }),
+    shippingUrl && !legalUrls.includes(shippingUrl) ? getShippingPolicyClues(shippingUrl, { viaPage }) : null,
   ]);
+  const dropshipping = dropshippingAlert
+    ? assessDropshipping([legalAnalysis.dropshipping, shippingClues], { hasCompanyNumber: Boolean(legalAnalysis.companyCheck.candidate) })
+    : [];
 
   const signals = { dnssec };
 
@@ -335,24 +361,43 @@ async function computeDeepSignals(tabId, domain, payload, claimedText, currentUr
     }
   }
 
-  return { signals, legalAnalysis, legalUrls };
+  return { signals, legalAnalysis, legalUrls, dropshipping };
 }
 
 /**
  * @param {ReturnType<typeof buildSiteFacts>} facts what the popup's summary shows about the site
+ * @param {ReturnType<typeof assessDropshipping>} [dropshipping] clues of a
+ *   likely dropshipping shop, shown apart from the score
  */
-async function publishVerdict(tabId, displayId, signals, facts) {
+async function publishVerdict(tabId, displayId, signals, facts, dropshipping = []) {
   const verdict = computeScore(signals);
   verdict.domain = displayId;
   verdict.facts = facts;
+  verdict.dropshipping = dropshipping.map((clue) => ({ id: clue.id, message: t(DROPSHIPPING_MESSAGES[clue.id], clue.detail ?? '') }));
   await verdictsByTab.set(tabId, verdict);
   setBadge(tabId, verdict);
 
+  // The content script can't load the chosen language itself, so the
+  // banner's text travels with it. A red verdict's banner wins over the
+  // dropshipping one.
+  const buttons = { details: t('bannerDetails'), dismiss: t('bannerDismiss') };
   if (verdict.band === 'red') {
-    // The content script can't load the chosen language itself, so the
-    // banner's text travels with the verdict.
-    const text = { title: t('bannerTitle', verdict.score), details: t('bannerDetails'), dismiss: t('bannerDismiss') };
-    browser.tabs.sendMessage(tabId, { type: 'SHOW_BANNER', verdict, text }).catch(() => {});
+    const banner = {
+      tone: 'danger',
+      title: t('bannerTitle', verdict.score),
+      summary: verdict.reasons[0]?.message ?? '',
+      ...buttons,
+    };
+    browser.tabs.sendMessage(tabId, { type: 'SHOW_BANNER', banner }).catch(() => {});
+  } else if (verdict.dropshipping.length > 0 && !dropshippingBannerShown.has(`${tabId} ${displayId}`)) {
+    dropshippingBannerShown.add(`${tabId} ${displayId}`);
+    const banner = {
+      tone: 'info',
+      title: t('bannerDropshippingTitle'),
+      summary: verdict.dropshipping[0].message,
+      ...buttons,
+    };
+    browser.tabs.sendMessage(tabId, { type: 'SHOW_BANNER', banner }).catch(() => {});
   }
   return verdict;
 }
@@ -384,7 +429,7 @@ async function buildIdentityCard(tabId) {
   if (!payload) return { needsReload: true };
   if (!isCurrentPage()) return null;
 
-  const { domain, displayId, isAllowlisted, claimedText, baseSignals } = await analyzePage(url, payload);
+  const { domain, displayId, isAllowlisted, dropshippingAlert, claimedText, baseSignals } = await analyzePage(url, payload);
 
   let rdapInfo = EMPTY_RDAP_INFO;
   let legalAnalysis = { address: null, legal: { present: false, length: 0, detectedLang: 'unknown', languageMismatch: false, tooShort: false }, mandatoryMentions: null, companyCheck: { candidate: null, checksumValid: null, registry: null } };
@@ -395,7 +440,7 @@ async function buildIdentityCard(tabId) {
     // Hosting is for the card only (not scored), so it isn't looked up on load.
     const [registration, deep, hostingInfo] = await Promise.all([
       computeRegistrationSignals(domain),
-      computeDeepSignals(tabId, domain, payload, claimedText, url),
+      computeDeepSignals(tabId, domain, payload, claimedText, url, { dropshippingAlert }),
       getHostingInfo(domain, getHostname(url) ?? domain).catch(() => null),
     ]);
     hosting = hostingInfo;
@@ -403,7 +448,7 @@ async function buildIdentityCard(tabId) {
     rdapInfo = registration.rdapInfo;
     legalAnalysis = deep.legalAnalysis;
     legalUrls = deep.legalUrls;
-    await publishVerdict(tabId, displayId, { ...baseSignals, ...registration.signals, ...deep.signals }, buildSiteFacts({ rdapInfo, legalAnalysis }));
+    await publishVerdict(tabId, displayId, { ...baseSignals, ...registration.signals, ...deep.signals }, buildSiteFacts({ rdapInfo, legalAnalysis }), deep.dropshipping);
   }
 
   return {
@@ -429,6 +474,11 @@ async function buildIdentityCard(tabId) {
 }
 
 function setBadge(tabId, verdict) {
+  if (verdict.band === 'green' && verdict.dropshipping?.length > 0) {
+    browser.action.setBadgeText({ tabId, text: DROPSHIPPING_BADGE.text });
+    browser.action.setBadgeBackgroundColor({ tabId, color: DROPSHIPPING_BADGE.color });
+    return;
+  }
   browser.action.setBadgeText({ tabId, text: verdict.band === 'green' ? '' : String(verdict.score) });
   browser.action.setBadgeBackgroundColor({ tabId, color: BADGE_COLORS[verdict.band] });
 }

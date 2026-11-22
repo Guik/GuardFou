@@ -50,7 +50,7 @@ const SOCIAL_PLATFORMS = [
 ];
 
 /** @param {string} hostname @param {string} domain */
-function hostnameMatchesDomain(hostname, domain) {
+export function hostnameMatchesDomain(hostname, domain) {
   return hostname === domain || hostname.endsWith(`.${domain}`);
 }
 

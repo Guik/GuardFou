@@ -578,6 +578,27 @@
   "hostingUnknown": {
     "message": "Not found"
   },
+  "optionsDropshippingAlert": {
+    "message": "Point out likely dropshipping shops"
+  },
+  "popupDropshippingTitle": {
+    "message": "Likely dropshipping"
+  },
+  "popupDropshippingHint": {
+    "message": "Not a scam: the products are shipped by a supplier, often from Asia. Expect long delivery times and difficult returns."
+  },
+  "dropshippingVirtualOffice": {
+    "message": "Registered at $1, an address shared by many dropshipping shops"
+  },
+  "dropshippingAsianSeller": {
+    "message": "The seller’s address is in $1"
+  },
+  "dropshippingLongDelivery": {
+    "message": "Long delivery times announced: “$1”"
+  },
+  "dropshippingSplitShipments": {
+    "message": "An order may arrive in several parcels, from different warehouses"
+  },
   "optionsChecksHeading": {
     "message": "Checks"
   },
@@ -587,6 +608,9 @@
   "optionsCheckAgeEverywhereHint": {
     "message": "By default, only on pages that look like a shop or name a known brand. Elsewhere, a domain under 6 months old turns orange even if it sells nothing, and every domain you visit is sent to rdap.org (at most once a week)."
   },
+  "optionsDropshippingAlertHint": {
+    "message": "Dropshipping isn't a scam: a supplier, often in Asia, ships the products straight to you, with long delivery times and difficult returns. Shown apart from the risk score; the shop's shipping policy, or else its FAQ, is read too."
+  },
   "optionsIgnorePrivateIpWarningsHint": {
     "message": "For local services and development."
   },
@@ -595,5 +619,11 @@
   },
   "optionsDisableCacheHint": {
     "message": "Re-checks everything every time: useful for testing, but more network requests."
+  },
+  "bannerDropshippingTitle": {
+    "message": "GuardFou: this shop is probably dropshipping"
+  },
+  "dropshippingShipsFromAsia": {
+    "message": "The shop says its orders ship from Asia: “$1”"
   }
 }

@@ -3,6 +3,7 @@ import { getCached, setCached, CACHE_TTL_MS } from './cache.js';
 import { stripHtmlToText, extractContactLinks, extractPhysicalAddress, analyzeLegalText, checkMandatoryLegalMentions } from '../core/identity.js';
 import { extractSirenOrSiret, isValidSirenOrSiret, extractPublisherStatements } from '../core/siret.js';
 import { getCompanyInfo } from './companyRegistry.js';
+import { findDropshippingClues } from '../core/dropshipping.js';
 
 /**
  * Fetches and analyzes a site's legal-notice page(s) — mentions légales,
@@ -28,6 +29,7 @@ import { getCompanyInfo } from './companyRegistry.js';
  *   legal: ReturnType<typeof analyzeLegalText>,
  *   mandatoryMentions: ReturnType<typeof checkMandatoryLegalMentions>,
  *   publisherText: string,
+ *   dropshipping: ReturnType<typeof findDropshippingClues>,
  *   companyCheck: {
  *     candidate: {type: 'siret'|'siren', digits: string} | null,
  *     checksumValid: boolean | null,
@@ -47,18 +49,19 @@ export async function getLegalPageAnalysis(legalUrls, declaredLang, { viaPage } 
   if (!textAnalysis) return emptyAnalysis(declaredLang);
 
   // publisherText is missing from analyses cached before it existed.
-  const { address, legal, mandatoryMentions, publisherText = '', companyNumber: { candidate, checksumValid } } = textAnalysis;
+  const { address, legal, mandatoryMentions, publisherText = '', dropshipping, companyNumber: { candidate, checksumValid } } = textAnalysis;
   // Only look up a number whose checksum passes — no point wasting a
   // registry request on an obviously fabricated one.
   const registry = candidate && checksumValid ? await getCompanyInfo(candidate.digits) : null;
-  return { address, unreadable: false, legal, mandatoryMentions, publisherText, companyCheck: { candidate, checksumValid, registry } };
+  return { address, unreadable: false, legal, mandatoryMentions, publisherText, dropshipping, companyCheck: { candidate, checksumValid, registry } };
 }
 
 const UNREADABLE = Symbol('unreadable');
 
 // 2: publisher statements also read "propriété de", "publié par"… and the
 // words before a SIRET/SIREN/RCS. 3: the host's SIRET is skipped.
-const LEGAL_ANALYSIS_VERSION = 3;
+// 4-5: dropshipping clues, then the shop saying it ships from Asia.
+const LEGAL_ANALYSIS_VERSION = 5;
 
 // A site that blocked us is asked again after a day, not on every page view:
 // retrying each time is exactly what gets a visitor's IP flagged as a bot.
@@ -109,6 +112,7 @@ function analyzeText(text, declaredLang) {
     legal: analyzeLegalText(text, declaredLang),
     mandatoryMentions: checkMandatoryLegalMentions(text),
     publisherText: extractPublisherStatements(text),
+    dropshipping: findDropshippingClues(text),
     companyNumber: { candidate, checksumValid: candidate ? isValidSirenOrSiret(candidate) : null },
   };
 }
@@ -164,6 +168,34 @@ function emptyAnalysis(declaredLang) {
     legal: analyzeLegalText(null, declaredLang),
     mandatoryMentions: null,
     publisherText: '',
+    dropshipping: findDropshippingClues(null),
     companyCheck: { candidate: null, checksumValid: null, registry: null },
   };
+}
+
+// 2: the shop saying it ships from Asia.
+const SHIPPING_ANALYSIS_VERSION = 2;
+
+/**
+ * Dropshipping clues from the site's shipping policy (or FAQ), where delivery times
+ * and split parcels are spelled out. Only read when the dropshipping alert
+ * is turned on. Cached like the legal pages, and only when the page loaded.
+ * @param {string|null} url
+ * @param {{ viaPage?: (url: string) => Promise<{ok: boolean, html: string} | null> }} [options]
+ * @returns {Promise<ReturnType<typeof findDropshippingClues> | null>}
+ */
+export async function getShippingPolicyClues(url, { viaPage } = {}) {
+  if (!url) return null;
+  const cacheKey = `shipping:v${SHIPPING_ANALYSIS_VERSION}:${url}`;
+  if (Date.now() - (blockedSince.get(cacheKey) ?? -Infinity) < BLOCKED_TTL_MS) return null;
+  const cached = await getCached(cacheKey, CACHE_TTL_MS);
+  if (cached !== undefined) return cached;
+  const page = await fetchPageText(url, viaPage);
+  if (!page.ok) {
+    if (page.blocked) blockedSince.set(cacheKey, Date.now());
+    return null;
+  }
+  const clues = findDropshippingClues(page.text);
+  await setCached(cacheKey, clues);
+  return clues;
 }

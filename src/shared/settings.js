@@ -7,6 +7,7 @@ export const SYNC_SETTING_KEYS = [
   'allowlist',
   'checkAgeOnEverySite',
   'ignorePrivateIpWarnings',
+  'dropshippingAlert',
   'cacheDisabled',
 ];
 

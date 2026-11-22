@@ -24,7 +24,7 @@ Every push and pull request runs the unit tests, the browser tests and lint, and
 src/content/      reads the page (title, links, prices…) and shows the warning banner
 src/background/   runs the network lookups and keeps each tab's verdict
 src/core/         pure logic, no browser APIs: scoring, brand matching, legal and SIRET checks
-src/data/         known brands and their official domains, watched registrars
+src/data/         known brands and their official domains, watched registrars, dropshipping addresses
 src/popup/        toolbar popup and identity card
 src/options/      settings page
 src/shared/       styles, translation helper, settings and the Chrome alias
@@ -78,6 +78,12 @@ To check every official domain at once, run `npm run check:brands`. It requests 
 The tests in `tests/brands.test.js` enforce the rest: a valid `sector`, a non-empty `source`, a valid `verified` date, no look-alike reported for any official domain, no alias or domain shared by two brands, and a single-word alias that is a common word (listed in `src/data/common-words.js`) must be `commonWord: true`, except the exceptions named in the test. Add a word to that list only if it is a real common word.
 
 A domain carrying a brand's exact name under another extension (`chronopost.net`, `impots-gouv.fr`) is reported as a look-alike, so every domain the brand really uses must be listed. `npm run check:brands -- --variants` tries each brand's name with `.fr`, `.com`, `.net`, `.org`, `.eu` and `.info` and lists the ones that redirect to an official domain: add those. The others belong to someone else, or are registered but unused.
+
+## Adding a dropshipping address
+
+`src/data/dropshipping.js` lists registered-office addresses rented to many dropshipping shops at once, usually a company secretary's address in Hong Kong. Add one only after seeing it on several unrelated shops, with a `pattern` that matches how it is written and a `source` saying where. `ASIAN_SELLER_PLACES` in the same file holds the places that put a seller's address in Hong Kong or mainland China: cities and provinces, not the country name alone, since "fabriqué en Chine" says nothing about the seller.
+
+These clues only feed the optional dropshipping alert, never the risk score. The rules are in `src/core/dropshipping.js` and tested in `tests/dropshipping.test.js`.
 
 ## Adding a language
 

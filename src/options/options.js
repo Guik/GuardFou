@@ -80,6 +80,16 @@ async function refreshPrivateIpWarningsToggle() {
   ignorePrivateIpWarningsCheckbox.checked = ignorePrivateIpWarnings;
 }
 
+const dropshippingAlertCheckbox = document.getElementById('dropshipping-alert-checkbox');
+dropshippingAlertCheckbox.addEventListener('change', async () => {
+  await setSettings({ dropshippingAlert: dropshippingAlertCheckbox.checked });
+});
+
+async function refreshDropshippingToggle() {
+  const { dropshippingAlert = false } = await getSettings('dropshippingAlert');
+  dropshippingAlertCheckbox.checked = dropshippingAlert;
+}
+
 const languageSelect = document.getElementById('language-select');
 languageSelect.addEventListener('change', async () => {
   if (languageSelect.value) await setSettings({ [LANGUAGE_KEY]: languageSelect.value });
@@ -100,5 +110,6 @@ refreshPermissionStatus();
 refreshAllowlist();
 refreshCheckAgeToggle();
 refreshPrivateIpWarningsToggle();
+refreshDropshippingToggle();
 refreshLanguage();
 refreshCacheToggle();

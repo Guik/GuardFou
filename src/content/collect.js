@@ -245,7 +245,7 @@
 
   browser.runtime.onMessage.addListener((message, sender, sendResponse) => {
     if (message?.type === 'SHOW_BANNER') {
-      showBanner(message.verdict, message.text);
+      showBanner(message.banner);
     }
     // The identity card reads the page again when it's opened rather than
     // relying on a copy kept since load — see buildIdentityCard.
@@ -290,12 +290,15 @@
       transition: background-color 0.15s ease;
     }
     button:hover { background: rgba(255,255,255,.3); }
+    .bar.info { background: #5e5ce6; }
     .actions { display: flex; gap: 8px; flex-shrink: 0; }
   `;
 
   const SVG_NS = 'http://www.w3.org/2000/svg';
 
-  function createWarningIcon() {
+  // "!" for a warning; for information, the same mark upside down: "i".
+  function createIcon(tone) {
+    const info = tone === 'info';
     const svg = document.createElementNS(SVG_NS, 'svg');
     svg.setAttribute('viewBox', '0 0 24 24');
     svg.setAttribute('fill', 'none');
@@ -308,14 +311,14 @@
     bg.setAttribute('fill-opacity', '0.18');
 
     const stem = document.createElementNS(SVG_NS, 'path');
-    stem.setAttribute('d', 'M12 7v6');
+    stem.setAttribute('d', info ? 'M12 11v6' : 'M12 7v6');
     stem.setAttribute('stroke', '#fff');
     stem.setAttribute('stroke-width', '2');
     stem.setAttribute('stroke-linecap', 'round');
 
     const dot = document.createElementNS(SVG_NS, 'circle');
     dot.setAttribute('cx', '12');
-    dot.setAttribute('cy', '16.2');
+    dot.setAttribute('cy', info ? '7.8' : '16.2');
     dot.setAttribute('r', '1.15');
     dot.setAttribute('fill', '#fff');
 
@@ -323,8 +326,11 @@
     return svg;
   }
 
-  /** @param {{ title: string, details: string, dismiss: string }} text already translated by the background */
-  function showBanner(verdict, text) {
+  /**
+   * @param {{ tone: 'danger'|'info', title: string, summary: string, details: string, dismiss: string }} banner
+   *   already translated by the background
+   */
+  function showBanner(banner) {
     if (document.getElementById('guardfou-banner-host')) return;
 
     const host = document.createElement('div');
@@ -335,30 +341,30 @@
     style.textContent = BANNER_STYLE;
 
     const bar = document.createElement('div');
-    bar.className = 'bar';
+    bar.className = banner.tone === 'info' ? 'bar info' : 'bar';
 
     const icon = document.createElement('div');
     icon.className = 'icon';
-    icon.appendChild(createWarningIcon());
+    icon.appendChild(createIcon(banner.tone));
 
     const msg = document.createElement('div');
     msg.className = 'msg';
     const title = document.createElement('b');
-    title.textContent = text.title;
+    title.textContent = banner.title;
     const detail = document.createElement('span');
-    detail.textContent = verdict.reasons[0]?.message || '';
+    detail.textContent = banner.summary;
     msg.append(title, detail);
 
     const actions = document.createElement('div');
     actions.className = 'actions';
     const detailsBtn = document.createElement('button');
-    detailsBtn.textContent = text.details;
+    detailsBtn.textContent = banner.details;
     // The same analysis as the toolbar button's.
     detailsBtn.addEventListener('click', () => {
       browser.runtime.sendMessage({ type: 'GUARDFOU_OPEN_ANALYSIS' }).catch(() => {});
     });
     const dismissBtn = document.createElement('button');
-    dismissBtn.textContent = text.dismiss;
+    dismissBtn.textContent = banner.dismiss;
     dismissBtn.addEventListener('click', () => host.remove());
     actions.append(detailsBtn, dismissBtn);
 

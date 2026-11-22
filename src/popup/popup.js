@@ -68,7 +68,7 @@ async function analyzedTab() {
     document.documentElement.classList.add('standalone');
     return browser.tabs.get(Number(tabParam)).catch(() => null);
   }
-  const tab = await analyzedTab();
+  const [tab] = await browser.tabs.query({ active: true, currentWindow: true });
   return tab ?? null;
 }
 
@@ -83,7 +83,7 @@ async function main() {
     return;
   }
 
-  const [tab] = await browser.tabs.query({ active: true, currentWindow: true });
+  const tab = await analyzedTab();
   if (!tab) {
     show('empty');
     return;
@@ -120,6 +120,7 @@ function renderScore(verdict) {
   bandLabel.className = `band-label ${verdict.band}`;
   document.getElementById('domain').textContent = verdict.domain;
   renderSummary(verdict.facts);
+  renderDropshipping(verdict.dropshipping);
 
   const list = document.getElementById('reasons');
   list.innerHTML = '';
@@ -136,6 +137,19 @@ function renderScore(verdict) {
     }
   }
 
+}
+
+/** @param {Array<{id: string, message: string}> | undefined} clues */
+function renderDropshipping(clues) {
+  const section = document.getElementById('dropshipping');
+  section.hidden = !clues?.length;
+  const list = document.getElementById('dropshipping-clues');
+  list.innerHTML = '';
+  for (const clue of clues ?? []) {
+    const li = document.createElement('li');
+    li.textContent = clue.message;
+    list.appendChild(li);
+  }
 }
 
 /** "6 years ago", "in 3 months", or null for a missing or unreadable date. */
