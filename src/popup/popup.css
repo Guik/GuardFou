@@ -155,6 +155,12 @@ header img {
   white-space: nowrap;
 }
 
+/* Opened in a window or tab of its own (the banner's Details button) */
+
+.standalone body {
+  margin-inline: auto;
+}
+
 /* Summary ----------------------------------------------------------------- */
 
 .summary {

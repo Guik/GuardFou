@@ -58,6 +58,20 @@ function orNullAfter(promise, ms) {
   return Promise.race([promise.catch(() => null), timeout]).finally(() => clearTimeout(timer));
 }
 
+/**
+ * The tab to show: the active one, or, when the banner's "Details" button
+ * opened this page in a window of its own, the tab named in its address.
+ */
+async function analyzedTab() {
+  const tabParam = new URLSearchParams(location.search).get('tabId');
+  if (tabParam !== null) {
+    document.documentElement.classList.add('standalone');
+    return browser.tabs.get(Number(tabParam)).catch(() => null);
+  }
+  const tab = await analyzedTab();
+  return tab ?? null;
+}
+
 async function main() {
   const hasAccess = await browser.permissions.contains({ origins: ['<all_urls>'] });
   if (!hasAccess) {

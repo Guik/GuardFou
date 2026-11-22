@@ -353,9 +353,9 @@
     actions.className = 'actions';
     const detailsBtn = document.createElement('button');
     detailsBtn.textContent = text.details;
+    // The same analysis as the toolbar button's.
     detailsBtn.addEventListener('click', () => {
-      // eslint-disable-next-line no-alert
-      alert(verdict.reasons.map((r) => `• ${r.message}`).join('\n'));
+      browser.runtime.sendMessage({ type: 'GUARDFOU_OPEN_ANALYSIS' }).catch(() => {});
     });
     const dismissBtn = document.createElement('button');
     dismissBtn.textContent = text.dismiss;

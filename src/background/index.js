@@ -93,10 +93,38 @@ function handleMessage(message, sender) {
   if (message?.type === 'GET_POPUP_STATE') {
     return verdictsByTab.get(message.tabId).then((verdict) => ({ verdict, analyzing: analyzingTabs.has(message.tabId) }));
   }
+  if (message?.type === 'GUARDFOU_OPEN_ANALYSIS' && sender.tab?.id != null) {
+    return openAnalysis(sender.tab);
+  }
   if (message?.type === 'GET_IDENTITY_CARD') {
     return i18nReady.then(() => buildIdentityCard(message.tabId));
   }
   return undefined;
+}
+
+const ANALYSIS_WINDOW = { width: 400, height: 640 };
+
+/**
+ * Opens the toolbar popup for the banner's "Details" button. Chrome before
+ * 127 has no action.openPopup(), and Firefox only allows it right after a
+ * click on the extension's own UI, which a click in the page isn't: then the
+ * same page opens in a small window for that tab (a tab on Firefox for
+ * Android, which has no windows).
+ * @param {{ id: number, windowId: number }} tab
+ */
+async function openAnalysis(tab) {
+  try {
+    await browser.action.openPopup({ windowId: tab.windowId });
+    return;
+  } catch {
+    // Not allowed here: fall back to a window.
+  }
+  const url = browser.runtime.getURL(`src/popup/popup.html?tabId=${tab.id}`);
+  if (browser.windows?.create) {
+    await browser.windows.create({ url, type: 'popup', ...ANALYSIS_WINDOW });
+  } else {
+    await browser.tabs.create({ url, openerTabId: tab.id });
+  }
 }
 
 browser.tabs.onRemoved.addListener((tabId) => {

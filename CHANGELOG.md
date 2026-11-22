@@ -13,6 +13,7 @@ isn't released.
 - Brand impersonation now also covers parcel delivery (La Poste, Colissimo, Chronopost, Mondial Relay, DHL, UPS, FedEx, Relais Colis) and government services (Ameli, impots.gouv, ANTS, CAF, Crit'Air, Mon Compte Formation, Service-Public.fr).
 - A domain whose name is a common word one letter away from a brand, such as dart.fr (Darty) or point.fr (Point.P), is no longer reported as a look-alike.
 - A domain that carries a brand's exact name under another extension, such as impots-gouv.fr or moncompteformation.fr, is now reported as a look-alike. The brands' own other domains (laposte.net, castorama.com…) are recognised.
+- The "Details" button on the warning banner now opens GuardFou's usual analysis, as the toolbar button does, instead of a plain list of reasons.
 - The settings are grouped into fewer sections (Checks, Trusted sites, Language, Data and sync), with a short explanation under each option.
 - The trusted-sites list in the settings shows each site's domain again; the names were blank.
 
@@ -21,6 +22,7 @@ isn't released.
 - La détection d'usurpation de marque couvre désormais la livraison (La Poste, Colissimo, Chronopost, Mondial Relay, DHL, UPS, FedEx, Relais Colis) et les services publics (Ameli, impots.gouv, ANTS, CAF, Crit'Air, Mon Compte Formation, Service-Public.fr).
 - Un domaine dont le nom est un mot courant, à une lettre près du nom d'une marque, comme dart.fr (Darty) ou point.fr (Point.P), n'est plus signalé comme imitation.
 - Un domaine qui reprend le nom exact d'une marque avec une autre extension, comme impots-gouv.fr ou moncompteformation.fr, est désormais signalé comme imitation. Les autres domaines des marques elles-mêmes (laposte.net, castorama.com…) sont reconnus.
+- Le bouton « Détails » du bandeau d'alerte ouvre désormais l'analyse habituelle de GuardFou, comme le bouton de la barre d'outils, au lieu d'une simple liste des raisons.
 - Les réglages sont regroupés en moins de sections (Vérifications, Sites de confiance, Langue, Données et synchronisation), avec une courte explication sous chaque option.
 - La liste des sites de confiance dans les réglages affiche de nouveau le domaine de chaque site ; les noms étaient vides.
 
