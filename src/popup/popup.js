@@ -606,8 +606,9 @@ document.getElementById('identity-close-btn').addEventListener('click', () => {
   document.getElementById('identity-toggle').hidden = false;
 });
 
-document.getElementById('options-link').addEventListener('click', (event) => {
-  event.preventDefault();
+const settingsButton = document.getElementById('options-link');
+settingsButton.title = t('popupSettings');
+settingsButton.addEventListener('click', () => {
   browser.runtime.openOptionsPage();
 });
 

@@ -15,6 +15,7 @@ isn't released.
 - A domain that carries a brand's exact name under another extension, such as impots-gouv.fr or moncompteformation.fr, is now reported as a look-alike. The brands' own other domains (laposte.net, castorama.com…) are recognised.
 - New setting, off by default: point out likely dropshipping shops. Dropshipping is not a scam, so it doesn't change the risk score: the popup lists the clues (a registered office shared by many dropshipping shops, a seller's address in Hong Kong or mainland China, the shop saying it ships from Asia, delivery times of several weeks, orders split across warehouses), the toolbar badge shows "DS" on a site that is otherwise fine, and a purple banner says so on the shop, once per site and tab. With the setting on, the shop's shipping policy is read too, or its FAQ when it has none.
 - The "Details" button on the warning banner now opens GuardFou's usual analysis, as the toolbar button does, instead of a plain list of reasons.
+- The settings button is now a gear at the top right of the popup instead of a link at the bottom.
 - The settings are grouped into fewer sections (Checks, Trusted sites, Language, Data and sync), with a short explanation under each option.
 - The trusted-sites list in the settings shows each site's domain again; the names were blank.
 
@@ -25,6 +26,7 @@ isn't released.
 - Un domaine qui reprend le nom exact d'une marque avec une autre extension, comme impots-gouv.fr ou moncompteformation.fr, est désormais signalé comme imitation. Les autres domaines des marques elles-mêmes (laposte.net, castorama.com…) sont reconnus.
 - Nouveau réglage, désactivé par défaut : signaler les boutiques probablement en dropshipping. Le dropshipping n'est pas une arnaque, donc le score de risque ne change pas : le popup liste les indices (une adresse de domiciliation partagée par de nombreuses boutiques en dropshipping, un vendeur domicilié à Hong Kong ou en Chine continentale, une boutique qui dit expédier depuis l'Asie, des délais de livraison de plusieurs semaines, des commandes réparties entre plusieurs entrepôts), le badge de la barre d'outils affiche « DS » sur un site par ailleurs sans risque, et un bandeau violet l'indique sur la boutique, une fois par site et par onglet. Avec ce réglage, la politique de livraison de la boutique est lue aussi, ou sa FAQ si elle n'en a pas.
 - Le bouton « Détails » du bandeau d'alerte ouvre désormais l'analyse habituelle de GuardFou, comme le bouton de la barre d'outils, au lieu d'une simple liste des raisons.
+- Le bouton des réglages est désormais un engrenage en haut à droite de la fenêtre GuardFou, au lieu d'un lien tout en bas.
 - Les réglages sont regroupés en moins de sections (Vérifications, Sites de confiance, Langue, Données et synchronisation), avec une courte explication sous chaque option.
 - La liste des sites de confiance dans les réglages affiche de nouveau le domaine de chaque site ; les noms étaient vides.
 
