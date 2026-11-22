@@ -23,6 +23,25 @@
     </section>
 
     <section class="card">
+      <h2 data-i18n="optionsChecksHeading">Checks</h2>
+      <label class="toggle-row">
+        <input type="checkbox" id="check-age-everywhere-checkbox" />
+        <span class="toggle-text">
+          <span class="toggle-label" data-i18n="optionsCheckAgeEverywhere">Check domain age on every site</span>
+          <span class="toggle-hint" data-i18n="optionsCheckAgeEverywhereHint">By default, only on pages that look like a shop or name a known brand.</span>
+        </span>
+      </label>
+      <label class="toggle-row">
+        <input type="checkbox" id="ignore-private-ip-warnings-checkbox" />
+        <span class="toggle-text">
+          <span class="toggle-label" data-i18n="optionsIgnorePrivateIpWarnings">Ignore raw-IP and unencrypted-HTTP warnings on private IP addresses</span>
+          <span class="toggle-hint" data-i18n="optionsIgnorePrivateIpWarningsHint">For local services and development.</span>
+        </span>
+      </label>
+      <p class="hint footnote" data-i18n="optionsChecksHint">Changes apply the next time a page is analyzed.</p>
+    </section>
+
+    <section class="card">
       <h2 data-i18n="optionsTrustedHeading">Trusted sites</h2>
       <p class="hint" data-i18n="optionsTrustedHint">These domains will never be flagged.</p>
       <ul id="allowlist" class="item-list"></ul>
@@ -30,36 +49,6 @@
         <input id="add-input" type="text" placeholder="example.com" data-i18n-placeholder="optionsTrustedPlaceholder" />
         <button type="submit" class="btn btn-ghost" data-i18n="optionsAdd">Add</button>
       </form>
-    </section>
-
-    <section class="card">
-      <h2 data-i18n="optionsAutoHeading">Automatic checks</h2>
-      <p class="hint" data-i18n="optionsAutoHint">
-        By default, domain age is only checked automatically on pages that look
-        like a shop or name a known brand.
-      </p>
-      <label class="toggle-row">
-        <input type="checkbox" id="check-age-everywhere-checkbox" />
-        <span data-i18n="optionsCheckAgeEverywhere">Check domain age on every site</span>
-      </label>
-    </section>
-
-    <section class="card">
-      <h2 data-i18n="optionsPrivateIpHeading">Private IP addresses</h2>
-      <p class="hint" data-i18n="optionsPrivateIpHint">
-        For local services and development. Changes apply the next time the page is analyzed.
-      </p>
-      <label class="toggle-row">
-        <input type="checkbox" id="ignore-private-ip-warnings-checkbox" />
-        <span data-i18n="optionsIgnorePrivateIpWarnings">Ignore raw-IP and unencrypted-HTTP warnings for private IPs</span>
-      </label>
-    </section>
-
-    <section class="card">
-      <h2 data-i18n="optionsSyncHeading">Settings sync</h2>
-      <p class="hint" data-i18n="optionsSyncHint">
-        Preferences sync through Chrome Sync or Firefox Sync when extension syncing is enabled. Lookup results stay on this device.
-      </p>
     </section>
 
     <section class="card">
@@ -76,16 +65,24 @@
     </section>
 
     <section class="card">
-      <h2 data-i18n="optionsCacheHeading">Lookup cache</h2>
+      <h2 data-i18n="optionsDataHeading">Data and sync</h2>
       <p class="hint" data-i18n="optionsCacheHint">
         Domain, DNSSEC and legal-notice results are kept for 7 days.
       </p>
-      <button id="clear-cache-btn" class="btn btn-ghost" data-i18n="optionsClearCache">Clear cache</button>
-      <p id="clear-cache-status" class="hint"></p>
+      <div class="button-row">
+        <button id="clear-cache-btn" class="btn btn-ghost" data-i18n="optionsClearCache">Clear cache</button>
+        <span id="clear-cache-status" class="hint inline-status" role="status"></span>
+      </div>
       <label class="toggle-row">
         <input type="checkbox" id="disable-cache-checkbox" />
-        <span data-i18n="optionsDisableCache">Turn off the cache</span>
+        <span class="toggle-text">
+          <span class="toggle-label" data-i18n="optionsDisableCache">Turn off the cache</span>
+          <span class="toggle-hint" data-i18n="optionsDisableCacheHint">Re-checks everything every time.</span>
+        </span>
       </label>
+      <p class="hint footnote" data-i18n="optionsSyncHint">
+        Preferences sync through Chrome Sync or Firefox Sync when extension syncing is enabled. Lookup results stay on this device.
+      </p>
     </section>
   </main>
 

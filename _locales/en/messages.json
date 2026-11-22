@@ -326,26 +326,11 @@
   "optionsRemove": {
     "message": "Remove"
   },
-  "optionsAutoHeading": {
-    "message": "Automatic checks"
-  },
-  "optionsAutoHint": {
-    "message": "By default, domain age is only checked automatically on pages that look like a shop or name a known brand; other sites are checked when you open their identity card. On every site, a domain under 6 months old is flagged orange even if it sells nothing, and every domain you visit is sent to rdap.org (at most once a week)."
-  },
   "optionsCheckAgeEverywhere": {
     "message": "Check domain age on every site"
   },
-  "optionsPrivateIpHeading": {
-    "message": "Private IP addresses"
-  },
-  "optionsPrivateIpHint": {
-    "message": "For local services and development. Changes apply the next time the page is analyzed."
-  },
   "optionsIgnorePrivateIpWarnings": {
-    "message": "Ignore raw-IP and unencrypted-HTTP warnings for private IPs"
-  },
-  "optionsSyncHeading": {
-    "message": "Settings sync"
+    "message": "Ignore raw-IP and unencrypted-HTTP warnings on private IP addresses"
   },
   "optionsSyncHint": {
     "message": "Preferences sync through Chrome Sync or Firefox Sync when extension syncing is enabled. Lookup results stay on this device. Firefox for Android does not sync extension data."
@@ -359,9 +344,6 @@
   "optionsLanguageAuto": {
     "message": "Firefox's language"
   },
-  "optionsCacheHeading": {
-    "message": "Lookup cache"
-  },
   "optionsCacheHint": {
     "message": "Domain, DNSSEC and legal-notice results are kept for 7 days to limit network requests. Clear the cache if you think a result is out of date or a lookup failed temporarily."
   },
@@ -372,7 +354,7 @@
     "message": "$1 entries removed."
   },
   "optionsDisableCache": {
-    "message": "Turn off the cache (re-checks everything every time: useful for testing, but more network requests)"
+    "message": "Turn off the cache"
   },
   "summaryDomain": {
     "message": "Domain created $1"
@@ -595,5 +577,23 @@
   },
   "hostingUnknown": {
     "message": "Not found"
+  },
+  "optionsChecksHeading": {
+    "message": "Checks"
+  },
+  "optionsChecksHint": {
+    "message": "Changes apply the next time a page is analyzed."
+  },
+  "optionsCheckAgeEverywhereHint": {
+    "message": "By default, only on pages that look like a shop or name a known brand. Elsewhere, a domain under 6 months old turns orange even if it sells nothing, and every domain you visit is sent to rdap.org (at most once a week)."
+  },
+  "optionsIgnorePrivateIpWarningsHint": {
+    "message": "For local services and development."
+  },
+  "optionsDataHeading": {
+    "message": "Data and sync"
+  },
+  "optionsDisableCacheHint": {
+    "message": "Re-checks everything every time: useful for testing, but more network requests."
   }
 }

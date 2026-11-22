@@ -326,26 +326,11 @@
   "optionsRemove": {
     "message": "Retirer"
   },
-  "optionsAutoHeading": {
-    "message": "Vérifications automatiques"
-  },
-  "optionsAutoHint": {
-    "message": "Par défaut, l'âge du domaine n'est vérifié automatiquement que sur les pages qui ressemblent à une boutique ou citent une marque connue ; les autres sites sont vérifiés quand vous ouvrez leur fiche. Sur tous les sites, un domaine de moins de 6 mois est signalé en orange, même s'il ne vend rien, et chaque domaine visité est envoyé à rdap.org (au plus une fois par semaine)."
-  },
   "optionsCheckAgeEverywhere": {
     "message": "Vérifier l'âge du domaine sur tous les sites"
   },
-  "optionsPrivateIpHeading": {
-    "message": "Adresses IP privées"
-  },
-  "optionsPrivateIpHint": {
-    "message": "Pour les services locaux et le développement. Le réglage s'applique à la prochaine analyse de la page."
-  },
   "optionsIgnorePrivateIpWarnings": {
-    "message": "Ignorer les alertes d'adresse IP brute et de connexion HTTP non chiffrée pour les IP privées"
-  },
-  "optionsSyncHeading": {
-    "message": "Synchronisation des paramètres"
+    "message": "Ignorer les alertes IP brute et HTTP non chiffré sur les adresses IP privées"
   },
   "optionsSyncHint": {
     "message": "Les paramètres se synchronisent via Chrome Sync ou Firefox Sync si la synchronisation des extensions est activée. Le cache des recherches reste sur cet appareil. Firefox pour Android ne synchronise pas les données des extensions."
@@ -359,9 +344,6 @@
   "optionsLanguageAuto": {
     "message": "Langue de Firefox"
   },
-  "optionsCacheHeading": {
-    "message": "Cache des recherches"
-  },
   "optionsCacheHint": {
     "message": "RDAP, DNSSEC et mentions légales sont gardés 7 jours pour limiter les requêtes réseau. Videz le cache si vous pensez qu'un résultat est obsolète ou qu'une recherche a échoué temporairement."
   },
@@ -372,7 +354,7 @@
     "message": "$1 entrée(s) supprimée(s)."
   },
   "optionsDisableCache": {
-    "message": "Désactiver le cache (re-vérifie tout à chaque fois — utile pour tester, mais plus de requêtes réseau)"
+    "message": "Désactiver le cache"
   },
   "summaryDomain": {
     "message": "Domaine créé $1"
@@ -595,5 +577,23 @@
   },
   "hostingUnknown": {
     "message": "Introuvable"
+  },
+  "optionsChecksHeading": {
+    "message": "Vérifications"
+  },
+  "optionsChecksHint": {
+    "message": "Les changements s'appliquent à la prochaine analyse d'une page."
+  },
+  "optionsCheckAgeEverywhereHint": {
+    "message": "Par défaut, seulement sur les pages qui ressemblent à une boutique ou citent une marque connue. Ailleurs, un domaine de moins de 6 mois passe en orange même s'il ne vend rien, et chaque domaine visité est envoyé à rdap.org (au plus une fois par semaine)."
+  },
+  "optionsIgnorePrivateIpWarningsHint": {
+    "message": "Pour les services locaux et le développement."
+  },
+  "optionsDataHeading": {
+    "message": "Données et synchronisation"
+  },
+  "optionsDisableCacheHint": {
+    "message": "Tout est revérifié à chaque fois : utile pour tester, mais plus de requêtes réseau."
   }
 }
