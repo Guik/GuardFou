@@ -6,7 +6,7 @@ release notes (English as en-US, French as fr) and puts both in the GitHub
 Release. A tag whose version has no section here, or no English section,
 isn't released.
 
-## Unreleased
+## 0.1.6
 
 ### English
 
