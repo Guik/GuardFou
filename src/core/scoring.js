@@ -117,7 +117,9 @@ export function computeScore(signals) {
     if (signals.domainAgeDays < 30 * 6) {
       reasons.push({ id: 'domain-very-new', weight: 35, message: t('reasonDomainVeryNew', signals.domainAgeDays) });
     } else if (signals.domainAgeDays < 365) {
-      reasons.push({ id: 'domain-new', weight: 20, message: t('reasonDomainNew', Math.round(signals.domainAgeDays / 30)) });
+      // Enough on its own for orange: a shop in its first year has no track
+      // record yet, and scam shops rarely live past one.
+      reasons.push({ id: 'domain-new', weight: 30, message: t('reasonDomainNew', Math.round(signals.domainAgeDays / 30)) });
     } else if (signals.domainAgeDays > 365 * 5) {
       reasons.push({ id: 'domain-old', weight: -15, message: t('reasonDomainOld') });
     }

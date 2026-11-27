@@ -67,6 +67,13 @@ test('an unsigned zone (the common case) adds no reason either way', () => {
   assert.equal(verdict.reasons.length, 0);
 });
 
+test('a domain under a year old is enough for orange on its own', () => {
+  const verdict = computeScore({ domainAgeDays: 200 });
+  assert.equal(verdict.band, 'orange');
+  assert.deepEqual(verdict.reasons.map((r) => r.id), ['domain-new']);
+  assert.equal(computeScore({ domainAgeDays: 400 }).band, 'green');
+});
+
 test('a watched registrar on a brand-new domain adds a small weight', () => {
   const verdict = computeScore({ isWatchedRegistrar: true, registrarName: 'Realtime Register B.V.', domainAgeDays: 88 });
   assert.ok(verdict.reasons.some((r) => r.id === 'watched-registrar-recent-domain' && r.weight === 8));

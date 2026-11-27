@@ -6,6 +6,16 @@ release notes (English as en-US, French as fr) and puts both in the GitHub
 Release. A tag whose version has no section here, or no English section,
 isn't released.
 
+## Unreleased
+
+### English
+
+- A domain registered less than a year ago is now enough on its own for an orange verdict; it used to take another warning sign once the domain was over six months old.
+
+### Français
+
+- Un nom de domaine enregistré il y a moins d'un an suffit désormais à lui seul pour un avis orange ; au-delà de six mois, il fallait jusqu'ici un autre signe d'alerte.
+
 ## 0.1.6
 
 ### English

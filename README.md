@@ -26,7 +26,7 @@ No single check proves a site is a scam; the score combines them and shows every
 
 ### Any website
 
-- **Domain age**: very recent domains are a classic sign of short-lived scam shops. A one-year registration or a registrar often seen on scam shops adds weight when the domain is also new. Checked automatically on shops; a setting extends it to every site.
+- **Domain age**: very recent domains are a classic sign of short-lived scam shops; a domain under a year old is enough for an orange verdict. A one-year registration or a registrar often seen on scam shops adds weight when the domain is also new. Checked automatically on shops; a setting extends it to every site.
 - **Suspicious URLs**: raw IP addresses, `user@host` tricks, "https" written into the domain name, unencrypted HTTP.
 - **DNSSEC**: flags domains whose DNS signatures are invalid.
 - **Hidden from search engines**: a `noindex` page on a new domain, a way for scam sites to avoid being found and reported.
