@@ -110,22 +110,44 @@ const DELIVERY_TIMES = [
 const DELIVERY_CONTEXT = /livr|exp[ée]di|achemin|transit|r[ée]ception|colis|deliver|ship/gi;
 const RETURN_CONTEXT = /retour|rembours|r[ée]tractation|garantie|[ée]change|return|refund|warranty/gi;
 const CONTEXT_LOOKBACK = 150;
+// A delay the shop explains by making the piece or by how it is carried:
+// a genuine maker or furniture shop, not a supplier abroad. "Fabriqué en
+// Chine" is no explanation, so making is only an excuse when done on order.
+const EXPLAINED_DELAY = new RegExp([
+  String.raw`d[ée]lais?\s+de\s+(?:fabrication|confection|r[ée]alisation)`,
+  String.raw`(?:fabriqu|r[ée]alis|confectionn|produit)[\wÀ-ÿ]*\s+(?:sur|[àa]\s+la)\s+(?:commande|demande)`,
+  String.raw`fabrication\s+(?:sur|[àa]\s+la)\s+(?:commande|demande)`,
+  String.raw`sur[-\s]mesure|fait\s+main|made\s+to\s+order|custom[-\s]made|handmade`,
+  String.raw`(?:transporteur|courrier|messagerie)s?\s+sp[ée]cialis[ée]s?`,
+  String.raw`pr[ée]avis\s+t[ée]l[ée]phonique|prise\s+de\s+rendez-vous|white[-\s]glove`,
+  // Ordered from the maker when not in stock, as designer furniture is.
+  String.raw`(?:non|pas)\s+disponibles?\s+en\s+stock|hors\s+stock|not\s+in\s+stock|backorder`,
+  String.raw`fabricant|manufacturer|entreprise\s+de\s+production`,
+].join('|'), 'i');
+const EXPLANATION_LOOKBACK = 400;
+const EXPLANATION_LOOKAHEAD = 200;
 
 /**
  * The first long delivery time the text announces ("2 à 4 semaines",
  * "jusqu'à 5 semaines", "15-25 business days"), as written, or null. Asian
- * suppliers' shipping takes weeks; a French stockist ships in days.
+ * suppliers' shipping takes weeks; a French stockist ships in days. A delay
+ * the shop explains by making on order or by a specialised carrier doesn't
+ * count.
  */
 export function findLongDelivery(text) {
   const found = [];
   for (const { pattern, minimum } of DELIVERY_TIMES) {
     for (const match of text.matchAll(pattern)) {
-      if (Number(match[2]) < minimum || !aboutDelivery(text, match.index)) continue;
+      if (Number(match[2]) < minimum || !aboutDelivery(text, match.index) || explainedDelay(text, match.index)) continue;
       found.push(match);
     }
   }
   found.sort((a, b) => a.index - b.index);
   return found[0]?.[0].replace(/\s+/g, ' ').trim() ?? null;
+}
+
+function explainedDelay(text, index) {
+  return EXPLAINED_DELAY.test(text.slice(Math.max(index - EXPLANATION_LOOKBACK, 0), index + EXPLANATION_LOOKAHEAD));
 }
 
 function aboutDelivery(text, index) {

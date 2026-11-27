@@ -17,6 +17,7 @@ isn't released.
 - New warning sign: on a domain less than a year old, most struck-through prices on the page cut by half or more, like the designer furniture at -80 % of fake shops. A sale on an older shop doesn't count.
 - When the page's prices are slashed like this, an orange "Be careful" banner says so on the shop, even if the verdict is only orange: once per site and tab. A red banner replaces it if the verdict turns red.
 - Dropshipping alert: long delivery times alone, or split parcels alone, no longer mark a shop as likely dropshipping, even when it shows no French company number. Designer furniture often takes weeks to arrive; it now takes both, or a stronger clue such as a seller in Asia.
+- Dropshipping alert: a delivery time the shop explains by making on order, made-to-measure work, an item out of stock and ordered from the maker, or a specialised furniture carrier is no longer taken as a clue.
 - A shop established elsewhere in the EU, such as an Italian S.r.l., is no longer reported as missing its company form, address and SIRET: its own company form (S.r.l., GmbH, B.V.…), its address with the country's name and its VAT number are recognised.
 
 ### Français
@@ -28,6 +29,7 @@ isn't released.
 - Nouveau signe d'alerte : sur un domaine de moins d'un an, la plupart des prix barrés de la page réduits de moitié ou plus, comme le mobilier design à -80 % des fausses boutiques. Les soldes d'une boutique plus ancienne ne comptent pas.
 - Quand les prix de la page sont cassés de cette façon, un bandeau orange « Soyez vigilant » l'indique sur la boutique, même si l'avis n'est qu'orange : une fois par site et par onglet. Le bandeau rouge le remplace si l'avis passe au rouge.
 - Alerte dropshipping : des délais de livraison longs seuls, ou des colis séparés seuls, ne suffisent plus à signaler une boutique, même sans numéro d'entreprise français. Le mobilier design met souvent des semaines à arriver ; il faut désormais les deux, ou un indice plus fort comme un vendeur en Asie.
+- Alerte dropshipping : un délai de livraison que la boutique explique par une fabrication sur commande, du sur-mesure, un article hors stock commandé au fabricant ou un transporteur spécialisé pour meubles n'est plus compté comme un indice.
 - Une boutique établie ailleurs dans l'UE, comme une S.r.l. italienne, n'est plus signalée comme sans forme juridique, adresse ni SIRET : sa forme de société (S.r.l., GmbH, B.V.…), son adresse avec le nom du pays et son numéro de TVA sont reconnus.
 
 ## 0.1.6

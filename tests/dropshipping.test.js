@@ -60,6 +60,17 @@ test('a product made in Asia, a destination or a denial is not shipping from Asi
   assert.equal(findShipsFromAsia("Nous n'expédions jamais depuis la Chine."), null);
 });
 
+test('a delay explained by making on order or by a specialised carrier is not a clue', () => {
+  // From myareadesign.com's terms of sale (2026-11-27).
+  const myarea = "MyAreaDesign s'engage à délivrer la marchandise en utilisant un courrier spécialisé pour meubles, plus lent dans la livraison mais capable de la compléter en évitant endommages ou manutention non correcte des colis. Les courriers utilisés dans ces cas ne sont pas rapides comme les courriers exprès, le transit demandera en effet jusqu'à 3 semaines et il ne sera pas possible de fournir le suivi. Toutefois, la livraison sera effectuée après préavis téléphonique.";
+  assert.equal(findLongDelivery(myarea), null);
+  assert.equal(findLongDelivery('Chaque canapé est fabriqué sur commande dans notre atelier : livraison en 6 à 8 semaines.'), null);
+  assert.equal(findLongDelivery('Délai de fabrication puis de livraison : 4 à 6 semaines.'), null);
+  assert.equal(findLongDelivery("Pour les articles non disponibles en stock, la livraison peut prendre entre 2 et 6 semaines après l'acceptation de la commande, selon les temps de livraison de l'entreprise de production."), null);
+  // Made in China is no excuse.
+  assert.equal(findLongDelivery('Fabriqué en Chine. La livraison prend 2 à 4 semaines.'), '2 à 4 semaines');
+});
+
 test('split parcels are found', () => {
   assert.equal(findDropshippingClues('il est possible que ceux-ci soient envoyés séparément, en fonction des stocks').splitShipments, true);
   assert.equal(findDropshippingClues('Your items may be shipped separately.').splitShipments, true);
