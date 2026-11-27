@@ -206,6 +206,9 @@
   "reasonAllowlisted": {
     "message": "Site ajouté à votre liste de confiance."
   },
+  "reasonSteepDiscounts": {
+    "message": "La plupart des prix barrés de la page sont réduits de moitié ou plus (jusqu'à −$1 %) sur un domaine de moins d'un an : c'est l'appât des fausses boutiques."
+  },
   "reasonNoindex": {
     "message": "La page demande aux moteurs de recherche de ne pas la référencer, ce qui, sur un domaine récent, permet à un site de rester discret."
   },

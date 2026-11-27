@@ -30,6 +30,7 @@ No single check proves a site is a scam; the score combines them and shows every
 - **Suspicious URLs**: raw IP addresses, `user@host` tricks, "https" written into the domain name, unencrypted HTTP.
 - **DNSSEC**: flags domains whose DNS signatures are invalid.
 - **Hidden from search engines**: a `noindex` page on a new domain, a way for scam sites to avoid being found and reported.
+- **Slashed prices**: most struck-through prices on the page cut by half or more, on a domain less than a year old. Fake shops lure buyers with designer pieces at -70 or -80 %; an older shop's sale doesn't count.
 - **Shared hosting**: recognises shops on platform subdomains (`*.myshopify.com`, `*.wixsite.com`…), which have no domain of their own to check.
 
 ### France only

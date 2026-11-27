@@ -13,12 +13,14 @@ isn't released.
 - A domain registered less than a year ago is now enough on its own for an orange verdict; it used to take another warning sign once the domain was over six months old.
 - The registrar Cloud Yuqu, seen on a fake furniture shop, now adds weight when the domain is also recent.
 - A shop's "Terms of service" page ("Conditions d'utilisation") is now read like its terms of sale when looking for the company's details, so a shop with no legal notice is checked against it.
+- New warning sign: on a domain less than a year old, most struck-through prices on the page cut by half or more, like the designer furniture at -80 % of fake shops. A sale on an older shop doesn't count.
 
 ### Français
 
 - Un nom de domaine enregistré il y a moins d'un an suffit désormais à lui seul pour un avis orange ; au-delà de six mois, il fallait jusqu'ici un autre signe d'alerte.
 - Le bureau d'enregistrement Cloud Yuqu, vu sur une fausse boutique de mobilier, compte désormais quand le domaine est aussi récent.
 - La page « Conditions d'utilisation » d'une boutique est désormais lue comme ses CGV pour chercher l'identité de l'entreprise : une boutique sans mentions légales est vérifiée sur cette page.
+- Nouveau signe d'alerte : sur un domaine de moins d'un an, la plupart des prix barrés de la page réduits de moitié ou plus, comme le mobilier design à -80 % des fausses boutiques. Les soldes d'une boutique plus ancienne ne comptent pas.
 
 ## 0.1.6
 

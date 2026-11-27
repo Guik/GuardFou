@@ -14,6 +14,7 @@ import {
 } from '../core/domain.js';
 import { findBrandByAlias, getBrandClaimText, isOfficialDomain, findLookalikeBrand } from '../core/brands.js';
 import { isWatchedRegistrar } from '../core/registrar.js';
+import { summarizePriceCuts, hasSteepDiscounts } from '../core/prices.js';
 import { companyNameMatchesClaim } from '../core/siret.js';
 import { computeScore } from '../core/scoring.js';
 import { buildSiteFacts } from '../core/summary.js';
@@ -184,6 +185,11 @@ function startPageAnalysis(tabId) {
  * trusted-sites list, the brand the page claims, and the
  * cheap URL-structural signals.
  */
+function steepDiscountsOf(priceCuts) {
+  const summary = summarizePriceCuts(priceCuts);
+  return hasSteepDiscounts(summary) ? { maxPercent: summary.maxPercent } : null;
+}
+
 async function analyzePage(url, payload) {
   const domain = getRegistrableDomain(url);
   const displayId = domain ?? getHostname(url) ?? url;
@@ -216,6 +222,7 @@ async function analyzePage(url, payload) {
     hasRedirectionInPath: hasRedirectionInPath(url),
     isInsecureHttp: isInsecureHttp(url) && !ignorePrivateIpWarningsHere,
     isNoindex: payload?.seoMeta?.noindex === true,
+    steepDiscounts: steepDiscountsOf(payload?.priceCuts),
   };
 
   return { domain, displayId, isAllowlisted, checkAgeOnEverySite, dropshippingAlert, claimedText, matchedBrand, baseSignals };

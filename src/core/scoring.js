@@ -31,6 +31,8 @@ export const THRESHOLDS = { orange: 30, red: 60 };
  *  - isShortRegistrationSpan: boolean (domain registered for ~1 year only)
  *  - isInsecureHttp: boolean (page served over plain HTTP, not HTTPS)
  *  - isNoindex: boolean (the page asks search engines not to index it)
+ *  - steepDiscounts: { maxPercent } | null (most slashed prices on the page
+ *    are cut by half or more, from core/prices.js)
  *  - legalPageMissing: boolean (no mentions-légales page found at all)
  *  - legalPageUnreadable: boolean (legal pages linked but none could be
  *    fetched, e.g. blocked by bot protection: not scored)
@@ -142,6 +144,12 @@ export function computeScore(signals) {
   // results, where it would be found and reported.
   if (signals.isNoindex && typeof signals.domainAgeDays === 'number' && signals.domainAgeDays < 30 * 6) {
     reasons.push({ id: 'noindex-recent-domain', weight: 10, message: t('reasonNoindex') });
+  }
+
+  // Every product at a fraction of its price is the bait of a fake shop, but
+  // a genuine shop holds sales too: only counts in the domain's first year.
+  if (signals.steepDiscounts && typeof signals.domainAgeDays === 'number' && signals.domainAgeDays < 365) {
+    reasons.push({ id: 'steep-discounts-recent-domain', weight: 20, message: t('reasonSteepDiscounts', signals.steepDiscounts.maxPercent) });
   }
 
   // A watched registrar alone proves nothing — they're mostly large,

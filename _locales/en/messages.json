@@ -206,6 +206,9 @@
   "reasonAllowlisted": {
     "message": "Site on your trusted list."
   },
+  "reasonSteepDiscounts": {
+    "message": "Most slashed prices on the page are cut by half or more (up to $1% off) on a domain less than a year old: fake shops lure buyers with prices like these."
+  },
   "reasonNoindex": {
     "message": "The page asks search engines not to list it, which on a new domain helps a site stay out of sight."
   },

@@ -199,6 +199,27 @@
     };
   }
 
+  // Struck prices and the text around them, for core/prices.js: WooCommerce
+  // puts the old price in <del> and the new one in <ins>, Shopify themes
+  // the old one in <s> next to a sibling holding the new one. Climbs from
+  // the struck price until its container says more than the price itself.
+  const MAX_PRICE_CUTS = 60;
+  function getPriceCuts() {
+    const cuts = [];
+    for (const struck of document.querySelectorAll('del, s, strike')) {
+      if (cuts.length >= MAX_PRICE_CUTS) break;
+      const was = (struck.textContent || '').trim();
+      if (!was || was.length > 40 || !/\d/.test(was)) continue;
+      let container = struck.parentElement;
+      for (let depth = 0; container && depth < 3 && container.textContent.trim() === was; depth++) {
+        container = container.parentElement;
+      }
+      const around = container?.querySelector('ins')?.textContent || container?.textContent.replace(was, ' ') || '';
+      cuts.push({ was, now: around.replace(/\s+/g, ' ').trim().slice(0, 200) });
+    }
+    return cuts;
+  }
+
   function collectPayload() {
     return {
       title: document.title || null,
@@ -211,6 +232,7 @@
       techHints: getTechHints(),
       allLinks: getAllLinks(),
       seoMeta: getSeoMeta(),
+      priceCuts: getPriceCuts(),
     };
   }
 
