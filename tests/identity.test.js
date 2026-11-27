@@ -407,3 +407,35 @@ test('extractPhysicalAddress still requires a capitalized city after the postal 
 test('stripHtmlToText decodes typographic quotes and common symbols', () => {
   assert.equal(stripHtmlToText('<p>l&rsquo;issue &ldquo;AXA&rdquo; &copy; 2026</p>'), 'l’issue “AXA” © 2026');
 });
+
+// From myareadesign.com's terms of sale (2026-11-27), an Italian shop.
+const ITALIAN_SELLER = "Les Conditions Générales de Vente suivantes ont comme thème les achats des produits effectués sur le site www.myareadesign.com appartenant à I Fasano S.r.l. unipersonale - Via A. De Gasperi, 58 - 70015 Noci (BA) Italy - N° TVA 07552990728 (ci-dessous appelé I Fasano S.r.l. unipersonale).";
+
+test('a seller elsewhere in the EU is recognised by its legal form, address and VAT number', () => {
+  const present = (text) => Object.fromEntries(
+    Object.values(checkMandatoryLegalMentions(text)).filter(Array.isArray).flat().map((m) => [m.key, m.present]),
+  );
+  const fields = present(ITALIAN_SELLER);
+  assert.equal(fields.legalForm, true);
+  assert.equal(fields.address, true);
+  assert.equal(fields.siren, true);
+  assert.equal(fields.vat, true);
+  assert.equal(extractPhysicalAddress(ITALIAN_SELLER), '70015 Noci (BA) Italy');
+  assert.equal(extractPhysicalAddress('Musterstraße 5, 10115 Berlin, Germany'), '10115 Berlin, Germany');
+});
+
+test('a VAT number alone, or with a French or no address, does not stand in for a SIREN', () => {
+  const fields = (text) => Object.fromEntries(
+    Object.values(checkMandatoryLegalMentions(text)).filter(Array.isArray).flat().map((m) => [m.key, m.present]),
+  );
+  assert.equal(fields('Vendeur : Shop Ltd, VAT number: 12345678901').siren, false);
+  assert.equal(fields('TVA : FR12345678901, 12 rue des Lilas, 75001 Paris').siren, false);
+  assert.equal(fields('Siège : 75001 Paris, France. P.IVA 07552990728').siren, false);
+});
+
+test('ordinary words are not foreign company forms', () => {
+  const legalForm = (text) => checkMandatoryLegalMentions(text).universal.find((m) => m.key === 'legalForm').present;
+  assert.equal(legalForm('Profitez de notre spa et de sa piscine.'), false);
+  assert.equal(legalForm('Vendu par Area Design GmbH.'), true);
+  assert.equal(legalForm('Exemple S.p.A., Milano'), true);
+});

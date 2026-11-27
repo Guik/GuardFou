@@ -173,16 +173,48 @@ export function pageLooksLikeOwnLegalDocument(title, url) {
   return LEGAL_LINK_TIERS.some((tier) => tier.test.test(combined));
 }
 
+// A seller elsewhere in the EU (or Switzerland) writes its address in its own
+// order ("Via A. De Gasperi, 58 - 70015 Noci (BA) Italy"): what is common is
+// a postcode, a city, an optional province and the country's name.
+const EU_COUNTRY_NAMES = [
+  'Italy', 'Italie', 'Italia', 'Germany', 'Allemagne', 'Deutschland', 'Spain', 'Espagne', 'España', 'Espana',
+  'Belgium', 'Belgique', 'België', 'Belgie', 'Netherlands', 'Pays-Bas', 'Nederland', 'Portugal', 'Austria',
+  'Autriche', 'Österreich', 'Luxembourg', 'Ireland', 'Irlande', 'Denmark', 'Danemark', 'Danmark', 'Sweden',
+  'Suède', 'Sverige', 'Finland', 'Finlande', 'Poland', 'Pologne', 'Polska', 'Czechia', 'Czech Republic',
+  'Tchéquie', 'République tchèque', 'Greece', 'Grèce', 'Switzerland', 'Suisse', 'Schweiz', 'Svizzera',
+];
+const CITY_WORD = String.raw`[A-ZÀ-Ÿ][\wÀ-ÿ'\-]{1,30}`;
+const EU_ADDRESS_PATTERN = new RegExp(
+  String.raw`\b\d{4,5}\s+${CITY_WORD}(?:\s+${CITY_WORD})?(?:\s*\([A-Z]{2}\))?\s*[,\-–]?\s*(?:${EU_COUNTRY_NAMES.join('|')})\b`,
+);
+
 /**
- * A very rough best-effort guess at a French postal address
- * ("12 rue des Lilas, 75001 Paris") in free text. Returns null when nothing
- * matching is found — this is a weak heuristic, not a validated address
- * parser.
+ * A very rough best-effort guess at a postal address in free text: a French
+ * one ("12 rue des Lilas, 75001 Paris"), or else the postcode, city and
+ * country of a seller elsewhere in the EU ("70015 Noci (BA) Italy"). Returns
+ * null when nothing matching is found — this is a weak heuristic, not a
+ * validated address parser.
  * @param {string} text
  */
 export function extractPhysicalAddress(text) {
-  const match = text.match(ADDRESS_PATTERN);
+  const match = text.match(ADDRESS_PATTERN) ?? text.match(EU_ADDRESS_PATTERN);
   return match ? match[0].replace(/\s+/g, ' ').trim() : null;
+}
+
+// A VAT number from another EU country: the country prefix and digits
+// ("IT07552990728"), or the digits after a VAT label in any of the
+// languages a seller uses ("N° TVA 07552990728", "P.IVA", "USt-IdNr.").
+const EU_VAT_PREFIXED = /\b(?:AT|BE|BG|CY|CZ|DE|DK|EE|EL|ES|FI|HR|HU|IE|IT|LT|LU|LV|MT|NL|PL|PT|RO|SE|SI|SK)\s?U?\d{8,12}\b/;
+const VAT_LABELLED = /(?<!\w)(?:n[°o]\.?\s*(?:de\s*)?tva|num[ée]ro\s+(?:de\s+)?tva|tva\s*:|vat\s*(?:number|no\.?|id|reg\w*)?\s*:|p\.?\s?iva|partita\s+iva|ust-?id(?:nr)?\.?|n\.?i\.?f\.?|c\.?i\.?f\.?)\s*[:.]?\s*(?:[A-Z]{2}\s?)?\d{8,12}\b/i;
+
+/**
+ * True when the text gives a VAT number from another EU country, the
+ * registration a seller established there shows instead of a SIREN.
+ * @param {string} text
+ */
+function hasForeignVatNumber(text) {
+  const labelled = text.match(VAT_LABELLED)?.[0] ?? '';
+  return EU_VAT_PREFIXED.test(text) || (labelled !== '' && !/\bfr\s?\d/i.test(labelled));
 }
 
 const STREET_TYPES = ['rue', 'avenue', 'boulevard', 'impasse', 'chemin', 'allée', 'allee', 'route', 'place', 'quai', 'cours'];
@@ -271,7 +303,10 @@ const UNIVERSAL_LEGAL_MENTIONS = [
     // specific abbreviations, and that's just as valid.
     test: (t) =>
       /\b(sarl|sasu?|eurl|scp|sci|snc|ei|eirl|auto-entrepreneur|micro-entreprise|associations?|assoc\.?)\b/i.test(t)
-      || /d[ée]nomination\s+sociale|raison\s+sociale/i.test(t),
+      || /d[ée]nomination\s+sociale|raison\s+sociale/i.test(t)
+      // Company forms of sellers elsewhere in Europe, as they write them:
+      // case-sensitive, since "spa" or "sa" are also ordinary words.
+      || /(?<![\w.])(?:S\.r\.l|S\.R\.L|Srl|SRL|S\.p\.A|S\.P\.A|SpA|GmbH|B\.V|N\.V|BV|S\.L\.U?|S\.A|Ltd|LLC|SPRL|SRL)\.?(?!\w)/.test(t),
   },
   {
     key: 'siren',
@@ -280,7 +315,9 @@ const UNIVERSAL_LEGAL_MENTIONS = [
     // core/siret.js), which also catches a SIREN given via its RCS
     // registration ("RCS Paris B 321045395") rather than literally labeled
     // "SIREN" — a real, common pattern a plain keyword search would miss.
-    test: (t) => extractSirenOrSiret(t) !== null,
+    // A seller established elsewhere in the EU has no SIREN: its VAT
+    // number, next to an address in that country, stands in for it.
+    test: (t) => extractSirenOrSiret(t) !== null || (hasForeignVatNumber(t) && EU_ADDRESS_PATTERN.test(t)),
   },
   { key: 'address', weight: 5, test: (t) => Boolean(extractPhysicalAddress(t)) },
   {
@@ -315,7 +352,7 @@ const CONDITIONAL_LEGAL_MENTIONS = [
   {
     key: 'vat',
     weight: 2,
-    test: (t) => /tva\s+intracommunautaire/i.test(t) || /\bfr\d{2}\s?\d{9}\b/i.test(t),
+    test: (t) => /tva\s+intracommunautaire/i.test(t) || /\bfr\d{2}\s?\d{9}\b/i.test(t) || hasForeignVatNumber(t),
   },
   {
     key: 'mediator',

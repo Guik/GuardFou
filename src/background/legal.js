@@ -61,7 +61,8 @@ const UNREADABLE = Symbol('unreadable');
 // 2: publisher statements also read "propriété de", "publié par"… and the
 // words before a SIRET/SIREN/RCS. 3: the host's SIRET is skipped.
 // 4-5: dropshipping clues, then the shop saying it ships from Asia.
-const LEGAL_ANALYSIS_VERSION = 5;
+// 6: the legal form, address and VAT number of a seller elsewhere in the EU.
+const LEGAL_ANALYSIS_VERSION = 6;
 
 // A site that blocked us is asked again after a day, not on every page view:
 // retrying each time is exactly what gets a visitor's IP flagged as a bot.

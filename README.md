@@ -36,7 +36,7 @@ No single check proves a site is a scam; the score combines them and shows every
 ### France only
 
 - **Brand impersonation**: the site claims to be a known French brand (retailers like Fnac or Decathlon, and the windshield, energy and insurance names used by home-service scams) but isn't on its official domain, or its domain imitates it with an added word (`decathlon-outlet.com`), a typo (`decathllon.fr`) or the same name under another extension (`impots-gouv.fr`). Only the brand list, in `src/data/brands-fr.js`, is French.
-- **Mandatory legal information**: French law (LCEN) requires a company name, SIRET number, registered address, host and contact details. GuardFou reads the legal notice and terms of sale and lists what's missing.
+- **Mandatory legal information**: French law (LCEN) requires a company name, SIRET number, registered address, host and contact details. GuardFou reads the legal notice and terms of sale and lists what's missing. A seller established elsewhere in the EU is recognised by its own company form, address and VAT number instead of a SIRET.
 - **SIRET/SIREN numbers**: checks that the number is well-formed, exists in the official registry, belongs to an active company and matches the site's name.
 - **Shop detection**: prices in euros and cart wording in French or English (product structured data works in any language).
 
