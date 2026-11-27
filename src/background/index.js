@@ -66,10 +66,14 @@ const currentPageByTab = new Map();
 // the analysis it tracked is gone too.
 const analyzingTabs = new Set();
 
-// Sites whose dropshipping banner a tab has already shown, so browsing the
-// shop doesn't bring it back on every page: the badge and popup keep saying
-// it. In memory: after a background restart it may show once more.
-const dropshippingBannerShown = new Set();
+// Sites whose "be careful" or dropshipping banner a tab has already shown
+// ("<tabId> <site> <kind>"), so browsing the shop doesn't bring it back on
+// every page: the badge and popup keep saying it. In memory: after a
+// background restart it may show once more.
+const softBannersShown = new Set();
+
+// Orange reasons worth a banner of their own, though the verdict isn't red.
+const WARNING_BANNER_REASONS = ['steep-discounts-recent-domain'];
 
 pruneExpiredCache().catch(() => {});
 
@@ -147,7 +151,7 @@ async function openAnalysis(tab) {
 browser.tabs.onRemoved.addListener((tabId) => {
   currentPageByTab.delete(tabId);
   analyzingTabs.delete(tabId);
-  for (const key of dropshippingBannerShown) if (key.startsWith(`${tabId} `)) dropshippingBannerShown.delete(key);
+  for (const key of softBannersShown) if (key.startsWith(`${tabId} `)) softBannersShown.delete(key);
   verdictsByTab.delete(tabId).catch(() => {});
 });
 browser.runtime.onInstalled.addListener(() => {
@@ -386,26 +390,24 @@ async function publishVerdict(tabId, displayId, signals, facts, dropshipping = [
 
   // The content script can't load the chosen language itself, so the
   // banner's text travels with it. A red verdict's banner wins over the
-  // dropshipping one.
+  // "be careful" one, which wins over the dropshipping one.
   const buttons = { details: t('bannerDetails'), dismiss: t('bannerDismiss') };
+  const firstTime = (kind) => {
+    const key = `${tabId} ${displayId} ${kind}`;
+    if (softBannersShown.has(key)) return false;
+    softBannersShown.add(key);
+    return true;
+  };
+  const warning = verdict.reasons.find((reason) => WARNING_BANNER_REASONS.includes(reason.id));
+  let banner = null;
   if (verdict.band === 'red') {
-    const banner = {
-      tone: 'danger',
-      title: t('bannerTitle', verdict.score),
-      summary: verdict.reasons[0]?.message ?? '',
-      ...buttons,
-    };
-    browser.tabs.sendMessage(tabId, { type: 'SHOW_BANNER', banner }).catch(() => {});
-  } else if (verdict.dropshipping.length > 0 && !dropshippingBannerShown.has(`${tabId} ${displayId}`)) {
-    dropshippingBannerShown.add(`${tabId} ${displayId}`);
-    const banner = {
-      tone: 'info',
-      title: t('bannerDropshippingTitle'),
-      summary: verdict.dropshipping[0].message,
-      ...buttons,
-    };
-    browser.tabs.sendMessage(tabId, { type: 'SHOW_BANNER', banner }).catch(() => {});
+    banner = { tone: 'danger', title: t('bannerTitle', verdict.score), summary: verdict.reasons[0]?.message ?? '' };
+  } else if (warning && firstTime('warning')) {
+    banner = { tone: 'warning', title: t('bannerWarningTitle', verdict.score), summary: warning.message };
+  } else if (verdict.dropshipping.length > 0 && firstTime('dropshipping')) {
+    banner = { tone: 'info', title: t('bannerDropshippingTitle'), summary: verdict.dropshipping[0].message };
   }
+  if (banner) browser.tabs.sendMessage(tabId, { type: 'SHOW_BANNER', banner: { ...banner, ...buttons } }).catch(() => {});
   return verdict;
 }
 

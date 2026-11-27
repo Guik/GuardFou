@@ -623,6 +623,9 @@
   "optionsDisableCacheHint": {
     "message": "Tout est revérifié à chaque fois : utile pour tester, mais plus de requêtes réseau."
   },
+  "bannerWarningTitle": {
+    "message": "GuardFou : soyez vigilant sur ce site (score $1/100)"
+  },
   "bannerDropshippingTitle": {
     "message": "GuardFou : cette boutique fait probablement du dropshipping"
   },

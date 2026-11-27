@@ -313,6 +313,9 @@
     }
     button:hover { background: rgba(255,255,255,.3); }
     .bar.info { background: #5e5ce6; }
+    .bar.warning { background: #ff9f0a; color: #1d1d1f; }
+    .bar.warning button { background: rgba(0,0,0,.1); color: #1d1d1f; }
+    .bar.warning button:hover { background: rgba(0,0,0,.18); }
     .actions { display: flex; gap: 8px; flex-shrink: 0; }
   `;
 
@@ -329,12 +332,12 @@
     bg.setAttribute('cx', '12');
     bg.setAttribute('cy', '12');
     bg.setAttribute('r', '10');
-    bg.setAttribute('fill', '#fff');
+    bg.setAttribute('fill', 'currentColor');
     bg.setAttribute('fill-opacity', '0.18');
 
     const stem = document.createElementNS(SVG_NS, 'path');
     stem.setAttribute('d', info ? 'M12 11v6' : 'M12 7v6');
-    stem.setAttribute('stroke', '#fff');
+    stem.setAttribute('stroke', 'currentColor');
     stem.setAttribute('stroke-width', '2');
     stem.setAttribute('stroke-linecap', 'round');
 
@@ -342,7 +345,7 @@
     dot.setAttribute('cx', '12');
     dot.setAttribute('cy', info ? '7.8' : '16.2');
     dot.setAttribute('r', '1.15');
-    dot.setAttribute('fill', '#fff');
+    dot.setAttribute('fill', 'currentColor');
 
     svg.append(bg, stem, dot);
     return svg;
@@ -352,18 +355,26 @@
    * @param {{ tone: 'danger'|'info', title: string, summary: string, details: string, dismiss: string }} banner
    *   already translated by the background
    */
+  // A later, more serious verdict replaces the banner on screen: the red
+  // one can follow a "be careful" one once the legal pages are read.
+  const BANNER_RANK = { info: 0, warning: 1, danger: 2 };
   function showBanner(banner) {
-    if (document.getElementById('guardfou-banner-host')) return;
+    const existing = document.getElementById('guardfou-banner-host');
+    if (existing) {
+      if (BANNER_RANK[existing.dataset.tone] >= BANNER_RANK[banner.tone]) return;
+      existing.remove();
+    }
 
     const host = document.createElement('div');
     host.id = 'guardfou-banner-host';
+    host.dataset.tone = banner.tone;
     const shadow = host.attachShadow({ mode: 'closed' });
 
     const style = document.createElement('style');
     style.textContent = BANNER_STYLE;
 
     const bar = document.createElement('div');
-    bar.className = banner.tone === 'info' ? 'bar info' : 'bar';
+    bar.className = banner.tone === 'danger' ? 'bar' : `bar ${banner.tone}`;
 
     const icon = document.createElement('div');
     icon.className = 'icon';

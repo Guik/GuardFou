@@ -15,6 +15,7 @@ isn't released.
 - A shop's "Terms of service" page ("Conditions d'utilisation") is now read like its terms of sale when looking for the company's details, so a shop with no legal notice is checked against it.
 - Terms of sale titled "Conditions de vente" or "Termes et conditions", and a privacy link titled just "Privacy", are now found in the shop's footer.
 - New warning sign: on a domain less than a year old, most struck-through prices on the page cut by half or more, like the designer furniture at -80 % of fake shops. A sale on an older shop doesn't count.
+- When the page's prices are slashed like this, an orange "Be careful" banner says so on the shop, even if the verdict is only orange: once per site and tab. A red banner replaces it if the verdict turns red.
 - A shop established elsewhere in the EU, such as an Italian S.r.l., is no longer reported as missing its company form, address and SIRET: its own company form (S.r.l., GmbH, B.V.…), its address with the country's name and its VAT number are recognised.
 
 ### Français
@@ -24,6 +25,7 @@ isn't released.
 - La page « Conditions d'utilisation » d'une boutique est désormais lue comme ses CGV pour chercher l'identité de l'entreprise : une boutique sans mentions légales est vérifiée sur cette page.
 - Les conditions de vente intitulées « Conditions de vente » ou « Termes et conditions », et un lien de confidentialité intitulé simplement « Privacy », sont désormais trouvés dans le pied de page de la boutique.
 - Nouveau signe d'alerte : sur un domaine de moins d'un an, la plupart des prix barrés de la page réduits de moitié ou plus, comme le mobilier design à -80 % des fausses boutiques. Les soldes d'une boutique plus ancienne ne comptent pas.
+- Quand les prix de la page sont cassés de cette façon, un bandeau orange « Soyez vigilant » l'indique sur la boutique, même si l'avis n'est qu'orange : une fois par site et par onglet. Le bandeau rouge le remplace si l'avis passe au rouge.
 - Une boutique établie ailleurs dans l'UE, comme une S.r.l. italienne, n'est plus signalée comme sans forme juridique, adresse ni SIRET : sa forme de société (S.r.l., GmbH, B.V.…), son adresse avec le nom du pays et son numéro de TVA sont reconnus.
 
 ## 0.1.6
