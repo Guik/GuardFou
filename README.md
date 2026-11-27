@@ -87,6 +87,7 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for the project layout, browser tests, bu
 - Community reports: let users flag scam sites and vouch for trusted ones.
 - More brands in `src/data/brands-fr.js`; contributions welcome (see [Adding a brand](CONTRIBUTING.md#adding-a-brand)).
 - Other countries: brand lists, company registries and legal requirements.
+- Check the VAT number of a seller established elsewhere in the EU against [VIES](https://ec.europa.eu/taxation_customs/vies/), the EU's VAT register, as SIRET numbers are checked against the French registry: that it exists, is active and belongs to the company named on the site.
 - Site popularity and backlinks in the identity card.
 - A "Report this site" link in the identity card: the registrar's abuse contact (from RDAP), [Pharos](https://www.internet-signalement.gouv.fr) and [SignalConso](https://signal.conso.gouv.fr).
 - A "Report a false positive" button in the popup, for a legitimate site wrongly flagged: it opens a pre-filled GitHub issue with the domain, the score and the reasons (nothing is sent without the user's say), and offers to add the site to the trusted list.
