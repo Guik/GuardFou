@@ -10,4 +10,5 @@
  */
 export const WATCHED_REGISTRARS = [
   'realtime register', // confirmed on a Chausson-impersonating clone, Oct 2026
+  'cloud yuqu', // confirmed on bestmobilierdesign.com, a fake design-furniture shop at -80 %, Nov 2026
 ];

@@ -11,10 +11,12 @@ isn't released.
 ### English
 
 - A domain registered less than a year ago is now enough on its own for an orange verdict; it used to take another warning sign once the domain was over six months old.
+- The registrar Cloud Yuqu, seen on a fake furniture shop, now adds weight when the domain is also recent.
 
 ### Français
 
 - Un nom de domaine enregistré il y a moins d'un an suffit désormais à lui seul pour un avis orange ; au-delà de six mois, il fallait jusqu'ici un autre signe d'alerte.
+- Le bureau d'enregistrement Cloud Yuqu, vu sur une fausse boutique de mobilier, compte désormais quand le domaine est aussi récent.
 
 ## 0.1.6
 

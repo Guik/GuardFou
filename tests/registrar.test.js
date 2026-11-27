@@ -1,6 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { isWatchedRegistrar } from '../src/core/registrar.js';
+import { WATCHED_REGISTRARS } from '../src/data/watched-registrars.js';
 
 const WATCHED = ['realtime register'];
 
@@ -16,4 +17,8 @@ test('does not match an unrelated registrar', () => {
 test('handles null/empty registrar name', () => {
   assert.equal(isWatchedRegistrar(null, WATCHED), false);
   assert.equal(isWatchedRegistrar('', WATCHED), false);
+});
+
+test('Cloud Yuqu, seen on a fake furniture shop, is watched', () => {
+  assert.equal(isWatchedRegistrar('Cloud Yuqu LLC', WATCHED_REGISTRARS), true);
 });
