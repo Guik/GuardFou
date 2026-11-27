@@ -13,6 +13,7 @@ isn't released.
 - A domain registered less than a year ago is now enough on its own for an orange verdict; it used to take another warning sign once the domain was over six months old.
 - The registrar Cloud Yuqu, seen on a fake furniture shop, now adds weight when the domain is also recent.
 - A shop's "Terms of service" page ("Conditions d'utilisation") is now read like its terms of sale when looking for the company's details, so a shop with no legal notice is checked against it.
+- Terms of sale titled "Conditions de vente" or "Termes et conditions", and a privacy link titled just "Privacy", are now found in the shop's footer.
 - New warning sign: on a domain less than a year old, most struck-through prices on the page cut by half or more, like the designer furniture at -80 % of fake shops. A sale on an older shop doesn't count.
 - A shop established elsewhere in the EU, such as an Italian S.r.l., is no longer reported as missing its company form, address and SIRET: its own company form (S.r.l., GmbH, B.V.…), its address with the country's name and its VAT number are recognised.
 
@@ -21,6 +22,7 @@ isn't released.
 - Un nom de domaine enregistré il y a moins d'un an suffit désormais à lui seul pour un avis orange ; au-delà de six mois, il fallait jusqu'ici un autre signe d'alerte.
 - Le bureau d'enregistrement Cloud Yuqu, vu sur une fausse boutique de mobilier, compte désormais quand le domaine est aussi récent.
 - La page « Conditions d'utilisation » d'une boutique est désormais lue comme ses CGV pour chercher l'identité de l'entreprise : une boutique sans mentions légales est vérifiée sur cette page.
+- Les conditions de vente intitulées « Conditions de vente » ou « Termes et conditions », et un lien de confidentialité intitulé simplement « Privacy », sont désormais trouvés dans le pied de page de la boutique.
 - Nouveau signe d'alerte : sur un domaine de moins d'un an, la plupart des prix barrés de la page réduits de moitié ou plus, comme le mobilier design à -80 % des fausses boutiques. Les soldes d'une boutique plus ancienne ne comptent pas.
 - Une boutique établie ailleurs dans l'UE, comme une S.r.l. italienne, n'est plus signalée comme sans forme juridique, adresse ni SIRET : sa forme de société (S.r.l., GmbH, B.V.…), son adresse avec le nom du pays et son numéro de TVA sont reconnus.
 

@@ -66,8 +66,11 @@ const LEGAL_LINK_TIERS = [
   { priority: 0, test: /mentions?\s*l[ée]gales?|legal\s*notice/i },
   // "Conditions d'utilisation" / "Terms of service": Shopify's own name for
   // its terms page, often the only legal-looking link on a fake shop.
-  { priority: 1, test: /cgv\b|cgu\b|conditions?\s*g[ée]n[ée]rales?|conditions?\s*d['’\s]\s*utilisation|terms\s*(and|&)?\s*conditions|terms\s*of\s*(?:service|use)/i },
-  { priority: 2, test: /privacy\s*policy|politique\s*de\s*confidentialit[ée]|protection\s*des\s*donn[ée]es/i },
+  // "Conditions de vente" / "Termes et conditions": seen on myareadesign.com.
+  { priority: 1, test: /cgv\b|cgu\b|conditions?\s*g[ée]n[ée]rales?|conditions?\s*de\s*vente|conditions?\s*d['’\s]\s*utilisation|termes\s*et\s*conditions|terms\s*(and|&)?\s*conditions|terms\s*of\s*(?:service|use)/i },
+  // "Privacy" alone, but not "privacy settings" or "your privacy choices",
+  // which open a cookie banner rather than a page.
+  { priority: 2, test: /privacy\s*policy|^\W*privacy\W*$|politique\s*de\s*confidentialit[ée]|protection\s*des\s*donn[ée]es/i },
 ];
 
 /**

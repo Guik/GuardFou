@@ -439,3 +439,19 @@ test('ordinary words are not foreign company forms', () => {
   assert.equal(legalForm('Vendu par Area Design GmbH.'), true);
   assert.equal(legalForm('Exemple S.p.A., Milano'), true);
 });
+
+test('"Conditions de vente", "Termes et conditions" and a bare "Privacy" are legal links', () => {
+  // From myareadesign.com's footer (2026-11-27).
+  const links = [
+    { text: '> Privacy', href: 'https://www.myareadesign.com/privacy-fr' },
+    { text: 'Paiement Sécurisé', href: 'https://www.myareadesign.com/termes-et-conditions#top04' },
+    { text: '> Conditions de vente', href: 'https://www.myareadesign.com/termes-et-conditions' },
+  ];
+  assert.deepEqual(findLegalLinks(links, 'myareadesign.com').map((l) => l.href), [
+    'https://www.myareadesign.com/termes-et-conditions',
+    'https://www.myareadesign.com/privacy-fr',
+  ]);
+  assert.equal(findLegalLinks([{ text: 'Termes et conditions', href: 'https://shop.it/t' }], 'shop.it').length, 1);
+  assert.equal(findLegalLinks([{ text: 'Your privacy choices', href: 'https://shop.it/#consent' }], 'shop.it').length, 0);
+  assert.equal(pageLooksLikeOwnLegalDocument(null, 'https://www.myareadesign.com/termes-et-conditions'), true);
+});
