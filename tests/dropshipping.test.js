@@ -88,16 +88,16 @@ test('without a shipping page, the FAQ or help page is read', () => {
 
 test('a shop saying it ships from Asia is a strong clue', () => {
   const none = findDropshippingClues(null);
-  const clues = assessDropshipping([none, { ...none, shipsFromAsia: 'shipped from China' }], { hasCompanyNumber: true });
+  const clues = assessDropshipping([none, { ...none, shipsFromAsia: 'shipped from China' }]);
   assert.deepEqual(clues, [{ id: 'ships-from-asia', detail: 'shipped from China' }]);
 });
 
-test('a strong clue is enough, a weak one needs a second one or no company number', () => {
+test('a strong clue is enough, a weak one needs a second one', () => {
   const none = findDropshippingClues(null);
   const ids = (clues) => clues.map((clue) => clue.id);
-  assert.deepEqual(ids(assessDropshipping([findDropshippingClues(MARIO_LEGAL)], { hasCompanyNumber: false })), ['virtual-office', 'asian-seller']);
-  assert.deepEqual(ids(assessDropshipping([none, { ...none, longDelivery: '4 à 6 semaines' }], { hasCompanyNumber: true })), []);
-  assert.deepEqual(ids(assessDropshipping([none, { ...none, longDelivery: '4 à 6 semaines' }], { hasCompanyNumber: false })), ['long-delivery']);
-  assert.deepEqual(ids(assessDropshipping([{ ...none, splitShipments: true }, { ...none, longDelivery: '2 à 4 semaines' }], { hasCompanyNumber: true })), ['long-delivery', 'split-shipments']);
-  assert.deepEqual(assessDropshipping([null, null], { hasCompanyNumber: false }), []);
+  assert.deepEqual(ids(assessDropshipping([findDropshippingClues(MARIO_LEGAL)])), ['virtual-office', 'asian-seller']);
+  assert.deepEqual(ids(assessDropshipping([none, { ...none, longDelivery: '4 à 6 semaines' }])), []);
+  assert.deepEqual(ids(assessDropshipping([{ ...none, splitShipments: true }])), []);
+  assert.deepEqual(ids(assessDropshipping([{ ...none, splitShipments: true }, { ...none, longDelivery: '2 à 4 semaines' }])), ['long-delivery', 'split-shipments']);
+  assert.deepEqual(assessDropshipping([null, null]), []);
 });

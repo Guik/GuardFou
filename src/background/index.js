@@ -342,7 +342,7 @@ async function computeDeepSignals(tabId, domain, payload, claimedText, currentUr
     shippingUrl && !legalUrls.includes(shippingUrl) ? getShippingPolicyClues(shippingUrl, { viaPage }) : null,
   ]);
   const dropshipping = dropshippingAlert
-    ? assessDropshipping([legalAnalysis.dropshipping, shippingClues], { hasCompanyNumber: Boolean(legalAnalysis.companyCheck.candidate) })
+    ? assessDropshipping([legalAnalysis.dropshipping, shippingClues])
     : [];
 
   const signals = { dnssec };

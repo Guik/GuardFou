@@ -176,15 +176,16 @@ export function findShippingInfoLink(links, siteDomain) {
 /**
  * The clues to show, or an empty list when they don't add up to a likely
  * dropshipping shop. A virtual office, a seller in Asia or the shop saying
- * it ships from Asia is enough on its own; long delivery times or split parcels alone are not (made-to-order
- * furniture also takes weeks), unless there is a second one or no French
- * company number to set against it.
+ * it ships from Asia is enough on its own; long delivery times and split
+ * parcels take both: either alone is common at a genuine shop (designer
+ * furniture often takes weeks, made to order or carried by a specialised
+ * courier, as at myareadesign.com). A company number says nothing either
+ * way: many dropshipping shops are French sole traders.
  * @param {Array<ReturnType<typeof findDropshippingClues> | null | undefined>} sources
  *   clues from the legal pages and the shipping policy or FAQ
- * @param {{ hasCompanyNumber: boolean }} context
  * @returns {Array<{ id: 'virtual-office'|'asian-seller'|'ships-from-asia'|'long-delivery'|'split-shipments', detail: string|null }>}
  */
-export function assessDropshipping(sources, { hasCompanyNumber }) {
+export function assessDropshipping(sources) {
   const pick = (key) => sources.map((source) => source?.[key]).find(Boolean) ?? null;
   const strong = [
     pick('virtualOffice') && { id: 'virtual-office', detail: pick('virtualOffice') },
@@ -195,6 +196,6 @@ export function assessDropshipping(sources, { hasCompanyNumber }) {
     pick('longDelivery') && { id: 'long-delivery', detail: pick('longDelivery') },
     pick('splitShipments') && { id: 'split-shipments', detail: null },
   ].filter(Boolean);
-  const likely = strong.length > 0 || weak.length >= 2 || (weak.length === 1 && !hasCompanyNumber);
+  const likely = strong.length > 0 || weak.length >= 2;
   return likely ? [...strong, ...weak] : [];
 }
