@@ -114,6 +114,17 @@ test('findLegalLinks falls back to CGV/CGU, then privacy policy, when no mention
   assert.ok(privacyOnly[0].href.endsWith('/privacy'));
 });
 
+test('a shop’s terms of service count as a legal page, before its privacy policy', () => {
+  const links = [
+    { text: 'Politique de confidentialité', href: 'https://shop.com/policies/privacy-policy' },
+    { text: "Conditions d'utilisation", href: 'https://shop.com/policies/terms-of-service' },
+  ];
+  assert.ok(findLegalLinks(links, 'shop.com')[0].href.endsWith('/terms-of-service'));
+  assert.equal(findLegalLinks([{ text: 'Terms of Service', href: 'https://shop.com/tos' }], 'shop.com').length, 1);
+  assert.equal(pageLooksLikeOwnLegalDocument(null, 'https://shop.com/policies/terms-of-service'), true);
+  assert.equal(pageLooksLikeOwnLegalDocument(null, 'https://shop.com/pages/conditions-d-utilisation'), true);
+});
+
 // Real bug: adepem.com links to iubenda.com for its privacy policy (common
 // pattern — many sites outsource privacy-policy hosting to a third-party
 // generator, often via a cookie-consent banner). That page is a generic

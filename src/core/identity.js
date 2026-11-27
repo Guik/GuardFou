@@ -64,7 +64,9 @@ export function hostnameMatchesDomain(hostname, domain) {
 // priority number = checked first.
 const LEGAL_LINK_TIERS = [
   { priority: 0, test: /mentions?\s*l[ée]gales?|legal\s*notice/i },
-  { priority: 1, test: /cgv\b|cgu\b|conditions?\s*g[ée]n[ée]rales?|terms\s*(and|&)?\s*conditions/i },
+  // "Conditions d'utilisation" / "Terms of service": Shopify's own name for
+  // its terms page, often the only legal-looking link on a fake shop.
+  { priority: 1, test: /cgv\b|cgu\b|conditions?\s*g[ée]n[ée]rales?|conditions?\s*d['’\s]\s*utilisation|terms\s*(and|&)?\s*conditions|terms\s*of\s*(?:service|use)/i },
   { priority: 2, test: /privacy\s*policy|politique\s*de\s*confidentialit[ée]|protection\s*des\s*donn[ée]es/i },
 ];
 

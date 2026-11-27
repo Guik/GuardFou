@@ -137,8 +137,8 @@
   // "/mentions-legales". Only the page's own inline scripts are read, only
   // paths that name a legal page are kept, and each gets a text built from
   // its path so the background ranks it like a real link.
-  const LEGAL_LINK_WORDING = /mentions|l[ée]gal|\bcg[uv]\b|conditions|confidentialit/i;
-  const LEGAL_PATH = /(?:^|\/)(mentions[-_]?legales?|conditions[-_]generales[\w-]*|cgu|cgv|legal[-_]notice|politique[-_]de[-_]confidentialite)(?:[/.?#]|$)/i;
+  const LEGAL_LINK_WORDING = /mentions|l[ée]gal|\bcg[uv]\b|conditions|confidentialit|\bterms\b/i;
+  const LEGAL_PATH = /(?:^|\/)(mentions[-_]?legales?|conditions[-_]generales[\w-]*|cgu|cgv|legal[-_]notice|terms[-_]of[-_]service|conditions[-_]d[-_]utilisation|politique[-_]de[-_]confidentialite)(?:[/.?#]|$)/i;
   const ASSET_PATH = /\.(png|jpe?g|gif|svg|webp|avif|ico|css|js|mjs|json|woff2?|ttf|pdf)(?:[?#]|$)/i;
   const MAX_INLINE_SCRIPT_TEXT = 5_000_000;
   function getEmbeddedLegalPaths() {
